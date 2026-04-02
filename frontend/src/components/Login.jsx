@@ -1,0 +1,162 @@
+import { useState } from 'react'
+import './Login.css'
+
+function Login() {
+  const [modalOpen, setModalOpen]       = useState(false)
+  const [email, setEmail]               = useState('')
+  const [password, setPassword]         = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [errorMsg, setErrorMsg]         = useState('')
+  const [loading, setLoading]           = useState(false)
+  const [success, setSuccess]           = useState(false)
+  const [shake, setShake]               = useState(false)
+
+  function openModal() {
+    setModalOpen(true)
+    setErrorMsg('')
+  }
+
+  function closeModal() {
+    setModalOpen(false)
+    setErrorMsg('')
+    setEmail('')
+    setPassword('')
+    setShowPassword(false)
+    setSuccess(false)
+  }
+
+  function showError(msg) {
+    setErrorMsg(msg)
+    setShake(true)
+    setTimeout(() => setShake(false), 400)
+  }
+
+  function validate() {
+    if (!email.trim()) { showError('Please enter your email address.'); return false }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) { showError("That doesn't look like a valid email."); return false }
+    if (!password) { showError('Please enter your password.'); return false }
+    if (password.length < 6) { showError('Password must be at least 6 characters.'); return false }
+    return true
+  }
+
+  async function fakeApiCall() {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        if (email === 'admin@test.com' && password === 'password123') {
+          resolve({ ok: true })
+        } else {
+          resolve({ ok: false })
+        }
+      }, 1500)
+    })
+  }
+
+  async function handleSubmit() {
+    setErrorMsg('')
+    if (!validate()) return
+    setLoading(true)
+    const result = await fakeApiCall()
+    setLoading(false)
+    if (result.ok) {
+      setSuccess(true)
+      setTimeout(() => { closeModal() }, 800)
+    } else {
+      showError('Incorrect email or password.')
+    }
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter') handleSubmit()
+  }
+
+  function handleBackdropClick(e) {
+    if (e.target === e.currentTarget) closeModal()
+  }
+
+  return (
+    <div className="h-full font-sans antialiased text-white">
+      <main className="relative h-full w-full bg-main-image flex items-center justify-center p-6 overflow-hidden">
+
+        <div aria-hidden="true" className="absolute inset-0 bg-black/55" />
+
+        <div className="relative z-10 flex flex-col items-center text-center space-y-8 max-w-md w-full">
+          <div>
+            <h1 className="text-5xl md:text-6xl font-bold text-white tracking-tight leading-tight">
+              AI Ticketing<br />
+              <span className="text-ai-mint">Assistant</span>
+            </h1>
+          </div>
+
+          <button
+            className="btn-active mt-2 px-12 py-3.5 bg-ai-mint text-ai-dark font-bold text-sm tracking-wider uppercase rounded-xl hover:bg-white hover:scale-105 transition-all duration-300 focus:outline-none"
+            type="button"
+            onClick={openModal}
+          >
+            Log In
+          </button>
+        </div>
+      </main>
+
+      {modalOpen && (
+        <div
+          className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-6"
+          onClick={handleBackdropClick}
+        >
+          <div className={`modal-card w-full max-w-sm bg-[#0f1117] border border-white/10 rounded-2xl p-8 shadow-2xl ${shake ? 'shake' : ''}`}>
+
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-lg font-bold text-white tracking-tight">Log in to your account</h2>
+                <p className="text-white/30 text-xs mt-1">AI Ticketing Assistant</p>
+              </div>
+              <button onClick={closeModal} className="text-white/20 hover:text-white transition-colors text-2xl leading-none">&times;</button>
+            </div>
+
+            {errorMsg && (
+              <div className="mb-5 px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-xs">
+                {errorMsg}
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-white/40 text-xs uppercase tracking-wider mb-2" htmlFor="email">Email</label>
+                <input
+                  id="email" type="email" placeholder="you@company.com"
+                  value={email} onChange={(e) => { setEmail(e.target.value); setErrorMsg('') }}
+                  onKeyDown={handleKeyDown}
+                  className="input-field w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-white/40 text-xs uppercase tracking-wider mb-2" htmlFor="password">Password</label>
+                <div className="relative">
+                  <input
+                    id="password" type={showPassword ? 'text' : 'password'} placeholder="••••••••"
+                    value={password} onChange={(e) => { setPassword(e.target.value); setErrorMsg('') }}
+                    onKeyDown={handleKeyDown}
+                    className="input-field w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pr-16 text-white placeholder-white/20 text-sm"
+                  />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 text-xs uppercase tracking-wider">
+                    {showPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+              </div>
+              <div className="text-right">
+                <a href="#" className="text-white/30 hover:text-ai-mint text-xs transition-colors">Forgot password?</a>
+              </div>
+              <button type="button" onClick={handleSubmit} disabled={loading}
+                className={`btn-active w-full py-3.5 text-sm font-bold uppercase tracking-wider rounded-xl transition-all duration-300 flex items-center justify-center gap-2 ${success ? 'bg-ai-mint text-ai-dark' : 'bg-ai-mint text-ai-dark hover:bg-white'}`}>
+                {loading ? <span className="spinner" /> : success ? 'Loged In' : 'Log In'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default Login
