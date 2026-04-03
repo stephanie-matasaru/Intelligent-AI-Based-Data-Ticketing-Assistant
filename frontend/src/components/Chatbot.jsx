@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import Navbar from './Navbar'
 import './Chatbot.css'
 
 const AI_RESPONSES = [
@@ -62,31 +63,7 @@ function Chatbot() {
   return (
     <div className="bg-[#0f0f1e] text-white font-body h-screen flex flex-col overflow-hidden">
 
-      {/* Top Nav */}
-      <nav className="w-full bg-[#0f0f1e] flex justify-between items-center px-8 h-20 z-50 border-b border-white/5 flex-shrink-0">
-        <div className="flex items-center gap-8">
-          <span className="font-headline tracking-tighter text-2xl font-bold text-white">
-            AI Assistant
-          </span>
-          <div className="hidden md:flex gap-6 items-center">
-            {['Dashboard', 'Tickets', 'Archive'].map((item) => (
-              <a key={item} className="font-headline tracking-tight text-white/50 hover:text-[#A1CEBC] transition-colors duration-300 cursor-pointer active:scale-95">
-                {item}
-              </a>
-            ))}
-            <a className="font-headline tracking-tight text-[#A1CEBC] font-semibold border-b-2 border-[#A1CEBC] pb-1 cursor-pointer">
-              Intelligence
-            </a>
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <span className="material-symbols-outlined text-white/50 cursor-pointer hover:text-[#A1CEBC]">notifications</span>
-          <span className="material-symbols-outlined text-white/50 cursor-pointer hover:text-[#A1CEBC]">settings</span>
-          <div className="h-10 w-10 rounded-full bg-[#252540] overflow-hidden border border-white/10 flex items-center justify-center">
-            <span className="material-symbols-outlined text-white/50">person</span>
-          </div>
-        </div>
-      </nav>
+    <Navbar />
 
       <main className="flex flex-1 overflow-hidden">
 
