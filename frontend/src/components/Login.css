@@ -3,6 +3,19 @@
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  animation: slowZoom 20s ease-in-out infinite alternate;
+}
+
+
+  @keyframes slowZoom {
+  from {
+    background-size: 110%;
+    background-position: center;
+  }
+  to {
+    background-size: 120%;
+    background-position: 55% 45%;
+  }
 }
 
 .glow-text {

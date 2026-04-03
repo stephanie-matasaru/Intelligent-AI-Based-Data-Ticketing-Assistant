@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import './Login.css'
 
 function Login() {
@@ -10,6 +11,7 @@ function Login() {
   const [loading, setLoading]           = useState(false)
   const [success, setSuccess]           = useState(false)
   const [shake, setShake]               = useState(false)
+  const navigate = useNavigate()
 
   function openModal() {
     setModalOpen(true)
@@ -60,7 +62,7 @@ function Login() {
     setLoading(false)
     if (result.ok) {
       setSuccess(true)
-      setTimeout(() => { closeModal() }, 800)
+      setTimeout(() => { navigate('/chat') }, 800)
     } else {
       showError('Incorrect email or password.')
     }
