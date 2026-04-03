@@ -60,10 +60,10 @@ function Chatbot() {
   }
 
   return (
-    <div className="bg-[#0f0f1e] text-white font-body min-h-screen">
+    <div className="bg-[#0f0f1e] text-white font-body h-screen flex flex-col overflow-hidden">
 
       {/* Top Nav */}
-      <nav className="w-full top-0 sticky bg-[#0f0f1e] flex justify-between items-center px-8 h-20 z-50 border-b border-white/5">
+      <nav className="w-full bg-[#0f0f1e] flex justify-between items-center px-8 h-20 z-50 border-b border-white/5 flex-shrink-0">
         <div className="flex items-center gap-8">
           <span className="font-headline tracking-tighter text-2xl font-bold text-white">
             AI Assistant
@@ -88,13 +88,13 @@ function Chatbot() {
         </div>
       </nav>
 
-      <main className="flex min-h-[calc(100vh-5rem)]">
+      <main className="flex flex-1 overflow-hidden">
 
         {/* Chat Section */}
-        <section className="flex-grow flex flex-col relative px-4 md:px-12 py-8 max-w-5xl mx-auto w-full">
+        <section className="flex-grow flex flex-col px-4 md:px-12 py-8 max-w-5xl mx-auto w-full overflow-hidden">
 
           {/* Chat Header */}
-          <div className="mb-10 flex items-center justify-between">
+          <div className="mb-6 flex items-center justify-between flex-shrink-0">
             <div>
               <h1 className="font-headline text-3xl font-bold tracking-tight text-white mb-1">
                 Active Ticket Session
@@ -113,13 +113,8 @@ function Chatbot() {
           </div>
 
           {/* Chat Messages */}
-          <div className="flex-grow space-y-6 overflow-y-auto pb-32">
+          <div className="flex-1 space-y-6 overflow-y-auto pb-4">
 
-            {/* System Message */}
-            <div className="flex justify-center">
-            </div>
-
-            {/* Dynamic Messages */}
             {messages.map((msg) => (
               msg.type === 'user' ? (
                 <div key={msg.id} className="flex justify-end group">
@@ -148,13 +143,12 @@ function Chatbot() {
               )
             ))}
 
-            {/* Typing indicator */}
             {isTyping && (
               <div className="flex items-start gap-4">
-                <div className="mt-1 flex-shrink-0 h-8 w-8 rounded-full bg-gradient-to-br from-[#113499] to-[#6B4D90] flex items-center justify-center">
-                  <span className="material-symbols-outlined text-white text-[18px]" style={{fontVariationSettings: "'FILL' 1"}}>auto_awesome</span>
+                <div className="mt-1 flex-shrink-0 h-8 w-8 rounded-full bg-gradient-to-br from-[#000000] to-[#28074C] flex items-center justify-center">
+                  <span className="material-symbols-outlined text-white text-[18px]" style={{fontVariationSettings: "'FILL' 1"}}>robot</span>
                 </div>
-                <div className="bg-gradient-to-br from-[#6B4D90]/40 to-[#113499]/30 px-6 py-4 rounded-2xl rounded-tl-none border border-white/10">
+                <div className="bg-gradient-to-br from-[#0a0a1a] to-[#1a1a3a] px-6 py-4 rounded-2xl rounded-tl-none">
                   <div className="flex gap-1 items-center">
                     <span className="typing-dot"></span>
                     <span className="typing-dot" style={{animationDelay: '0.2s'}}></span>
@@ -168,7 +162,7 @@ function Chatbot() {
           </div>
 
           {/* Input Area */}
-          <div className="absolute bottom-8 left-4 right-4 md:left-12 md:right-12">
+          <div className="flex-shrink-0 pt-4">
             <div className="bg-[#1a1a35] backdrop-blur-md border border-white/10 p-1.5 rounded-2xl shadow-[0_-20px_50px_rgba(0,0,0,0.3)] max-w-2xl mx-auto">
               <div className="flex items-center gap-2">
                 <button className="h-10 w-10 flex items-center justify-center text-white/30 hover:text-white transition-colors">
@@ -197,7 +191,7 @@ function Chatbot() {
         </section>
 
         {/* Sidebar */}
-        <aside className="h-screen w-72 right-0 sticky bg-[#13132a] flex flex-col py-8 border-l border-white/5 shadow-[-20px_0px_40px_rgba(0,0,0,0.4)]">
+        <aside className="w-72 bg-[#13132a] flex flex-col py-8 border-l border-white/5 shadow-[-20px_0px_40px_rgba(0,0,0,0.4)] flex-shrink-0 overflow-y-auto">
           <div className="px-8 mb-8">
             <div className="flex items-center gap-3 mb-2">
               <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#000000] to-[#28074C] flex items-center justify-center">
