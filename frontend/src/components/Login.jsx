@@ -34,7 +34,7 @@ function Login() {
   }
 
   function validate() {
-    if (!email.trim()) { showError('Please enter your email address.'); return false }
+    if (!email.trim()) { showError('Please enter your username.'); return false }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) { showError("That doesn't look like a valid email."); return false }
     if (!password) { showError('Please enter your password.'); return false }
@@ -64,7 +64,7 @@ function Login() {
       setSuccess(true)
       setTimeout(() => { navigate('/chat') }, 800)
     } else {
-      showError('Incorrect email or password.')
+      showError('Incorrect username or password.')
     }
   }
 
@@ -145,9 +145,6 @@ function Login() {
                     {showPassword ? 'Hide' : 'Show'}
                   </button>
                 </div>
-              </div>
-              <div className="text-right">
-                <a href="#" className="text-white/30 hover:text-ai-mint text-xs transition-colors">Forgot password?</a>
               </div>
               <button type="button" onClick={handleSubmit} disabled={loading}
                 className={`btn-active w-full py-3.5 text-sm font-bold uppercase tracking-wider rounded-xl transition-all duration-300 flex items-center justify-center gap-2 ${success ? 'bg-ai-mint text-ai-dark' : 'bg-ai-mint text-ai-dark hover:bg-white'}`}>
