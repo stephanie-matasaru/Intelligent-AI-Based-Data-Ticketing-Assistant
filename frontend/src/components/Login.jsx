@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-'
+import { useNavigate } from 'react-router-dom'
 import './Login.css'
 
 function Login() {
@@ -40,32 +40,34 @@ function Login() {
     return true
   }
 
-  async function handleSubmit() {
-    setErrorMsg('')
-    if (!validate()) return
-    setLoading(true)
+async function handleSubmit() {
+  setErrorMsg('')
+  if (!validate()) return
+  setLoading(true)
 
-    try {
-      const response = await fetch('http://localhost:8000/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: username, password: password })
-      })
+  try {
+    const response = await fetch('http://localhost:8000/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    })
 
-      const data = await response.json()
+    const data = await response.json()
 
-      if (response.ok && data.success) {
-        setSuccess(true)
-        setTimeout(() => { navigate('/chat') }, 800)
-      } else {
-        showError(data.detail || 'Incorrect username or password.')
-      }
-    } catch (err) {
-      showError('Could not connect to server. Please try again.')
+    if (!response.ok) {
+      throw new Error(data.detail || 'Login failed')
     }
 
-    setLoading(false)
+    localStorage.setItem('user', JSON.stringify(data.user))
+    setSuccess(true)
+    setTimeout(() => { navigate('/chat') }, 800)
+
+  } catch (error) {
+    showError(error.message)
   }
+
+  setLoading(false)
+}
 
   function handleKeyDown(e) {
     if (e.key === 'Enter') handleSubmit()
