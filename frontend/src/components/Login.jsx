@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-'
 import './Login.css'
 
 function Login() {
   const [modalOpen, setModalOpen]       = useState(false)
-  const [email, setEmail]               = useState('')
+  const [username, setUsername]         = useState('')
   const [password, setPassword]         = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [errorMsg, setErrorMsg]         = useState('')
@@ -21,7 +21,7 @@ function Login() {
   function closeModal() {
     setModalOpen(false)
     setErrorMsg('')
-    setEmail('')
+    setUsername('')
     setPassword('')
     setShowPassword(false)
     setSuccess(false)
@@ -34,38 +34,37 @@ function Login() {
   }
 
   function validate() {
-    if (!email.trim()) { showError('Please enter your username.'); return false }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) { showError("That doesn't look like a valid email."); return false }
+    if (!username.trim()) { showError('Please enter your username.'); return false }
     if (!password) { showError('Please enter your password.'); return false }
     if (password.length < 6) { showError('Password must be at least 6 characters.'); return false }
     return true
-  }
-
-  async function fakeApiCall() {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        if (email === 'admin@test.com' && password === 'password123') {
-          resolve({ ok: true })
-        } else {
-          resolve({ ok: false })
-        }
-      }, 1500)
-    })
   }
 
   async function handleSubmit() {
     setErrorMsg('')
     if (!validate()) return
     setLoading(true)
-    const result = await fakeApiCall()
-    setLoading(false)
-    if (result.ok) {
-      setSuccess(true)
-      setTimeout(() => { navigate('/chat') }, 800)
-    } else {
-      showError('Incorrect username or password.')
+
+    try {
+      const response = await fetch('http://localhost:8000/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: username, password: password })
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        setSuccess(true)
+        setTimeout(() => { navigate('/chat') }, 800)
+      } else {
+        showError(data.detail || 'Incorrect username or password.')
+      }
+    } catch (err) {
+      showError('Could not connect to server. Please try again.')
     }
+
+    setLoading(false)
   }
 
   function handleKeyDown(e) {
@@ -123,10 +122,10 @@ function Login() {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-white/40 text-xs uppercase tracking-wider mb-2" htmlFor="email">Email</label>
+                <label className="block text-white/40 text-xs uppercase tracking-wider mb-2" htmlFor="username">Username</label>
                 <input
-                  id="email" type="email" placeholder="you@company.com"
-                  value={email} onChange={(e) => { setEmail(e.target.value); setErrorMsg('') }}
+                  id="username" type="text" placeholder="your_username"
+                  value={username} onChange={(e) => { setUsername(e.target.value); setErrorMsg('') }}
                   onKeyDown={handleKeyDown}
                   className="input-field w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 text-sm"
                 />
@@ -148,7 +147,7 @@ function Login() {
               </div>
               <button type="button" onClick={handleSubmit} disabled={loading}
                 className={`btn-active w-full py-3.5 text-sm font-bold uppercase tracking-wider rounded-xl transition-all duration-300 flex items-center justify-center gap-2 ${success ? 'bg-ai-mint text-ai-dark' : 'bg-ai-mint text-ai-dark hover:bg-white'}`}>
-                {loading ? <span className="spinner" /> : success ? 'Loged In' : 'Log In'}
+                {loading ? <span className="spinner" /> : success ? 'Logged In' : 'Log In'}
               </button>
             </div>
           </div>
