@@ -6,7 +6,7 @@ load_dotenv()
 
 def get_ai_client():
     return AzureOpenAI(
-        api_key=os.getenv("AZURE_OPENAI_MODEL_KEY"),
         azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-        api_version="2024-10-21"
+        api_key=os.getenv("AZURE_OPENAI_MODEL_KEY"),
+        api_version="2025-04-01-preview"
     )
