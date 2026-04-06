@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, CartesianGrid
@@ -64,12 +66,21 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null
 }
 
-function Dashboard() {
+function Graphs() {
   const [filters, setFilters] = useState({
     startDate: '', endDate: '', priority: 'all', status: 'all', team: 'all',
   })
 
-  // cand ai backend: useEffect(() => { fetchData(filters) }, [filters])
+  const { hash } = useLocation()
+
+  useEffect(() => {
+    if (hash) {
+      const el = document.querySelector(hash)
+      if (el) el.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [hash])
+
+  // cand avem backend: useEffect(() => { fetchData(filters) }, [filters])
 
   function handleFilter(key, value) {
     setFilters(prev => ({ ...prev, [key]: value }))
@@ -80,23 +91,23 @@ function Dashboard() {
   }
 
   return (
-    <div className="dashboard-root">
+    <div className="graphs-root">
 
       <Navbar />
 
-      <main className="dash-main">
+      <main className="graphs-main">
 
-        <div className="dash-header">
+        <div className="graphs-header">
           <div>
-            <h1 className="dash-title">KPI Dashboard</h1>
-            <div className="dash-subtitle">
+            <h1 className="graphs-title">KPI Dashboard</h1>
+            <div className="graphs-subtitle">
               <div className="ai-pulse" />
-              <span className="dash-subtitle-text">Live Analytics</span>
+              <span className="graphs-subtitle-text">Live Analytics</span>
             </div>
           </div>
-          <div className="dash-meta">
-            <span className="meta-label">Total Tickets</span>
-            <span className="meta-value">{MOCK_PRIORITY.reduce((s, d) => s + d.count, 0)}</span>
+          <div className="graphs-meta">
+            <span className="graphs-meta-label">Total Tickets</span>
+            <span className="graphs-meta-value">{MOCK_PRIORITY.reduce((s, d) => s + d.count, 0)}</span>
           </div>
         </div>
 
@@ -156,7 +167,7 @@ function Dashboard() {
         <div className="charts-grid">
 
           {/* 1. Bar – Priority */}
-          <div className="chart-card">
+          <div className="chart-card" id="priority">
             <div className="chart-card-header">
               <h2 className="chart-title">Tickets by Priority</h2>
               <span className="chart-badge">{MOCK_PRIORITY.reduce((s,d) => s+d.count, 0)} total</span>
@@ -177,7 +188,7 @@ function Dashboard() {
           </div>
 
           {/* 2. Donut – SLA */}
-          <div className="chart-card">
+          <div className="chart-card" id="sla">
             <div className="chart-card-header">
               <h2 className="chart-title">SLA Compliance</h2>
               <span className="chart-badge">
@@ -213,7 +224,7 @@ function Dashboard() {
           </div>
 
           {/* 3. Line – Timeline */}
-          <div className="chart-card chart-card--wide">
+          <div className="chart-card chart-card--wide" id="timeline">
             <div className="chart-card-header">
               <h2 className="chart-title">Tickets Created Over Time</h2>
               <div className="timeline-toggle">
@@ -238,7 +249,7 @@ function Dashboard() {
           </div>
 
           {/* 4. Bar – Status */}
-          <div className="chart-card chart-card--wide">
+          <div className="chart-card chart-card--wide" id="status">
             <div className="chart-card-header">
               <h2 className="chart-title">Tickets by Status</h2>
               <span className="chart-badge">{MOCK_STATUS.reduce((s,d) => s+d.count, 0)} total</span>
@@ -264,4 +275,4 @@ function Dashboard() {
   )
 }
 
-export default Dashboard
+export default Graphs

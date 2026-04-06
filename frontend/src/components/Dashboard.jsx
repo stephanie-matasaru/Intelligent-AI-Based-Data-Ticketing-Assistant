@@ -35,7 +35,7 @@ const NAV_CARDS = [
     label: 'Charts',
     description: 'KPI & analytics dashboard',
     accent: '#4fc093',
-    route: '/graphs',
+    route: '/graphs#priority',
   },
   {
     id: 'piechart',
@@ -43,7 +43,7 @@ const NAV_CARDS = [
     label: 'Pie Chart',
     description: 'Distribution breakdown',
     accent: '#e09a3a',
-    route: '/piechart',
+    route: '/graphs#sla',
   },
   {
     id: 'incidents',

@@ -2,8 +2,8 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Login from './components/Login'
 import Chatbot from './components/Chatbot'
 import Tickets from './components/Tickets'
-import Graphics from './components/Graphs'
-import Dashboard from './components/dashboard'
+import Graphs from './components/Graphs'
+import Dashboard from './components/Dashboard'
 import './App.css'
 
 function App() {
@@ -13,8 +13,8 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route path="/chat" element={<Chatbot />} />
         <Route path="/tickets" element={<Tickets />} />
-        <Route path="/graphs" element = {<Graphics/>} />
-        <Route path="/dashboard" element = {<Dashboard/>} />
+        <Route path="/graphs" element = {<Graphs />} />
+        <Route path="/dashboard" element = {<Dashboard />} />
       </Routes>
     </BrowserRouter>
   )

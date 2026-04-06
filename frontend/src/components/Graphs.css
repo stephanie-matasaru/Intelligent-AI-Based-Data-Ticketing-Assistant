@@ -1,4 +1,4 @@
-.dashboard-root {
+.graphs-root {
   background: #0f0f1e;
   color: white;
   min-height: 100vh;
@@ -34,16 +34,16 @@
 }
 
 /* Main */
-.dash-main { padding: 2rem 2.5rem; max-width: 1400px; margin: 0 auto; }
+.graphs-main { padding: 2rem 2.5rem; max-width: 1400px; margin: 0 auto; }
 
 /* Header */
-.dash-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; }
-.dash-title { font-size: 1.8rem; font-weight: 700; letter-spacing: -0.03em; margin: 0 0 0.4rem; }
-.dash-subtitle { display: flex; align-items: center; gap: 0.5rem; }
-.dash-subtitle-text { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.12em; color: #A1CEBC; }
-.dash-meta { text-align: right; }
-.meta-label { display: block; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.4); margin-bottom: 0.25rem; }
-.meta-value { font-size: 2rem; font-weight: 700; color: #A1CEBC; }
+.graphs-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; }
+.graphs-title { font-size: 1.8rem; font-weight: 700; letter-spacing: -0.03em; margin: 0 0 0.4rem; }
+.graphs-subtitle { display: flex; align-items: center; gap: 0.5rem; }
+.graphs-subtitle-text { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.12em; color: #A1CEBC; }
+.graphs-meta { text-align: right; }
+.graphs-meta-label { display: block; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.4); margin-bottom: 0.25rem; }
+.graphs-meta-value { font-size: 2rem; font-weight: 700; color: #A1CEBC; }
 
 /* Pulse */
 .ai-pulse {
