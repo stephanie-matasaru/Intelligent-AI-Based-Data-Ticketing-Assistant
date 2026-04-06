@@ -3,6 +3,7 @@ import Login from './components/Login'
 import Chatbot from './components/Chatbot'
 import Tickets from './components/Tickets'
 import Graphics from './components/Graphs'
+import Dashboard from './components/dashboard'
 import './App.css'
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
         <Route path="/chat" element={<Chatbot />} />
         <Route path="/tickets" element={<Tickets />} />
         <Route path="/graphs" element = {<Graphics/>} />
+        <Route path="/dashboard" element = {<Dashboard/>} />
       </Routes>
     </BrowserRouter>
   )

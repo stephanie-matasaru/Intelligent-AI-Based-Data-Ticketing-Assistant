@@ -9,7 +9,7 @@ function Navbar() {
       <div className="nav-left">
         <span className="nav-logo">AI Assistant</span>
         <div className="nav-links">
-          <Link to="/" className={`nav-link ${pathname === '/' ? 'nav-link--active' : ''}`}>Dashboard</Link>
+          <Link to="/dashboard" className={`nav-link ${pathname === '/dashboard' ? 'nav-link--active' : ''}`}>Dashboard</Link>
           <Link to="/tickets" className={`nav-link ${pathname === '/tickets' ? 'nav-link--active' : ''}`}>Tickets</Link>
           <Link to="/graphs" className={`nav-link ${pathname === '/graphs' ? 'nav-link--active' : ''}`}>Archive</Link>
           <Link to="/chat" className={`nav-link ${pathname === '/chat' ? 'nav-link--active' : ''}`}>Chatbot</Link>
