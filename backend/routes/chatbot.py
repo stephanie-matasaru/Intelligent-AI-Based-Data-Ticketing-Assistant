@@ -43,6 +43,12 @@ def clean_sql(sql: str) -> str:
     sql = re.sub(r"```sql|```", "", sql)
     return sql.strip()
 
+FORBIDDEN = ["DROP", "DELETE", "UPDATE", "INSERT", "ALTER", "EXEC", "TRUNCATE"]
+
+def is_safe_sql(sql: str) -> bool:
+    sql_upper = sql.upper()
+    return not any(word in sql_upper for word in FORBIDDEN)
+
 @router.post("/")
 def ask_chatbot(data: ChatRequest):
     client = get_ai_client()
@@ -73,6 +79,9 @@ def ask_chatbot(data: ChatRequest):
     # validate SQL 
     if not sql_query.strip().upper().startswith("SELECT"):
         raise HTTPException(status_code=400, detail="Only SELECT queries are allowed")
+
+    if not is_safe_sql(sql_query):
+        raise HTTPException(status_code=400, detail="Unsafe SQL query detected")
 
     # 2. execute SQL on DB
     try:
