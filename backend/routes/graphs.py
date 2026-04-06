@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Query
 from db import get_connection
-from typing import Optional
+from typing import Optional, Literal
+from datetime import datetime
 
 router = APIRouter()
 
@@ -31,10 +32,10 @@ def build_filters(start_date, end_date, priority, status, team):
 # Returns: [{"name": "Critical", "count": 72}, ...]
 @router.get("/by-priority")
 def tickets_by_priority(
-    start_date: Optional[str] = Query(None),
-    end_date: Optional[str] = Query(None),
-    priority: Optional[str] = Query(None),
-    status: Optional[str] = Query(None),
+    start_date: Optional[datetime] = Query(None),
+    end_date: Optional[datetime] = Query(None),
+    priority: Optional[Literal["Critical", "High", "Medium", "Low"]] = Query(None),
+    status: Optional[Literal["Open", "In Progress", "Pending", "Resolved", "Closed"]] = Query(None),
     team: Optional[str] = Query(None)
 ):
     where_clause, params = build_filters(start_date, end_date, priority, status, team)
@@ -55,10 +56,10 @@ def tickets_by_priority(
 # Returns: [{"name": "Open", "count": 45}, ...]
 @router.get("/by-status")
 def tickets_by_status(
-    start_date: Optional[str] = Query(None),
-    end_date: Optional[str] = Query(None),
-    priority: Optional[str] = Query(None),
-    status: Optional[str] = Query(None),
+    start_date: Optional[datetime] = Query(None),
+    end_date: Optional[datetime] = Query(None),
+    priority: Optional[Literal["Critical", "High", "Medium", "Low"]] = Query(None),
+    status: Optional[Literal["Open", "In Progress", "Pending", "Resolved", "Closed"]] = Query(None),
     team: Optional[str] = Query(None)
 ):
     where_clause, params = build_filters(start_date, end_date, priority, status, team)
@@ -79,10 +80,10 @@ def tickets_by_status(
 # Returns: {"sla_met": 590, "sla_breached": 48}
 @router.get("/sla")
 def sla_compliance(
-    start_date: Optional[str] = Query(None),
-    end_date: Optional[str] = Query(None),
-    priority: Optional[str] = Query(None),
-    status: Optional[str] = Query(None),
+    start_date: Optional[datetime] = Query(None),
+    end_date: Optional[datetime] = Query(None),
+    priority: Optional[Literal["Critical", "High", "Medium", "Low"]] = Query(None),
+    status: Optional[Literal["Open", "In Progress", "Pending", "Resolved", "Closed"]] = Query(None),
     team: Optional[str] = Query(None)
 ):
     where_clause, params = build_filters(start_date, end_date, priority, status, team)
@@ -90,8 +91,10 @@ def sla_compliance(
     cursor = conn.cursor()
     cursor.execute(f"""
         SELECT 
-            SUM(CASE WHEN t.resolved_datetime <= t.estimated_resolution THEN 1 ELSE 0 END) as sla_met,
-            SUM(CASE WHEN t.resolved_datetime > t.estimated_resolution THEN 1 ELSE 0 END) as sla_breached
+            SUM(CASE WHEN t.resolved_datetime IS NOT NULL AND t.resolved_datetime <= t.estimated_resolution THEN 1 ELSE 0 END) as sla_met,
+            SUM(CASE WHEN (t.resolved_datetime IS NOT NULL AND t.resolved_datetime > t.estimated_resolution)
+                     OR (t.resolved_datetime IS NULL AND GETDATE() > t.estimated_resolution)
+                     THEN 1 ELSE 0 END) as sla_breached
         FROM tickets t
         JOIN priorities p ON t.priority_id = p.priority_id
         {where_clause}
@@ -107,10 +110,10 @@ def sla_compliance(
 # Returns: [{"day": "2024-03-01", "count": 16}, ...]
 @router.get("/timeline")
 def tickets_timeline(
-    start_date: Optional[str] = Query(None),
-    end_date: Optional[str] = Query(None),
-    priority: Optional[str] = Query(None),
-    status: Optional[str] = Query(None),
+    start_date: Optional[datetime] = Query(None),
+    end_date: Optional[datetime] = Query(None),
+    priority: Optional[Literal["Critical", "High", "Medium", "Low"]] = Query(None),
+    status: Optional[Literal["Open", "In Progress", "Pending", "Resolved", "Closed"]] = Query(None),
     team: Optional[str] = Query(None)
 ):
     where_clause, params = build_filters(start_date, end_date, priority, status, team)
