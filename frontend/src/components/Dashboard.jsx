@@ -27,7 +27,7 @@ const NAV_CARDS = [
     label: 'AI Chatbot',
     description: 'Talk to the AI analyst',
     accent: '#7b6cf6',
-    route: '/chatbot',
+    route: '/chat',
   },
   {
     id: 'charts',
