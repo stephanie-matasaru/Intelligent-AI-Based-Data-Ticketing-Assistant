@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import './Graphs.css'
+import './Navbar.css'
 
 function Navbar() {
   const { pathname } = useLocation()
