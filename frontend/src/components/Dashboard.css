@@ -4,13 +4,23 @@
   color: white;
   min-height: 100vh;
   font-family: inherit;
+
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  position: relative;
 }
+
 
 /* ── Main ─────────────────────────────────────────── */
 .db-main {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2.5rem 2.5rem 4rem;
+
+  background: rgba(15, 15, 30, 0.75);
+  backdrop-filter: blur(2px);
+  min-height: calc(100vh - 5rem);
 }
 
 /* ── Header ───────────────────────────────────────── */

@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import Navbar from './Navbar'
 import './Dashboard.css'
+import bgImage from '../assets/dash_background.jpg'
 
 const CURRENT_USER = 'test' // e.g. 'admin', 'test'
 
@@ -59,7 +60,7 @@ function Dashboard() {
   const navigate = useNavigate()
 
   return (
-    <div className="db-root">
+    <div className="db-root" style={{ backgroundImage: `url(${bgImage})` }}>
       <Navbar />
 
       <main className="db-main">
@@ -78,14 +79,7 @@ function Dashboard() {
             </div>
           </div>
 
-          {/* Background placeholder */}
-          <div className="db-hero-image">
-            <div className="db-hero-placeholder">
-              {/* Replace this div with: <img src="your-image.png" alt="hero" /> */}
-              <span className="material-symbols-outlined db-hero-icon">image</span>
-              <span className="db-hero-hint">Add your image here</span>
-            </div>
-          </div>
+          
         </div>
 
         <div className="db-cards-grid">
