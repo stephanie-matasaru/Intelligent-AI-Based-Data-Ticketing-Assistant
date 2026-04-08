@@ -3,376 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import Navbar from './Navbar'
 import { useEffect } from 'react'
 
-// Mock data based 
-/*
-const MOCK_TICKETS = [
-  {
-    ticket_id: 1042,
-    pending_duration: "2h 15m", // Mapped to Time Remaining
-    ticket_number: "INC-2026-001", // Mapped to Incident Number
-    priority_id: "P1 - Critical",
-    assigned_person: "Alex Vance",
-    status: "In Progress",
-    submit_datetime: "02/01/2026 09:30", // Start Date
-    estimated_resolution: "02/01/2026 14:00", // Resolution Date
-    last_modified: "02/01/2026 10:15",
-    service: "Active Directory",
-    project: "Network Migration",
-    team: "Identity Access", // Assigned Group
-  },
-  {
-    ticket_id: 1043,
-    pending_duration: "5h 30m",
-    ticket_number: "REQ-2026-089",
-    priority_id: "P3 - Moderate",
-    assigned_person: "Sarah Chen",
-    status: "Assigned",
-    submit_datetime: "02/02/2026 11:00",
-    estimated_resolution: "02/05/2026 17:00",
-    last_modified: "02/02/2026 11:05",
-    service: "Hardware Provisioning",
-    project: "New Hire Onboarding",
-    team: "IT Support Desk",
-  },
-  {
-    ticket_id: 1044,
-    pending_duration: "0h",
-    ticket_number: "INC-2026-042",
-    priority_id: "P2 - High",
-    assigned_person: "Unassigned",
-    status: "Open",
-    submit_datetime: "02/03/2026 08:15",
-    estimated_resolution: "02/03/2026 12:00",
-    last_modified: "02/03/2026 08:15",
-    service: "VPN Access",
-    project: "Remote Workforce",
-    team: "Network Security",
-  },
-  {
-    ticket_id: 1045,
-    pending_duration: "1h 10m",
-    ticket_number: "INC-2026-067",
-    priority_id: "P2 - High",
-    assigned_person: "David Kim",
-    status: "In Progress",
-    submit_datetime: "02/04/2026 14:20",
-    estimated_resolution: "02/04/2026 18:00",
-    last_modified: "02/04/2026 15:00",
-    service: "Email Services",
-    project: "Exchange Migration",
-    team: "SysAdmin",
-  },
-  {
-    ticket_id: 1046,
-    pending_duration: "48h 0m",
-    ticket_number: "REQ-2026-102",
-    priority_id: "P4 - Low",
-    assigned_person: "Unassigned",
-    status: "Open",
-    submit_datetime: "02/05/2026 09:00",
-    estimated_resolution: "02/10/2026 17:00",
-    last_modified: "02/05/2026 09:00",
-    service: "Software Licensing",
-    project: "Q1 Renewals",
-    team: "IT Procurement",
-  },
-  {
-    ticket_id: 1047,
-    pending_duration: "0h 15m",
-    ticket_number: "INC-2026-088",
-    priority_id: "P1 - Critical",
-    assigned_person: "Maria Garcia",
-    status: "Assigned",
-    submit_datetime: "02/06/2026 10:45",
-    estimated_resolution: "02/06/2026 12:45",
-    last_modified: "02/06/2026 10:50",
-    service: "Cloud Infrastructure",
-    project: "AWS Production",
-    team: "Cloud Ops",
-  },
-  {
-    ticket_id: 1048,
-    pending_duration: "12h 30m",
-    ticket_number: "REQ-2026-115",
-    priority_id: "P3 - Moderate",
-    assigned_person: "Alex Vance",
-    status: "Pending",
-    submit_datetime: "02/07/2026 16:30",
-    estimated_resolution: "02/09/2026 12:00",
-    last_modified: "02/08/2026 09:15",
-    service: "Hardware Provisioning",
-    project: "Device Refresh",
-    team: "IT Support Desk",
-  },
-  {
-    ticket_id: 1049,
-    pending_duration: "3h 45m",
-    ticket_number: "INC-2026-092",
-    priority_id: "P2 - High",
-    assigned_person: "Sarah Chen",
-    status: "Resolved",
-    submit_datetime: "02/08/2026 11:15",
-    estimated_resolution: "02/08/2026 16:00",
-    last_modified: "02/08/2026 15:30",
-    service: "Database Access",
-    project: "ERP Upgrade",
-    team: "Data Team",
-  },
-  {
-    ticket_id: 1050,
-    pending_duration: "1h 0m",
-    ticket_number: "INC-2026-095",
-    priority_id: "P3 - Moderate",
-    assigned_person: "James Wilson",
-    status: "In Progress",
-    submit_datetime: "02/09/2026 13:00",
-    estimated_resolution: "02/09/2026 17:00",
-    last_modified: "02/09/2026 13:30",
-    service: "Active Directory",
-    project: "Security Audit",
-    team: "Identity Access",
-  },
-  {
-    ticket_id: 1051,
-    pending_duration: "24h 20m",
-    ticket_number: "REQ-2026-120",
-    priority_id: "P4 - Low",
-    assigned_person: "Elena Rostova",
-    status: "Pending",
-    submit_datetime: "02/10/2026 08:30",
-    estimated_resolution: "02/15/2026 17:00",
-    last_modified: "02/11/2026 09:00",
-    service: "Intranet Portal",
-    project: "Content Migration",
-    team: "Web Services",
-  },
-  {
-    ticket_id: 1052,
-    pending_duration: "0h 45m",
-    ticket_number: "INC-2026-104",
-    priority_id: "P1 - Critical",
-    assigned_person: "Unassigned",
-    status: "Open",
-    submit_datetime: "02/11/2026 15:45",
-    estimated_resolution: "02/11/2026 17:45",
-    last_modified: "02/11/2026 15:45",
-    service: "Network Connectivity",
-    project: "Office Expansion",
-    team: "Network Security",
-  },
-  {
-    ticket_id: 1053,
-    pending_duration: "5h 15m",
-    ticket_number: "REQ-2026-132",
-    priority_id: "P3 - Moderate",
-    assigned_person: "Marcus Johnson",
-    status: "In Progress",
-    submit_datetime: "02/12/2026 09:15",
-    estimated_resolution: "02/13/2026 12:00",
-    last_modified: "02/12/2026 11:30",
-    service: "VPN Access",
-    project: "Remote Workforce",
-    team: "Network Security",
-  },
-  {
-    ticket_id: 1054,
-    pending_duration: "2h 30m",
-    ticket_number: "INC-2026-112",
-    priority_id: "P2 - High",
-    assigned_person: "David Kim",
-    status: "Assigned",
-    submit_datetime: "02/13/2026 14:00",
-    estimated_resolution: "02/13/2026 18:00",
-    last_modified: "02/13/2026 14:15",
-    service: "Email Services",
-    project: "Exchange Migration",
-    team: "SysAdmin",
-  },
-  {
-    ticket_id: 1055,
-    pending_duration: "72h 0m",
-    ticket_number: "REQ-2026-145",
-    priority_id: "P4 - Low",
-    assigned_person: "Alex Vance",
-    status: "Closed",
-    submit_datetime: "02/14/2026 10:00",
-    estimated_resolution: "02/18/2026 17:00",
-    last_modified: "02/17/2026 16:45",
-    service: "Software Licensing",
-    project: "Q1 Renewals",
-    team: "IT Procurement",
-  },
-  {
-    ticket_id: 1056,
-    pending_duration: "0h 10m",
-    ticket_number: "INC-2026-125",
-    priority_id: "P1 - Critical",
-    assigned_person: "Maria Garcia",
-    status: "Resolved",
-    submit_datetime: "02/15/2026 08:00",
-    estimated_resolution: "02/15/2026 10:00",
-    last_modified: "02/15/2026 09:45",
-    service: "Cloud Infrastructure",
-    project: "AWS Production",
-    team: "Cloud Ops",
-  },
-  {
-    ticket_id: 1057,
-    pending_duration: "18h 45m",
-    ticket_number: "REQ-2026-158",
-    priority_id: "P3 - Moderate",
-    assigned_person: "Unassigned",
-    status: "Open",
-    submit_datetime: "02/16/2026 16:15",
-    estimated_resolution: "02/18/2026 12:00",
-    last_modified: "02/16/2026 16:15",
-    service: "Hardware Provisioning",
-    project: "New Hire Onboarding",
-    team: "IT Support Desk",
-  },
-  {
-    ticket_id: 1058,
-    pending_duration: "4h 20m",
-    ticket_number: "INC-2026-138",
-    priority_id: "P2 - High",
-    assigned_person: "Sarah Chen",
-    status: "In Progress",
-    submit_datetime: "02/17/2026 11:40",
-    estimated_resolution: "02/17/2026 16:00",
-    last_modified: "02/17/2026 13:00",
-    service: "Database Access",
-    project: "ERP Upgrade",
-    team: "Data Team",
-  },
-  {
-    ticket_id: 1059,
-    pending_duration: "2h 15m",
-    ticket_number: "REQ-2026-170",
-    priority_id: "P3 - Moderate",
-    assigned_person: "Elena Rostova",
-    status: "Assigned",
-    submit_datetime: "02/18/2026 13:45",
-    estimated_resolution: "02/20/2026 17:00",
-    last_modified: "02/18/2026 14:00",
-    service: "Intranet Portal",
-    project: "Content Migration",
-    team: "Web Services",
-  },
-  {
-    ticket_id: 1060,
-    pending_duration: "0h 30m",
-    ticket_number: "INC-2026-150",
-    priority_id: "P1 - Critical",
-    assigned_person: "Marcus Johnson",
-    status: "In Progress",
-    submit_datetime: "02/19/2026 09:30",
-    estimated_resolution: "02/19/2026 11:30",
-    last_modified: "02/19/2026 09:45",
-    service: "Network Connectivity",
-    project: "Office Expansion",
-    team: "Network Security",
-  },
-  {
-    ticket_id: 1061,
-    pending_duration: "6h 0m",
-    ticket_number: "REQ-2026-182",
-    priority_id: "P3 - Moderate",
-    assigned_person: "James Wilson",
-    status: "Pending",
-    submit_datetime: "02/20/2026 10:00",
-    estimated_resolution: "02/23/2026 12:00",
-    last_modified: "02/20/2026 14:00",
-    service: "Active Directory",
-    project: "Security Audit",
-    team: "Identity Access",
-  },
-  {
-    ticket_id: 1062,
-    pending_duration: "1h 45m",
-    ticket_number: "INC-2026-165",
-    priority_id: "P2 - High",
-    assigned_person: "Maria Garcia",
-    status: "Resolved",
-    submit_datetime: "02/23/2026 15:15",
-    estimated_resolution: "02/23/2026 19:00",
-    last_modified: "02/23/2026 16:45",
-    service: "Cloud Infrastructure",
-    project: "AWS Production",
-    team: "Cloud Ops",
-  },
-  {
-    ticket_id: 1063,
-    pending_duration: "96h 0m",
-    ticket_number: "REQ-2026-195",
-    priority_id: "P4 - Low",
-    assigned_person: "Unassigned",
-    status: "Open",
-    submit_datetime: "02/24/2026 08:00",
-    estimated_resolution: "03/01/2026 17:00",
-    last_modified: "02/24/2026 08:00",
-    service: "Software Licensing",
-    project: "Q1 Renewals",
-    team: "IT Procurement",
-  },
-  {
-    ticket_id: 1064,
-    pending_duration: "3h 10m",
-    ticket_number: "INC-2026-178",
-    priority_id: "P2 - High",
-    assigned_person: "Alex Vance",
-    status: "In Progress",
-    submit_datetime: "02/25/2026 11:50",
-    estimated_resolution: "02/25/2026 16:00",
-    last_modified: "02/25/2026 13:00",
-    service: "Email Services",
-    project: "Exchange Migration",
-    team: "SysAdmin",
-  },
-  {
-    ticket_id: 1065,
-    pending_duration: "0h 5m",
-    ticket_number: "INC-2026-190",
-    priority_id: "P1 - Critical",
-    assigned_person: "David Kim",
-    status: "Assigned",
-    submit_datetime: "02/26/2026 14:55",
-    estimated_resolution: "02/26/2026 16:55",
-    last_modified: "02/26/2026 15:00",
-    service: "Database Access",
-    project: "ERP Upgrade",
-    team: "Data Team",
-  },
-  {
-    ticket_id: 1066,
-    pending_duration: "8h 30m",
-    ticket_number: "REQ-2026-210",
-    priority_id: "P3 - Moderate",
-    assigned_person: "Sarah Chen",
-    status: "Closed",
-    submit_datetime: "02/27/2026 09:30",
-    estimated_resolution: "03/02/2026 17:00",
-    last_modified: "02/28/2026 11:15",
-    service: "Hardware Provisioning",
-    project: "Device Refresh",
-    team: "IT Support Desk",
-  },
-  {
-    ticket_id: 1067,
-    pending_duration: "1h 20m",
-    ticket_number: "INC-2026-205",
-    priority_id: "P3 - Moderate",
-    assigned_person: "Elena Rostova",
-    status: "In Progress",
-    submit_datetime: "03/02/2026 10:40",
-    estimated_resolution: "03/02/2026 15:00",
-    last_modified: "03/02/2026 11:00",
-    service: "Intranet Portal",
-    project: "Content Migration",
-    team: "Web Services",
-  }
-]
-  */
-
 function Tickets() {
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
@@ -391,25 +21,22 @@ function Tickets() {
 
   //  API CALL 
   useEffect(() => {
-    const url = `http://localhost:8000/?page=${currentPage}&page_size=${rowsPerPage}`;
+    const url = `http://127.0.0.1:8000/api/tickets/?page=${currentPage}&page_size=${rowsPerPage}`;
     
     fetch(url)
       .then(response => response.json())
       .then(data => {
-        // 'data.items' and 'data.total' match the exact keys from your Python code!
-        setDisplayedTickets(data.items);
-        setTotalTickets(data.total);
+        
+        // added safety nets (|| []) so if it fails, it just shows an empty table instead of crashing the whole page
+        setDisplayedTickets(data.items || []);
+        setTotalTickets(data.total || 0);
       })
       .catch(error => console.error("Error fetching tickets:", error));
-  }, [currentPage, rowsPerPage]); // This array tells React to re-run the fetch if the page or rows change
+  }, [currentPage, rowsPerPage]); //array tells React to re-run the fetch if the page or rows change
 
 
   const totalPages = Math.ceil(totalTickets / rowsPerPage) || 1;
   const startIndex = (currentPage - 1) * rowsPerPage;
-  
- /* const displayedTickets = MOCK_TICKETS.slice(startIndex, endIndex);
-  const totalPages = Math.ceil(MOCK_TICKETS.length / rowsPerPage); */
-
   
 
   return (
@@ -554,8 +181,17 @@ function Tickets() {
                     <td className="p-4 text-[#A1CEBC] font-mono">{ticket.pending_duration}</td>
                     <td className="p-4 text-white">{ticket.ticket_number}</td>
                     <td className="p-4">
-                      <span className={`px-2 py-1 rounded text-xs ${ticket.priority_id.includes('P1') ? 'bg-red-500/20 text-red-300' : ticket.priority_id.includes('P2') ? 'bg-orange-500/20 text-orange-300' : 'bg-blue-500/20 text-blue-300'}`}>
-                        {ticket.priority_id}
+                      <span className={`px-2 py-1 rounded text-xs ${
+                        ticket.priority_id === 1 ? 'bg-red-500/20 text-red-300' : 
+                        ticket.priority_id === 2 ? 'bg-orange-500/20 text-orange-300' : 
+                        ticket.priority_id === 3 ? 'bg-red-500/20 text-blue-300' :
+                        'bg-blue-500/20 text-green-300'
+                      }`}>
+                        {ticket.priority_id === 1 ? 'Critical' :
+                         ticket.priority_id === 2 ? 'High' :
+                         ticket.priority_id === 3 ? 'Medium' :
+                        'Low'
+                        }
                       </span>
                     </td>
                     <td className="p-4 text-white/80">{ticket.assigned_person}</td>
