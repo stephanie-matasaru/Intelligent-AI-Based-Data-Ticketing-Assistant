@@ -4,6 +4,7 @@ import Navbar from './Navbar'
 import { useEffect } from 'react'
 
 // Mock data based 
+/*
 const MOCK_TICKETS = [
   {
     ticket_id: 1042,
@@ -370,6 +371,7 @@ const MOCK_TICKETS = [
     team: "Web Services",
   }
 ]
+  */
 
 function Tickets() {
   const navigate = useNavigate()
@@ -384,11 +386,29 @@ function Tickets() {
   const [rowsPerPage, setRowsPerPage] = useState(25)
   const [currentPage, setCurrentPage] = useState(1)
 
+  const [displayedTickets, setDisplayedTickets] = useState([])
+  const [totalTickets, setTotalTickets] = useState(0)
+
+  //  API CALL 
+  useEffect(() => {
+    const url = `http://localhost:8000/?page=${currentPage}&page_size=${rowsPerPage}`;
+    
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        // 'data.items' and 'data.total' match the exact keys from your Python code!
+        setDisplayedTickets(data.items);
+        setTotalTickets(data.total);
+      })
+      .catch(error => console.error("Error fetching tickets:", error));
+  }, [currentPage, rowsPerPage]); // This array tells React to re-run the fetch if the page or rows change
+
+
+  const totalPages = Math.ceil(totalTickets / rowsPerPage) || 1;
   const startIndex = (currentPage - 1) * rowsPerPage;
-  const endIndex = startIndex + rowsPerPage;
   
-  const displayedTickets = MOCK_TICKETS.slice(startIndex, endIndex);
-  const totalPages = Math.ceil(MOCK_TICKETS.length / rowsPerPage);
+ /* const displayedTickets = MOCK_TICKETS.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(MOCK_TICKETS.length / rowsPerPage); */
 
   
 
@@ -558,7 +578,7 @@ function Tickets() {
             <div className="absolute top-0 left-0 right-0 h-1 bg-[#6B4D90]"></div>
 
             <div className="font-headline font-bold text-white tracking-widest uppercase text-sm mb-4 sm:mb-0">
-              Ticket Count : <span className="text-[#A1CEBC] ml-2 text-lg">{MOCK_TICKETS.length}</span>
+              Ticket Count : <span className="text-[#A1CEBC] ml-2 text-lg">{totalTickets}</span>
             </div>
 
             <div className="flex items-center gap-6 text-[0.6875rem] text-white/50 font-label uppercase tracking-widest">
@@ -584,7 +604,7 @@ function Tickets() {
 
               {/* the pagination text and arrows */}
               <div className="flex items-center gap-4">
-                <span>{startIndex + 1}–{Math.min(endIndex, MOCK_TICKETS.length)} of {MOCK_TICKETS.length}</span>
+                <span>{startIndex + 1}–{Math.min(currentPage * rowsPerPage, totalTickets)} of {totalTickets}</span>
                 <div className="flex gap-1">
                   
                   {/* Left Arrow */}
