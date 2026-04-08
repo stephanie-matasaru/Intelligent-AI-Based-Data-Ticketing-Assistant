@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from './Navbar'
+import { useEffect } from 'react'
 
 // Mock data based 
 const MOCK_TICKETS = [
@@ -551,7 +552,7 @@ function Tickets() {
             </table>
           </div>
 
-          {/* --- Ticket Count Footer for the Mock Data --- */}
+          {/* --- Footer --- */}
           <div className="mt-4 flex flex-col sm:flex-row items-center justify-between bg-[#13132a] px-6 py-4 rounded-xl border border-white/5 shadow-lg flex-shrink-0 relative overflow-hidden">
             
             <div className="absolute top-0 left-0 right-0 h-1 bg-[#6B4D90]"></div>
@@ -581,7 +582,7 @@ function Tickets() {
                 </div>
               </div>
 
-              {/* functional pagination text and arrow */}
+              {/* the pagination text and arrows */}
               <div className="flex items-center gap-4">
                 <span>{startIndex + 1}–{Math.min(endIndex, MOCK_TICKETS.length)} of {MOCK_TICKETS.length}</span>
                 <div className="flex gap-1">
@@ -610,8 +611,6 @@ function Tickets() {
           </div>
 
         </section>
-
-        
 
       </main>
     </div>
