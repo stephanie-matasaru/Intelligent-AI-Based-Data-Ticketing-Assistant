@@ -21,7 +21,7 @@ function Tickets() {
 
   //  API CALL 
   useEffect(() => {
-    const url = `http://127.0.0.1:8000/api/tickets/?page=${currentPage}&page_size=${rowsPerPage}`;
+    const url = `http://127.0.0.1:8000/api/tickets/?page=${currentPage}&page_size=${rowsPerPage}&status=${status}&priority=${priority}`;
     
     fetch(url)
       .then(response => response.json())
@@ -32,7 +32,7 @@ function Tickets() {
         setTotalTickets(data.total || 0);
       })
       .catch(error => console.error("Error fetching tickets:", error));
-  }, [currentPage, rowsPerPage]); //array tells React to re-run the fetch if the page or rows change
+  }, [currentPage, rowsPerPage, status, priority]); //array tells React to re-run the fetch if the page or rows change
 
 
   const totalPages = Math.ceil(totalTickets / rowsPerPage) || 1;
@@ -100,7 +100,7 @@ function Tickets() {
               <div className="relative">
                 <select 
                   value={status}
-                  onChange={(e) => setStatus(e.target.value)}
+                  onChange={(e) => { setStatus(e.target.value); setCurrentPage(1); }}
                   className="bg-[#0a0a1a] text-white text-sm px-3 py-2.5 rounded-lg border border-white/10 outline-none appearance-none pr-8 cursor-pointer w-full min-w-[120px]"
                 >
                   <option value="all">All</option>
@@ -121,7 +121,7 @@ function Tickets() {
               <div className="relative">
                 <select 
                   value={priority}
-                  onChange={(e) => setPriority(e.target.value)}
+                  onChange={(e) => { setPriority(e.target.value); setCurrentPage(1); }}
                   className="bg-[#0a0a1a] text-white text-sm px-3 py-2.5 rounded-lg border border-white/10 outline-none appearance-none pr-8 cursor-pointer w-full min-w-[120px]"
                 >
                   <option value="all">All</option>
