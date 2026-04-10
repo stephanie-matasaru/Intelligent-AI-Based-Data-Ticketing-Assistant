@@ -60,7 +60,7 @@ async function handleSubmit() {
 
     localStorage.setItem('user', JSON.stringify(data.user))
     setSuccess(true)
-    setTimeout(() => { navigate('/chat') }, 800)
+    setTimeout(() => { navigate('/dashboard') }, 800)
 
   } catch (error) {
     showError(error.message)
