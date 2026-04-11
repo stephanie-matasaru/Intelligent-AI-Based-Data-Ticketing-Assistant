@@ -49,6 +49,7 @@ async function handleSubmit() {
     const response = await fetch('http://localhost:8000/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ username, password })
     })
 
@@ -58,7 +59,6 @@ async function handleSubmit() {
       throw new Error(data.detail || 'Login failed')
     }
 
-    localStorage.setItem('user', JSON.stringify(data.user))
     setSuccess(true)
     setTimeout(() => { navigate('/dashboard') }, 800)
 
