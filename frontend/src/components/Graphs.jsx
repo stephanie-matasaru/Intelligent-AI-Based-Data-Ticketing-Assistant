@@ -93,7 +93,7 @@ function Graphs() {
     if (filters.status   !== 'all') params.append('status',   filters.status)
     if (filters.team     !== 'all') params.append('team',      filters.team)
 
-    const base = 'http://localhost:8000'
+    const base = 'http://localhost:8000/api/graphs'
     const q = params.toString() ? `?${params.toString()}` : ''
 
     fetch(`${base}/by-priority${q}`).then(r => r.json()).then(setPriorityData)
