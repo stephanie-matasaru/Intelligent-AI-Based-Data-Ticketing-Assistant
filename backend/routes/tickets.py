@@ -1,64 +1,84 @@
 from fastapi import APIRouter, Query
 from db import get_connection
 from typing import Optional
+from enum import Enum
 
 router = APIRouter()
+
+
+class StatusEnum(str, Enum):
+    all = "all"
+    open = "Open"
+    in_progress = "In Progress"
+    pending = "Pending"
+    resolved = "Resolved"
+    closed = "Closed"
+
+
+class PriorityEnum(str, Enum):
+    all = "all"
+    critical = "Critical"
+    high = "High"
+    medium = "Medium"
+    low = "Low"
+
 
 @router.get("/")
 def get_tickets(
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1, le=100),
-    status: Optional[str] = Query("all"),
-    priority: Optional[str] = Query("all")
+    search: Optional[str] = Query(None),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+    status: StatusEnum = Query(StatusEnum.all),
+    priority: PriorityEnum = Query(PriorityEnum.all),
+    project: Optional[str] = Query(None),
+    service: Optional[str] = Query(None),
+    assignee: Optional[str] = Query(None)
 ):
-    offset = (page - 1) * page_size
-
-    conditions = []
-    params = []
-
-    if status and status != "all":
-        conditions.append("t.status =  ?")
-        params.append(status)
-
-    if priority and priority != "all":
-        conditions.append("p.priority_name = ?")
-        params.append(priority)
-
-    #join the conditions together
-    where_clause = "WHERE " + " AND ".join(conditions) if conditions else ""
-
     conn = get_connection()
     cursor = conn.cursor()
 
-    #total count for react's footer
-    count_query = f"""
-        SELECT COUNT(*)
-        FROM tickets t
-        LEFT JOIN priorities p ON t.priority_id = p.priority_id
-        {where_clause}
-    """
+    cursor.execute(
+        """
+        EXEC dbo.GetTicketsFiltered
+            @Page = ?,
+            @PageSize = ?,
+            @Search = ?,
+            @StartDate = ?,
+            @EndDate = ?,
+            @Status = ?,
+            @Priority = ?,
+            @Project = ?,
+            @Service = ?,
+            @Assignee = ?
+        """,
+        (
+            page,
+            page_size,
+            search,
+            start_date,
+            end_date,
+            status.value,
+            priority.value,
+            project,
+            service,
+            assignee
+        )
+    )
 
-    cursor.execute(count_query, params)
-    total = cursor.fetchone()[0]
-
-    #get the paginated data
-    data_query = f"""
-        SELECT t.* FROM tickets t
-        LEFT JOIN priorities p ON t.priority_id = p.priority_id
-        {where_clause}
-        ORDER BY t.submit_datetime DESC, t.ticket_id DESC
-        OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
-    """
-
-    data_params = params.copy()
-    data_params.extend([offset, page_size])
-    
-    cursor.execute(data_query, data_params)
     rows = cursor.fetchall()
-
     columns = [col[0] for col in cursor.description]
     items = [dict(zip(columns, row)) for row in rows]
+
+    total = items[0]["total_count"] if items else 0
+
+    # Remove total_count from each item before returning
+    for item in items:
+        item.pop("total_count", None)
+
     conn.close()
+
     return {
         "items": items,
         "page": page,
