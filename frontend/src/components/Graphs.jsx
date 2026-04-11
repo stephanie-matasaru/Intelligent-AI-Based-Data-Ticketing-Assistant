@@ -71,16 +71,41 @@ function Graphs() {
     startDate: '', endDate: '', priority: 'all', status: 'all', team: 'all',
   })
 
+  const [priorityData, setPriorityData] = useState(MOCK_PRIORITY)
+  const [statusData, setStatusData]     = useState(MOCK_STATUS)
+  const [slaData, setSlaData]           = useState(MOCK_SLA)
+  const [timelineData, setTimelineData] = useState(MOCK_TIMELINE)
+
   const { hash } = useLocation()
 
   useEffect(() => {
-    if (hash) {
-      const el = document.querySelector(hash)
-      if (el) el.scrollIntoView({ behavior: 'smooth' })
-    }
-  }, [hash])
+      if (hash) {
+        const el = document.querySelector(hash)
+        if (el) el.scrollIntoView({ behavior: 'smooth' })
+      }
+    }, [hash])
 
-  // cand avem backend: useEffect(() => { fetchData(filters) }, [filters])
+    useEffect(() => {
+    const params = new URLSearchParams()
+    if (filters.startDate) params.append('start_date', filters.startDate)
+    if (filters.endDate)   params.append('end_date',   filters.endDate)
+    if (filters.priority !== 'all') params.append('priority', filters.priority)
+    if (filters.status   !== 'all') params.append('status',   filters.status)
+    if (filters.team     !== 'all') params.append('team',      filters.team)
+
+    const base = 'http://localhost:8000'
+    const q = params.toString() ? `?${params.toString()}` : ''
+
+    fetch(`${base}/by-priority${q}`).then(r => r.json()).then(setPriorityData)
+    fetch(`${base}/by-status${q}`).then(r => r.json()).then(setStatusData)
+    fetch(`${base}/timeline${q}`).then(r => r.json()).then(setTimelineData)
+    fetch(`${base}/sla${q}`)
+      .then(r => r.json())
+      .then(d => setSlaData([
+        { name: 'SLA Met',      value: d.sla_met      },
+        { name: 'SLA Breached', value: d.sla_breached },
+      ]))
+  }, [filters])
 
   function handleFilter(key, value) {
     setFilters(prev => ({ ...prev, [key]: value }))
@@ -107,7 +132,7 @@ function Graphs() {
           </div>
           <div className="graphs-meta">
             <span className="graphs-meta-label">Total Tickets</span>
-            <span className="graphs-meta-value">{MOCK_PRIORITY.reduce((s, d) => s + d.count, 0)}</span>
+            <span className="graphs-meta-value">{priorityData.reduce((s, d) => s + d.count, 0)}</span>
           </div>
         </div>
 
@@ -170,16 +195,16 @@ function Graphs() {
           <div className="chart-card" id="priority">
             <div className="chart-card-header">
               <h2 className="chart-title">Tickets by Priority</h2>
-              <span className="chart-badge">{MOCK_PRIORITY.reduce((s,d) => s+d.count, 0)} total</span>
+              <span className="chart-badge">{priorityData.reduce((s,d) => s+d.count, 0)} total</span>
             </div>
             <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={MOCK_PRIORITY} barSize={36}>
+              <BarChart data={priorityData} barSize={36}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
                 <XAxis dataKey="name" stroke="#ffffff30" tick={{ fill: '#ffffff60', fontSize: 12 }} axisLine={false} tickLine={false} />
                 <YAxis stroke="#ffffff30" tick={{ fill: '#ffffff40', fontSize: 11 }} axisLine={false} tickLine={false} />
                 <Tooltip content={<CustomTooltip />} cursor={{ fill: '#ffffff05' }} />
                 <Bar dataKey="count" radius={[4,4,0,0]}>
-                  {MOCK_PRIORITY.map(entry => (
+                  {priorityData.map(entry => (
                     <Cell key={entry.name} fill={PRIORITY_COLORS[entry.name]} />
                   ))}
                 </Bar>
@@ -192,15 +217,15 @@ function Graphs() {
             <div className="chart-card-header">
               <h2 className="chart-title">SLA Compliance</h2>
               <span className="chart-badge">
-                {Math.round(MOCK_SLA[0].value / (MOCK_SLA[0].value + MOCK_SLA[1].value) * 100)}% met
+                {Math.round(slaData[0].value / (slaData[0].value + slaData[1].value) * 100)}% met
               </span>
             </div>
             <div className="donut-wrapper">
               <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
-                  <Pie data={MOCK_SLA} cx="50%" cy="50%" innerRadius={65} outerRadius={90}
+                  <Pie data={slaData} cx="50%" cy="50%" innerRadius={65} outerRadius={90}
                     paddingAngle={3} dataKey="value">
-                    {MOCK_SLA.map((entry, i) => (
+                    {slaData.map((entry, i) => (
                       <Cell key={entry.name} fill={SLA_COLORS[i]} />
                     ))}
                   </Pie>
@@ -208,12 +233,12 @@ function Graphs() {
                 </PieChart>
               </ResponsiveContainer>
               <div className="donut-center">
-                <span className="donut-number">{MOCK_SLA[0].value}</span>
+                <span className="donut-number">{slaData[0].value}</span>
                 <span className="donut-sub">SLA Met</span>
               </div>
             </div>
             <div className="sla-legend">
-              {MOCK_SLA.map((entry, i) => (
+              {slaData.map((entry, i) => (
                 <div key={entry.name} className="sla-legend-item">
                   <span className="sla-dot" style={{ background: SLA_COLORS[i] }} />
                   <span className="sla-legend-label">{entry.name}</span>
@@ -236,7 +261,7 @@ function Graphs() {
               </div>
             </div>
             <ResponsiveContainer width="100%" height={240}>
-              <LineChart data={MOCK_TIMELINE}>
+              <LineChart data={timelineData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
                 <XAxis dataKey="day" stroke="#ffffff30" tick={{ fill: '#ffffff60', fontSize: 12 }} axisLine={false} tickLine={false} />
                 <YAxis stroke="#ffffff30" tick={{ fill: '#ffffff40', fontSize: 11 }} axisLine={false} tickLine={false} />
@@ -252,16 +277,16 @@ function Graphs() {
           <div className="chart-card chart-card--wide" id="status">
             <div className="chart-card-header">
               <h2 className="chart-title">Tickets by Status</h2>
-              <span className="chart-badge">{MOCK_STATUS.reduce((s,d) => s+d.count, 0)} total</span>
+              <span className="chart-badge">{statusData.reduce((s,d) => s+d.count, 0)} total</span>
             </div>
             <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={MOCK_STATUS} barSize={40}>
+              <BarChart data={statusData} barSize={40}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
                 <XAxis dataKey="name" stroke="#ffffff30" tick={{ fill: '#ffffff60', fontSize: 12 }} axisLine={false} tickLine={false} />
                 <YAxis stroke="#ffffff30" tick={{ fill: '#ffffff40', fontSize: 11 }} axisLine={false} tickLine={false} />
                 <Tooltip content={<CustomTooltip />} cursor={{ fill: '#ffffff05' }} />
                 <Bar dataKey="count" radius={[4,4,0,0]}>
-                  {MOCK_STATUS.map(entry => (
+                  {statusData.map(entry => (
                     <Cell key={entry.name} fill={STATUS_COLORS[entry.name]} />
                   ))}
                 </Bar>
