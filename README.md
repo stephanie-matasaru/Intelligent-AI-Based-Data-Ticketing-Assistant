@@ -8,6 +8,7 @@
    - npm install
    - npm install react-router-dom
    - npm install recharts
+   - npm install xlsx
    - npm run dev
 
 The app should run on localhost:5173.
