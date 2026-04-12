@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from './Navbar'
+import * as XLSX from 'xlsx'
 
 function Tickets() {
   const navigate = useNavigate()
@@ -80,6 +81,46 @@ function Tickets() {
 
   const totalPages = Math.ceil(totalTickets / rowsPerPage) || 1;
   const startIndex = (currentPage - 1) * rowsPerPage;
+
+  // export to excel 
+  const exportToExcel = () => {
+    if (displayedTickets.length === 0) {
+      alert("No data to export!");
+      return;
+    }
+
+    const headers = [
+      "ID", "Time Remaining", "Incident Number", "Priority", 
+      "Assignee", "Status", "Start Date", "Resolution Date", 
+      "Last Modified", "Service", "Project", "Assigned Group"
+    ];
+
+    const dataRows = displayedTickets.map(ticket => [
+      ticket.ticket_id,
+      ticket.pending_duration || "0",
+      ticket.ticket_number,
+      ticket.priority || "Unknown",
+      ticket.assigned_person,
+      ticket.status,
+      ticket.submit_datetime ? new Date(ticket.submit_datetime).toLocaleString() : "",
+      ticket.estimated_resolution ? new Date(ticket.estimated_resolution).toLocaleString() : "",
+      ticket.last_modified ? new Date(ticket.last_modified).toLocaleString() : "",
+      ticket.service,
+      ticket.project,
+      ticket.team
+    ]);
+
+    const worksheetData = [headers, ...dataRows];
+
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    
+    const workbook = XLSX.utils.book_new();
+    
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Tickets");
+
+    const fileName = `Tickets_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
+  };
 
   return (
     <div className="bg-[#0f0f1e] text-white font-body h-screen flex flex-col overflow-hidden">
@@ -218,11 +259,11 @@ function Tickets() {
                 </select>
                 <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none text-[20px]">expand_more</span>
               </div>
-            </div>
+             </div>
 
-            <button className="ml-auto bg-[#4fc093] hover:bg-[#A1CEBC] text-[#0f0f1e] font-bold text-sm px-6 py-2.5 rounded-lg uppercase tracking-wider transition-colors shadow-[0_0_15px_rgba(79,192,147,0.3)]">
-              Export
-            </button>
+              <button onClick={exportToExcel} className="ml-auto bg-[#4fc093] hover:bg-[#A1CEBC] text-[#0f0f1e] font-bold text-sm px-6 py-2.5 rounded-lg uppercase tracking-wider transition-colors shadow-[0_0_15px_rgba(79,192,147,0.3)]">
+                 Export
+              </button>
           </div>
 
           {/* data table */}
