@@ -37,7 +37,7 @@ function Tickets() {
       .then(data => setProjectOptions(data.items || []))
       .catch(err => console.error("Error loading projects:", err));
 
-    fetch('http://127.0.0.1:8000/api/dropwown/services')
+    fetch('http://127.0.0.1:8000/api/dropdown/services')
       .then(res => res.json())
       .then(data => setServiceOptions(data.items || []))
       .catch(err => console.error("Error loading services:", err));
