@@ -23,7 +23,6 @@ function Chatbot() {
   ])
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
-  const navigate = useNavigate()
   const bottomRef = useRef(null)
 
   useEffect(() => {
@@ -202,19 +201,6 @@ function Chatbot() {
               </div>
             ))}
 
-            <div className="mt-4 pt-4 border-t border-white/5">
-              <div className="text-white/50 mx-4 my-1 p-4 flex items-center gap-3 hover:bg-white/5 hover:text-white rounded-xl transition-all cursor-pointer">
-                <span className="material-symbols-outlined">help</span>
-                <span className="font-body text-sm uppercase tracking-widest">Help</span>
-              </div>
-              <div
-                onClick={() => navigate('/')}
-                className="text-white/50 mx-4 my-1 p-4 flex items-center gap-3 hover:bg-white/5 hover:text-white rounded-xl transition-all cursor-pointer"
-              >
-                <span className="material-symbols-outlined">logout</span>
-                <span className="font-body text-sm uppercase tracking-widest">Sign Out</span>
-              </div>
-            </div>
           </nav>
         </aside>
       </main>
