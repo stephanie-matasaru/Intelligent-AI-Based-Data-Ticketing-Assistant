@@ -40,34 +40,34 @@ function Login() {
     return true
   }
 
-async function handleSubmit() {
-  setErrorMsg('')
-  if (!validate()) return
-  setLoading(true)
+  async function handleSubmit() {
+    setErrorMsg('')
+    if (!validate()) return
+    setLoading(true)
 
-  try {
-    const response = await fetch('http://localhost:8000/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ username, password })
-    })
+    try {
+      const response = await fetch('http://localhost:8000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ username, password })
+      })
 
-    const data = await response.json()
+      const data = await response.json()
 
-    if (!response.ok) {
-      throw new Error(data.detail || 'Login failed')
+      if (!response.ok) {
+        throw new Error(data.detail || 'Login failed')
+      }
+
+      setSuccess(true)
+      setTimeout(() => { navigate('/dashboard') }, 800)
+
+    } catch (error) {
+      showError(error.message)
     }
 
-    setSuccess(true)
-    setTimeout(() => { navigate('/dashboard') }, 800)
-
-  } catch (error) {
-    showError(error.message)
+    setLoading(false)
   }
-
-  setLoading(false)
-}
 
   function handleKeyDown(e) {
     if (e.key === 'Enter') handleSubmit()
@@ -95,6 +95,7 @@ async function handleSubmit() {
             className="btn-active mt-2 px-12 py-3.5 bg-ai-mint text-ai-dark font-bold text-sm tracking-wider uppercase rounded-xl hover:bg-white hover:scale-105 transition-all duration-300 focus:outline-none"
             type="button"
             onClick={openModal}
+            aria-label="Open login modal"
           >
             Log In
           </button>
@@ -105,19 +106,30 @@ async function handleSubmit() {
         <div
           className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-6"
           onClick={handleBackdropClick}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
         >
           <div className={`modal-card w-full max-w-sm bg-[#0f1117] border border-white/10 rounded-2xl p-8 shadow-2xl ${shake ? 'shake' : ''}`}>
 
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-lg font-bold text-white tracking-tight">Log in to your account</h2>
+                <h2 id="modal-title" className="text-lg font-bold text-white tracking-tight">Log in to your account</h2>
                 <p className="text-white/30 text-xs mt-1">AI Ticketing Assistant</p>
               </div>
-              <button onClick={closeModal} className="text-white/20 hover:text-white transition-colors text-2xl leading-none">&times;</button>
+              <button
+                onClick={closeModal}
+                aria-label="Close login modal"
+                className="text-white/20 hover:text-white transition-colors text-2xl leading-none">
+                &times;
+              </button>
             </div>
 
             {errorMsg && (
-              <div className="mb-5 px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-xs">
+              <div
+                role="alert"
+                aria-live="assertive"
+                className="mb-5 px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-xs">
                 {errorMsg}
               </div>
             )}
@@ -141,15 +153,19 @@ async function handleSubmit() {
                     onKeyDown={handleKeyDown}
                     className="input-field w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pr-16 text-white placeholder-white/20 text-sm"
                   />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)}
+                  <button
+                    type="button"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 text-xs uppercase tracking-wider">
                     {showPassword ? 'Hide' : 'Show'}
                   </button>
                 </div>
               </div>
               <button type="button" onClick={handleSubmit} disabled={loading}
+                aria-label={loading ? 'Logging in' : success ? 'Logged in successfully' : 'Log in'}
                 className={`btn-active w-full py-3.5 text-sm font-bold uppercase tracking-wider rounded-xl transition-all duration-300 flex items-center justify-center gap-2 ${success ? 'bg-ai-mint text-ai-dark' : 'bg-ai-mint text-ai-dark hover:bg-white'}`}>
-                {loading ? <span className="spinner" /> : success ? 'Logged In' : 'Log In'}
+                {loading ? <span className="spinner" aria-hidden="true" /> : success ? 'Logged In' : 'Log In'}
               </button>
             </div>
           </div>
