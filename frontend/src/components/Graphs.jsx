@@ -79,13 +79,13 @@ function Graphs() {
   const { hash } = useLocation()
 
   useEffect(() => {
-      if (hash) {
-        const el = document.querySelector(hash)
-        if (el) el.scrollIntoView({ behavior: 'smooth' })
-      }
-    }, [hash])
+    if (hash) {
+      const el = document.querySelector(hash)
+      if (el) el.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [hash])
 
-    useEffect(() => {
+  useEffect(() => {
     const params = new URLSearchParams()
     if (filters.startDate) params.append('start_date', filters.startDate)
     if (filters.endDate)   params.append('end_date',   filters.endDate)
@@ -120,36 +120,38 @@ function Graphs() {
 
       <Navbar />
 
-      <main className="graphs-main">
+      <main className="graphs-main" role="main">
 
         <div className="graphs-header">
           <div>
             <h1 className="graphs-title">KPI Dashboard</h1>
-            <div className="graphs-subtitle">
-              <div className="ai-pulse" />
+            <div className="graphs-subtitle" role="status" aria-label="Live analytics active">
+              <div className="ai-pulse" aria-hidden="true" />
               <span className="graphs-subtitle-text">Live Analytics</span>
             </div>
           </div>
           <div className="graphs-meta">
             <span className="graphs-meta-label">Total Tickets</span>
-            <span className="graphs-meta-value">{priorityData.reduce((s, d) => s + d.count, 0)}</span>
+            <span className="graphs-meta-value" aria-live="polite" aria-atomic="true">
+              {priorityData.reduce((s, d) => s + d.count, 0)}
+            </span>
           </div>
         </div>
 
-        <div className="filter-bar">
+        <div className="filter-bar" role="search" aria-label="Filter charts">
           <div className="filter-group">
-            <label className="filter-label">Start Date</label>
-            <input type="date" className="filter-input" value={filters.startDate}
+            <label className="filter-label" htmlFor="graph-start-date">Start Date</label>
+            <input id="graph-start-date" type="date" className="filter-input" value={filters.startDate}
               onChange={e => handleFilter('startDate', e.target.value)} />
           </div>
           <div className="filter-group">
-            <label className="filter-label">End Date</label>
-            <input type="date" className="filter-input" value={filters.endDate}
+            <label className="filter-label" htmlFor="graph-end-date">End Date</label>
+            <input id="graph-end-date" type="date" className="filter-input" value={filters.endDate}
               onChange={e => handleFilter('endDate', e.target.value)} />
           </div>
           <div className="filter-group">
-            <label className="filter-label">Priority</label>
-            <select className="filter-input" value={filters.priority}
+            <label className="filter-label" htmlFor="graph-priority">Priority</label>
+            <select id="graph-priority" className="filter-input" value={filters.priority}
               onChange={e => handleFilter('priority', e.target.value)}>
               <option value="all">All</option>
               <option value="Critical">Critical</option>
@@ -159,8 +161,8 @@ function Graphs() {
             </select>
           </div>
           <div className="filter-group">
-            <label className="filter-label">Status</label>
-            <select className="filter-input" value={filters.status}
+            <label className="filter-label" htmlFor="graph-status">Status</label>
+            <select id="graph-status" className="filter-input" value={filters.status}
               onChange={e => handleFilter('status', e.target.value)}>
               <option value="all">All</option>
               <option value="Open">Open</option>
@@ -171,8 +173,8 @@ function Graphs() {
             </select>
           </div>
           <div className="filter-group">
-            <label className="filter-label">Team</label>
-            <select className="filter-input" value={filters.team}
+            <label className="filter-label" htmlFor="graph-team">Team</label>
+            <select id="graph-team" className="filter-input" value={filters.team}
               onChange={e => handleFilter('team', e.target.value)}>
               <option value="all">All Teams</option>
               <option value="Support">Support</option>
@@ -183,8 +185,8 @@ function Graphs() {
               <option value="Data">Data</option>
             </select>
           </div>
-          <button className="filter-reset" onClick={handleReset}>
-            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>refresh</span>
+          <button className="filter-reset" onClick={handleReset} aria-label="Reset all filters">
+            <span className="material-symbols-outlined" style={{ fontSize: 16 }} aria-hidden="true">refresh</span>
             Reset
           </button>
         </div>
@@ -197,19 +199,30 @@ function Graphs() {
               <h2 className="chart-title">Tickets by Priority</h2>
               <span className="chart-badge">{priorityData.reduce((s,d) => s+d.count, 0)} total</span>
             </div>
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={priorityData} barSize={36}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
-                <XAxis dataKey="name" stroke="#ffffff30" tick={{ fill: '#ffffff60', fontSize: 12 }} axisLine={false} tickLine={false} />
-                <YAxis stroke="#ffffff30" tick={{ fill: '#ffffff40', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: '#ffffff05' }} />
-                <Bar dataKey="count" radius={[4,4,0,0]}>
-                  {priorityData.map(entry => (
-                    <Cell key={entry.name} fill={PRIORITY_COLORS[entry.name]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            {/* screen reader table */}
+            <table className="sr-only" aria-label="Tickets by priority data">
+              <thead><tr><th scope="col">Priority</th><th scope="col">Count</th></tr></thead>
+              <tbody>
+                {priorityData.map(d => (
+                  <tr key={d.name}><td>{d.name}</td><td>{d.count}</td></tr>
+                ))}
+              </tbody>
+            </table>
+            <div aria-hidden="true">
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={priorityData} barSize={36}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
+                  <XAxis dataKey="name" stroke="#ffffff30" tick={{ fill: '#ffffff60', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis stroke="#ffffff30" tick={{ fill: '#ffffff40', fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: '#ffffff05' }} />
+                  <Bar dataKey="count" radius={[4,4,0,0]}>
+                    {priorityData.map(entry => (
+                      <Cell key={entry.name} fill={PRIORITY_COLORS[entry.name]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
 
           {/* 2. Donut – SLA */}
@@ -220,31 +233,42 @@ function Graphs() {
                 {Math.round(slaData[0].value / (slaData[0].value + slaData[1].value) * 100)}% met
               </span>
             </div>
-            <div className="donut-wrapper">
-              <ResponsiveContainer width="100%" height={200}>
-                <PieChart>
-                  <Pie data={slaData} cx="50%" cy="50%" innerRadius={65} outerRadius={90}
-                    paddingAngle={3} dataKey="value">
-                    {slaData.map((entry, i) => (
-                      <Cell key={entry.name} fill={SLA_COLORS[i]} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="donut-center">
-                <span className="donut-number">{slaData[0].value}</span>
-                <span className="donut-sub">SLA Met</span>
-              </div>
-            </div>
-            <div className="sla-legend">
-              {slaData.map((entry, i) => (
-                <div key={entry.name} className="sla-legend-item">
-                  <span className="sla-dot" style={{ background: SLA_COLORS[i] }} />
-                  <span className="sla-legend-label">{entry.name}</span>
-                  <span className="sla-legend-value">{entry.value}</span>
+            {/* screen reader table */}
+            <table className="sr-only" aria-label="SLA compliance data">
+              <thead><tr><th scope="col">Category</th><th scope="col">Count</th></tr></thead>
+              <tbody>
+                {slaData.map(d => (
+                  <tr key={d.name}><td>{d.name}</td><td>{d.value}</td></tr>
+                ))}
+              </tbody>
+            </table>
+            <div aria-hidden="true">
+              <div className="donut-wrapper">
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie data={slaData} cx="50%" cy="50%" innerRadius={65} outerRadius={90}
+                      paddingAngle={3} dataKey="value">
+                      {slaData.map((entry, i) => (
+                        <Cell key={entry.name} fill={SLA_COLORS[i]} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="donut-center">
+                  <span className="donut-number">{slaData[0].value}</span>
+                  <span className="donut-sub">SLA Met</span>
                 </div>
-              ))}
+              </div>
+              <div className="sla-legend">
+                {slaData.map((entry, i) => (
+                  <div key={entry.name} className="sla-legend-item">
+                    <span className="sla-dot" style={{ background: SLA_COLORS[i] }} aria-hidden="true" />
+                    <span className="sla-legend-label">{entry.name}</span>
+                    <span className="sla-legend-value">{entry.value}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -254,23 +278,35 @@ function Graphs() {
               <h2 className="chart-title">Tickets Created Over Time</h2>
               <div className="timeline-toggle">
                 {['Daily', 'Weekly', 'Monthly'].map(t => (
-                  <button key={t} className={`toggle-btn ${t === 'Weekly' ? 'toggle-btn--active' : ''}`}>
+                  <button key={t} className={`toggle-btn ${t === 'Weekly' ? 'toggle-btn--active' : ''}`}
+                    aria-pressed={t === 'Weekly'}>
                     {t}
                   </button>
                 ))}
               </div>
             </div>
-            <ResponsiveContainer width="100%" height={240}>
-              <LineChart data={timelineData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
-                <XAxis dataKey="day" stroke="#ffffff30" tick={{ fill: '#ffffff60', fontSize: 12 }} axisLine={false} tickLine={false} />
-                <YAxis stroke="#ffffff30" tick={{ fill: '#ffffff40', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#A1CEBC', strokeWidth: 1 }} />
-                <Line type="monotone" dataKey="count" stroke="#A1CEBC" strokeWidth={2.5}
-                  dot={{ fill: '#A1CEBC', r: 4, strokeWidth: 0 }}
-                  activeDot={{ r: 6, fill: '#4fc093' }} />
-              </LineChart>
-            </ResponsiveContainer>
+            {/* screen reader table */}
+            <table className="sr-only" aria-label="Tickets created over time data">
+              <thead><tr><th scope="col">Date</th><th scope="col">Count</th></tr></thead>
+              <tbody>
+                {timelineData.map(d => (
+                  <tr key={d.day}><td>{d.day}</td><td>{d.count}</td></tr>
+                ))}
+              </tbody>
+            </table>
+            <div aria-hidden="true">
+              <ResponsiveContainer width="100%" height={240}>
+                <LineChart data={timelineData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
+                  <XAxis dataKey="day" stroke="#ffffff30" tick={{ fill: '#ffffff60', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis stroke="#ffffff30" tick={{ fill: '#ffffff40', fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#A1CEBC', strokeWidth: 1 }} />
+                  <Line type="monotone" dataKey="count" stroke="#A1CEBC" strokeWidth={2.5}
+                    dot={{ fill: '#A1CEBC', r: 4, strokeWidth: 0 }}
+                    activeDot={{ r: 6, fill: '#4fc093' }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
 
           {/* 4. Bar – Status */}
@@ -279,19 +315,30 @@ function Graphs() {
               <h2 className="chart-title">Tickets by Status</h2>
               <span className="chart-badge">{statusData.reduce((s,d) => s+d.count, 0)} total</span>
             </div>
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={statusData} barSize={40}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
-                <XAxis dataKey="name" stroke="#ffffff30" tick={{ fill: '#ffffff60', fontSize: 12 }} axisLine={false} tickLine={false} />
-                <YAxis stroke="#ffffff30" tick={{ fill: '#ffffff40', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: '#ffffff05' }} />
-                <Bar dataKey="count" radius={[4,4,0,0]}>
-                  {statusData.map(entry => (
-                    <Cell key={entry.name} fill={STATUS_COLORS[entry.name]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            {/* screen reader table */}
+            <table className="sr-only" aria-label="Tickets by status data">
+              <thead><tr><th scope="col">Status</th><th scope="col">Count</th></tr></thead>
+              <tbody>
+                {statusData.map(d => (
+                  <tr key={d.name}><td>{d.name}</td><td>{d.count}</td></tr>
+                ))}
+              </tbody>
+            </table>
+            <div aria-hidden="true">
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={statusData} barSize={40}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
+                  <XAxis dataKey="name" stroke="#ffffff30" tick={{ fill: '#ffffff60', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis stroke="#ffffff30" tick={{ fill: '#ffffff40', fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: '#ffffff05' }} />
+                  <Bar dataKey="count" radius={[4,4,0,0]}>
+                    {statusData.map(entry => (
+                      <Cell key={entry.name} fill={STATUS_COLORS[entry.name]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
 
         </div>

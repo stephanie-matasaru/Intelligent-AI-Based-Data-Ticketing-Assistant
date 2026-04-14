@@ -6,32 +6,26 @@ import * as XLSX from 'xlsx'
 function Tickets() {
   const navigate = useNavigate()
   
-  // text & date filters
   const [search, setSearch] = useState('')
   const [startDate, setStartDate] = useState('2026-01-01')
   const [endDate, setEndDate] = useState('2026-12-31')
 
-  // dropdown selection states 
   const [status, setStatus] = useState('all')
   const [priority, setPriority] = useState('all')
   const [project, setProject] = useState('')
   const [service, setService] = useState('')
   const [assignee, setAssignee] = useState('')
 
-  // dropdown options 
   const [projectOptions, setProjectOptions] = useState([])
   const [serviceOptions, setServiceOptions] = useState([])
   const [assigneeOptions, setAssigneeOptions] = useState([])
 
-  // Pagination states
   const [rowsPerPage, setRowsPerPage] = useState(25)
   const [currentPage, setCurrentPage] = useState(1)
 
-  // table data states
   const [displayedTickets, setDisplayedTickets] = useState([])
   const [totalTickets, setTotalTickets] = useState(0)
 
-  // fetch dropdown options
   useEffect(() => {
     fetch('http://127.0.0.1:8000/api/dropdown/projects')
       .then(res => res.json())
@@ -49,7 +43,6 @@ function Tickets() {
       .catch(err => console.error("Error loading assignees:", err));
   }, []);
 
-  // main ticket fetch
   useEffect(() => {
     const params = new URLSearchParams({
       page: currentPage,
@@ -58,7 +51,6 @@ function Tickets() {
       priority: priority,
     });
 
-    //append optional parameters if they have value
     if (search) params.append('search', search);
     if (startDate) params.append('start_date', startDate);
     if (endDate) params.append('end_date', endDate);
@@ -82,7 +74,6 @@ function Tickets() {
   const totalPages = Math.ceil(totalTickets / rowsPerPage) || 1;
   const startIndex = (currentPage - 1) * rowsPerPage;
 
-  // export to excel 
   const exportToExcel = () => {
     if (displayedTickets.length === 0) {
       alert("No data to export!");
@@ -111,13 +102,9 @@ function Tickets() {
     ]);
 
     const worksheetData = [headers, ...dataRows];
-
     const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-    
     const workbook = XLSX.utils.book_new();
-    
     XLSX.utils.book_append_sheet(workbook, worksheet, "Tickets");
-
     const fileName = `Tickets_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
     XLSX.writeFile(workbook, fileName);
   };
@@ -137,16 +124,18 @@ function Tickets() {
             </h1>
           </div>
 
-
           {/* top filter bar */}
-          <div className="bg-[#13132a] border border-white/5 rounded-xl p-4 mb-6 flex flex-wrap gap-4 items-end flex-shrink-0 shadow-lg">
+          <div className="bg-[#13132a] border border-white/5 rounded-xl p-4 mb-6 flex flex-wrap gap-4 items-end flex-shrink-0 shadow-lg"
+            role="search"
+            aria-label="Filter tickets">
             
             <div className="flex flex-col gap-1">
               <div className="bg-[#0a0a1a] flex items-center px-3 py-2.5 rounded-lg border border-white/10 w-48 focus-within:border-[#A1CEBC] transition-colors">
-                <span className="material-symbols-outlined text-white/40 mr-2 text-[18px]">search</span>
+                <span className="material-symbols-outlined text-white/40 mr-2 text-[18px]" aria-hidden="true">search</span>
                 <input 
                   type="text" 
-                  placeholder="Search" 
+                  placeholder="Search"
+                  aria-label="Search tickets"
                   value={search}
                   onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
                   className="bg-transparent border-none outline-none text-white text-sm w-full placeholder:text-white/30" 
@@ -155,24 +144,27 @@ function Tickets() {
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-[0.625rem] text-white/50 uppercase tracking-widest font-label ml-1">Start Date</label>
+              <label className="text-[0.625rem] text-white/50 uppercase tracking-widest font-label ml-1" htmlFor="start-date">Start Date</label>
               <div className="bg-[#0a0a1a] flex items-center px-3 py-2.5 rounded-lg border border-white/10 focus-within:border-[#A1CEBC] transition-colors">
                 <input 
+                  id="start-date"
                   type="date" 
                   value={startDate}
+                  aria-label="Filter start date"
                   onChange={(e) => { setStartDate(e.target.value); setCurrentPage(1); }}
                   className="bg-transparent border-none outline-none text-white text-sm w-32 cursor-pointer [color-scheme:dark]" 
                 />
               </div>
             </div>
 
-
             <div className="flex flex-col gap-1">
-              <label className="text-[0.625rem] text-white/50 uppercase tracking-widest font-label ml-1">End Date</label>
+              <label className="text-[0.625rem] text-white/50 uppercase tracking-widest font-label ml-1" htmlFor="end-date">End Date</label>
               <div className="bg-[#0a0a1a] flex items-center px-3 py-2.5 rounded-lg border border-white/10 focus-within:border-[#A1CEBC] transition-colors">
                 <input 
+                  id="end-date"
                   type="date" 
                   value={endDate}
+                  aria-label="Filter end date"
                   onChange={(e) => { setEndDate(e.target.value); setCurrentPage(1); }}
                   className="bg-transparent border-none outline-none text-white text-sm w-32 cursor-pointer [color-scheme:dark]" 
                 />
@@ -180,9 +172,11 @@ function Tickets() {
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-[0.625rem] text-white/50 uppercase tracking-widest font-label ml-1">Status</label>
+              <label className="text-[0.625rem] text-white/50 uppercase tracking-widest font-label ml-1" htmlFor="status-filter">Status</label>
               <div className="relative">
                 <select 
+                  id="status-filter"
+                  aria-label="Filter by status"
                   value={status}
                   onChange={(e) => { setStatus(e.target.value); setCurrentPage(1); }}
                   className="bg-[#0a0a1a] text-white text-sm px-3 py-2.5 rounded-lg border border-white/10 outline-none appearance-none pr-8 cursor-pointer w-full min-w-[120px]"
@@ -194,14 +188,16 @@ function Tickets() {
                   <option value="Resolved">Resolved</option>
                   <option value="Closed">Closed</option>
                 </select>
-                <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none text-[20px]">expand_more</span>
+                <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none text-[20px]" aria-hidden="true">expand_more</span>
               </div>
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-[0.625rem] text-white/50 uppercase tracking-widest font-label ml-1">Priority</label>
+              <label className="text-[0.625rem] text-white/50 uppercase tracking-widest font-label ml-1" htmlFor="priority-filter">Priority</label>
               <div className="relative">
                 <select 
+                  id="priority-filter"
+                  aria-label="Filter by priority"
                   value={priority}
                   onChange={(e) => { setPriority(e.target.value); setCurrentPage(1); }}
                   className="bg-[#0a0a1a] text-white text-sm px-3 py-2.5 rounded-lg border border-white/10 outline-none appearance-none pr-8 cursor-pointer w-full min-w-[120px]"
@@ -212,14 +208,16 @@ function Tickets() {
                   <option value="Medium">Medium</option>
                   <option value="Low">Low</option>
                 </select>
-                <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none text-[20px]">expand_more</span>
+                <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none text-[20px]" aria-hidden="true">expand_more</span>
               </div>
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-[0.625rem] text-white/50 uppercase tracking-widest font-label ml-1">Project</label>
+              <label className="text-[0.625rem] text-white/50 uppercase tracking-widest font-label ml-1" htmlFor="project-filter">Project</label>
               <div className="relative">
                 <select 
+                  id="project-filter"
+                  aria-label="Filter by project"
                   value={project}
                   onChange={(e) => { setProject(e.target.value); setCurrentPage(1); }}
                   className="bg-[#0a0a1a] text-white text-sm px-3 py-2.5 rounded-lg border border-white/10 outline-none appearance-none pr-8 cursor-pointer w-full min-w-[120px]"
@@ -227,14 +225,16 @@ function Tickets() {
                   <option value="">All Projects</option>
                   {projectOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                 </select>
-                <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none text-[20px]">expand_more</span>
+                <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none text-[20px]" aria-hidden="true">expand_more</span>
               </div>
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-[0.625rem] text-white/50 uppercase tracking-widest font-label ml-1">Service</label>
+              <label className="text-[0.625rem] text-white/50 uppercase tracking-widest font-label ml-1" htmlFor="service-filter">Service</label>
               <div className="relative">
                 <select 
+                  id="service-filter"
+                  aria-label="Filter by service"
                   value={service}
                   onChange={(e) => { setService(e.target.value); setCurrentPage(1); }}
                   className="bg-[#0a0a1a] text-white text-sm px-3 py-2.5 rounded-lg border border-white/10 outline-none appearance-none pr-8 cursor-pointer w-full min-w-[120px]"
@@ -242,14 +242,16 @@ function Tickets() {
                   <option value="">All Services</option>
                   {serviceOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                 </select>
-                <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none text-[20px]">expand_more</span>
+                <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none text-[20px]" aria-hidden="true">expand_more</span>
               </div>
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-[0.625rem] text-white/50 uppercase tracking-widest font-label ml-1">Assignee</label>
+              <label className="text-[0.625rem] text-white/50 uppercase tracking-widest font-label ml-1" htmlFor="assignee-filter">Assignee</label>
               <div className="relative">
                 <select 
+                  id="assignee-filter"
+                  aria-label="Filter by assignee"
                   value={assignee}
                   onChange={(e) => { setAssignee(e.target.value); setCurrentPage(1); }}
                   className="bg-[#0a0a1a] text-white text-sm px-3 py-2.5 rounded-lg border border-white/10 outline-none appearance-none pr-8 cursor-pointer w-full min-w-[120px]"
@@ -257,42 +259,45 @@ function Tickets() {
                   <option value="">All Assignees</option>
                   {assigneeOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                 </select>
-                <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none text-[20px]">expand_more</span>
+                <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none text-[20px]" aria-hidden="true">expand_more</span>
               </div>
              </div>
 
-              <button onClick={exportToExcel} className="ml-auto bg-[#4fc093] hover:bg-[#A1CEBC] text-[#0f0f1e] font-bold text-sm px-6 py-2.5 rounded-lg uppercase tracking-wider transition-colors shadow-[0_0_15px_rgba(79,192,147,0.3)]">
+              <button
+                onClick={exportToExcel}
+                aria-label="Export tickets to Excel"
+                className="ml-auto bg-[#4fc093] hover:bg-[#A1CEBC] text-[#0f0f1e] font-bold text-sm px-6 py-2.5 rounded-lg uppercase tracking-wider transition-colors shadow-[0_0_15px_rgba(79,192,147,0.3)]">
                  Export
               </button>
           </div>
 
           {/* data table */}
           <div className="flex-1 overflow-auto bg-[#13132a] rounded-xl border border-white/5 shadow-xl">
-            <table className="w-full text-left border-collapse whitespace-nowrap">
+            <table className="w-full text-left border-collapse whitespace-nowrap" role="grid" aria-label="Tickets table" aria-rowcount={totalTickets}>
               <thead className="sticky top-0 z-10 bg-[#000000] border-b border-white/10 shadow-sm">
                 <tr className="text-[0.6875rem] uppercase tracking-widest text-[#A1CEBC] font-label">
-                  <th className="p-4 font-semibold">#</th>
-                  <th className="p-4 font-semibold">Time Remaining</th>
-                  <th className="p-4 font-semibold">Incident Number</th>
-                  <th className="p-4 font-semibold">Priority</th>
-                  <th className="p-4 font-semibold">Assignee</th>
-                  <th className="p-4 font-semibold">Status</th>
-                  <th className="p-4 font-semibold">Start Date</th>
-                  <th className="p-4 font-semibold">Resolution Date</th>
-                  <th className="p-4 font-semibold">Last Modified</th>
-                  <th className="p-4 font-semibold">Service</th>
-                  <th className="p-4 font-semibold">Project</th>
-                  <th className="p-4 font-semibold">Assigned Group</th>
+                  <th className="p-4 font-semibold" scope="col">#</th>
+                  <th className="p-4 font-semibold" scope="col">Time Remaining</th>
+                  <th className="p-4 font-semibold" scope="col">Incident Number</th>
+                  <th className="p-4 font-semibold" scope="col">Priority</th>
+                  <th className="p-4 font-semibold" scope="col">Assignee</th>
+                  <th className="p-4 font-semibold" scope="col">Status</th>
+                  <th className="p-4 font-semibold" scope="col">Start Date</th>
+                  <th className="p-4 font-semibold" scope="col">Resolution Date</th>
+                  <th className="p-4 font-semibold" scope="col">Last Modified</th>
+                  <th className="p-4 font-semibold" scope="col">Service</th>
+                  <th className="p-4 font-semibold" scope="col">Project</th>
+                  <th className="p-4 font-semibold" scope="col">Assigned Group</th>
                 </tr>
               </thead>
               <tbody className="text-sm">
                 {displayedTickets.map((ticket) => (
-                  <tr key={ticket.ticket_id} className="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer group">
+                  <tr key={ticket.ticket_id} className="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer group"
+                    aria-label={`Ticket ${ticket.ticket_number}, priority ${ticket.priority}, status ${ticket.status}`}>
                     <td className="p-4 text-white/50 group-hover:text-white transition-colors">{ticket.ticket_id}</td>
                     <td className="p-4 text-[#A1CEBC] font-mono">{ticket.pending_duration}</td>
                     <td className="p-4 text-white">{ticket.ticket_number}</td>
                     <td className="p-4">
-                      {/* Note: The DB now returns the string (e.g., 'Critical') in ticket.priority */}
                       <span className={`px-2 py-1 rounded text-xs font-bold ${
                         ticket.priority === 'Critical' ? 'bg-red-500/20 text-red-500' : 
                         ticket.priority === 'High' ? 'bg-orange-500/20 text-orange-400' : 
@@ -317,20 +322,24 @@ function Tickets() {
           </div>
 
           {/* footer */}
-          <div className="mt-4 flex flex-col sm:flex-row items-center justify-between bg-[#13132a] px-6 py-4 rounded-xl border border-white/5 shadow-lg flex-shrink-0 relative overflow-hidden">
+          <div className="mt-4 flex flex-col sm:flex-row items-center justify-between bg-[#13132a] px-6 py-4 rounded-xl border border-white/5 shadow-lg flex-shrink-0 relative overflow-hidden"
+            role="navigation"
+            aria-label="Pagination">
             
             <div className="absolute top-0 left-0 right-0 h-1 bg-[#6B4D90]"></div>
 
-            <div className="font-headline font-bold text-white tracking-widest uppercase text-sm mb-4 sm:mb-0">
+            <div className="font-headline font-bold text-white tracking-widest uppercase text-sm mb-4 sm:mb-0" aria-live="polite" aria-atomic="true">
               Ticket Count : <span className="text-[#A1CEBC] ml-2 text-lg">{totalTickets}</span>
             </div>
 
             <div className="flex items-center gap-6 text-[0.6875rem] text-white/50 font-label uppercase tracking-widest">
               
               <div className="flex items-center gap-2">
-                <span>Rows per page:</span>
+                <label htmlFor="rows-per-page">Rows per page:</label>
                 <div className="relative">
                   <select 
+                    id="rows-per-page"
+                    aria-label="Rows per page"
                     value={rowsPerPage}
                     onChange={(e) => { setRowsPerPage(Number(e.target.value)); setCurrentPage(1); }}
                     className="bg-transparent text-white font-bold outline-none appearance-none pr-5 cursor-pointer hover:text-[#A1CEBC] transition-colors"
@@ -340,25 +349,35 @@ function Tickets() {
                     <option value={50} className="bg-[#0a0a1a]">50</option>
                     <option value={100} className="bg-[#0a0a1a]">100</option>
                   </select>
-                  <span className="material-symbols-outlined absolute right-0 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none text-[16px]">
+                  <span className="material-symbols-outlined absolute right-0 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none text-[16px]" aria-hidden="true">
                     arrow_drop_down
                   </span>
                 </div>
               </div>
 
               <div className="flex items-center gap-4">
-                <span>{totalTickets === 0 ? 0 : startIndex + 1}–{Math.min(currentPage * rowsPerPage, totalTickets)} of {totalTickets}</span>
+                <span aria-live="polite" aria-atomic="true">{totalTickets === 0 ? 0 : startIndex + 1}–{Math.min(currentPage * rowsPerPage, totalTickets)} of {totalTickets}</span>
                 <div className="flex gap-1">
                   
                   <span 
+                    role="button"
+                    tabIndex={currentPage === 1 ? -1 : 0}
+                    aria-label="Previous page"
+                    aria-disabled={currentPage === 1}
                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    onKeyDown={(e) => e.key === 'Enter' && setCurrentPage(prev => Math.max(prev - 1, 1))}
                     className={`material-symbols-outlined text-[18px] transition-colors ${currentPage === 1 ? 'text-white/20 cursor-not-allowed' : 'cursor-pointer hover:text-white'}`}
                   >
                     chevron_left
                   </span>
                   
                   <span 
+                    role="button"
+                    tabIndex={currentPage === totalPages || totalPages === 0 ? -1 : 0}
+                    aria-label="Next page"
+                    aria-disabled={currentPage === totalPages || totalPages === 0}
                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    onKeyDown={(e) => e.key === 'Enter' && setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                     className={`material-symbols-outlined text-[18px] transition-colors ${currentPage === totalPages || totalPages === 0 ? 'text-white/20 cursor-not-allowed' : 'cursor-pointer hover:text-white'}`}
                   >
                     chevron_right
