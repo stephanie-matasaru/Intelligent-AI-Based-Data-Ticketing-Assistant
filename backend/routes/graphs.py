@@ -5,29 +5,6 @@ from datetime import datetime
 
 router = APIRouter()
 
-def build_filters(start_date, end_date, priority, status, team):
-    conditions = []
-    params = []
-
-    if start_date:
-        conditions.append("t.submit_datetime >= ?")
-        params.append(start_date)
-    if end_date:
-        conditions.append("t.submit_datetime <= ?")
-        params.append(end_date)
-    if priority and priority != "all":
-        conditions.append("p.priority_name = ?")
-        params.append(priority)
-    if status and status != "all":
-        conditions.append("t.status = ?")
-        params.append(status)
-    if team and team != "all":
-        conditions.append("t.team = ?")
-        params.append(team)
-
-    where_clause = "WHERE " + " AND ".join(conditions) if conditions else ""
-    return where_clause, params
-
 # Frontend: BarChart "Tickets by Priority" (Critical, High, Medium, Low)
 # Returns: [{"name": "Critical", "count": 72}, ...]
 @router.get("/by-priority")
@@ -38,16 +15,11 @@ def tickets_by_priority(
     status: Optional[Literal["Open", "In Progress", "Pending", "Resolved", "Closed"]] = Query(None),
     team: Optional[str] = Query(None)
 ):
-    where_clause, params = build_filters(start_date, end_date, priority, status, team)
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute(f"""
-        SELECT p.priority_name as name, COUNT(*) as count
-        FROM tickets t
-        JOIN priorities p ON t.priority_id = p.priority_id
-        {where_clause}
-        GROUP BY p.priority_name
-    """, params)
+    cursor.execute("EXEC dbo.GetTicketsByPriority @StartDate=?, @EndDate=?, @Priority=?, @Status=?, @Team=?",
+        (start_date, end_date, priority, status, team)
+        )
     rows = cursor.fetchall()
     conn.close()
     return [{"name": row[0], "count": row[1]} for row in rows]
@@ -62,16 +34,11 @@ def tickets_by_status(
     status: Optional[Literal["Open", "In Progress", "Pending", "Resolved", "Closed"]] = Query(None),
     team: Optional[str] = Query(None)
 ):
-    where_clause, params = build_filters(start_date, end_date, priority, status, team)
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute(f"""
-        SELECT t.status as name, COUNT(*) as count
-        FROM tickets t
-        JOIN priorities p ON t.priority_id = p.priority_id
-        {where_clause}
-        GROUP BY t.status
-    """, params)
+    cursor.execute("EXEC dbo.GetTicketsByStatus @StartDate=?, @EndDate=?, @Priority=?, @Status=?, @Team=?",
+        (start_date, end_date, priority, status, team)
+    )
     rows = cursor.fetchall()
     conn.close()
     return [{"name": row[0], "count": row[1]} for row in rows]
@@ -86,19 +53,11 @@ def sla_compliance(
     status: Optional[Literal["Open", "In Progress", "Pending", "Resolved", "Closed"]] = Query(None),
     team: Optional[str] = Query(None)
 ):
-    where_clause, params = build_filters(start_date, end_date, priority, status, team)
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute(f"""
-        SELECT 
-            SUM(CASE WHEN t.resolved_datetime IS NOT NULL AND t.resolved_datetime <= t.estimated_resolution THEN 1 ELSE 0 END) as sla_met,
-            SUM(CASE WHEN (t.resolved_datetime IS NOT NULL AND t.resolved_datetime > t.estimated_resolution)
-                     OR (t.resolved_datetime IS NULL AND GETDATE() > t.estimated_resolution)
-                     THEN 1 ELSE 0 END) as sla_breached
-        FROM tickets t
-        JOIN priorities p ON t.priority_id = p.priority_id
-        {where_clause}
-    """, params)
+    cursor.execute("EXEC dbo.GetSLACompliance @StartDate=?, @EndDate=?, @Priority=?, @Status=?, @Team=?",
+        (start_date, end_date, priority, status, team)
+    )
     row = cursor.fetchone()
     conn.close()
     return {
@@ -116,17 +75,11 @@ def tickets_timeline(
     status: Optional[Literal["Open", "In Progress", "Pending", "Resolved", "Closed"]] = Query(None),
     team: Optional[str] = Query(None)
 ):
-    where_clause, params = build_filters(start_date, end_date, priority, status, team)
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute(f"""
-        SELECT CAST(t.submit_datetime as DATE) as day, COUNT(*) as count
-        FROM tickets t
-        JOIN priorities p ON t.priority_id = p.priority_id
-        {where_clause}
-        GROUP BY CAST(t.submit_datetime as DATE)
-        ORDER BY day
-    """, params)
+    cursor.execute("EXEC dbo.GetTicketsOverTime @StartDate=?, @EndDate=?, @Priority=?, @Status=?, @Team=?",
+        (start_date, end_date, priority, status, team)
+        )
     rows = cursor.fetchall()
     conn.close()
     return [{"day": str(row[0]), "count": row[1]} for row in rows]
