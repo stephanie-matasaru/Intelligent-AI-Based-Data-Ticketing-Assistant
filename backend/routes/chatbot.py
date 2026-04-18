@@ -4,12 +4,15 @@ from db import get_connection
 from ai_client import get_ai_client
 import os
 import re
+import uuid
+from datetime import datetime
 
 router = APIRouter()
 
 class ChatRequest(BaseModel):
     question: str
     history: list = []
+    group_id: str =  None
 
 #the prompt needs to be revised and improved!!! this is only a starting point. 
 # tests need to be done to see how the model responds.
@@ -49,9 +52,49 @@ def is_safe_sql(sql: str) -> bool:
     sql_upper = sql.upper()
     return not any(word in sql_upper for word in FORBIDDEN)
 
+def save_message(group_id, user_id, sender, message, query=None, json_chart=None, request_tokens=None, response_status="success"):
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            """INSERT INTO chat_messages 
+            (group_id, user_id, sender, message, query, json_chart, request_tokens, response_status, date_added)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (group_id, user_id, sender, message, query, json_chart, request_tokens, response_status, datetime.utcnow())
+        )
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Failed to save message: {e}")
+
 @router.post("/")
 def ask_chatbot(data: ChatRequest):
     client = get_ai_client()
+
+    # get user_id from session
+    user_id = None
+    if session_id:
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT user_id FROM sessions WHERE session_id = ?", (session_id,))
+            row = cursor.fetchone()
+            conn.close()
+            if row:
+                user_id = row[0]
+        except:
+            pass
+
+    # use existing group_id or create new one
+    group_id = data.group_id or str(uuid.uuid4())
+
+    # save user message
+    save_message(
+        group_id=group_id,
+        user_id=user_id,
+        sender="user",
+        message=data.question
+    )
 
     # 1. generate SQL
     messages = [
@@ -66,10 +109,20 @@ def ask_chatbot(data: ChatRequest):
     )
 
     sql_query = clean_sql(response.choices[0].message.content)
+    request_tokens = response.usage.total_tokens if response.usage else None
 
     # question not related to ticketing data
     if sql_query == "NOT_RELATED":
+        save_message(
+            group_id=group_id,
+            user_id=user_id,
+            sender="agent",
+            message="I can only answer questions about the ticketing system data.",
+            response_status="not_related",
+            request_tokens=request_tokens
+        )
         return {
+            "group_id": group_id,
             "question": data.question,
             "explanation": "I can only answer questions about the ticketing system data.",
             "sql": None,
@@ -93,8 +146,10 @@ def ask_chatbot(data: ChatRequest):
         results = [dict(zip(columns, row)) for row in rows]
         conn.close()
     except Exception as e:
+        save_message(group_id=group_id, user_id=user_id, sender="agent",
+                    message=str(e), response_status="failed")
         raise HTTPException(status_code=500, detail=f"SQL error: {str(e)}")
-
+    
     # detect response type
     is_single_value = len(results) == 1 and len(results[0]) == 1
 
@@ -108,8 +163,20 @@ def ask_chatbot(data: ChatRequest):
     )
 
     explanation = explain_response.choices[0].message.content.strip()
+    explain_tokens = explain_response.usage.total_tokens if explain_response.usage else None
+
+    save_message(
+        group_id=group_id,
+        user_id=user_id,
+        sender="agent",
+        message=explanation,
+        query=sql_query,
+        request_tokens=(request_tokens or 0) + (explain_tokens or 0),
+        response_status="success"
+    )
 
     return {
+        "group_id": group_id,
         "question": data.question,
         "sql": sql_query,
         "results": results,
