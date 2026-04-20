@@ -26,6 +26,13 @@ function Tickets() {
   const [displayedTickets, setDisplayedTickets] = useState([])
   const [totalTickets, setTotalTickets] = useState(0)
 
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(timer); 
+  }, []);
+
   useEffect(() => {
     fetch('http://127.0.0.1:8000/api/dropdown/projects')
       .then(res => res.json())
@@ -73,6 +80,29 @@ function Tickets() {
 
   const totalPages = Math.ceil(totalTickets / rowsPerPage) || 1;
   const startIndex = (currentPage - 1) * rowsPerPage;
+
+
+  const calculateTimeRemaining = (estimatedResolution, status) => {
+    if (!estimatedResolution) return <span className="text-white/30">-</span>;
+    
+    if (status === 'Resolved' || status === 'Closed') {
+      return <span className="text-green-400">Completed</span>;
+    }
+
+    const targetTime = new Date(estimatedResolution).getTime();
+    const now = currentTime.getTime();
+    const difference = targetTime - now;
+
+    const absoluteDiff = Math.abs(difference);
+    const hours = Math.floor(absoluteDiff / (1000 * 60 * 60));
+    const minutes = Math.floor((absoluteDiff % (1000 * 60 * 60)) / (1000 * 60));
+
+    if (difference < 0) {
+      return <span className="text-red-400 font-bold">Overdue by {hours}h {minutes}m</span>;
+    }
+
+    return <span className="text-[#A1CEBC]">{hours}h {minutes}m</span>;
+  };
 
   const exportToExcel = () => {
     if (displayedTickets.length === 0) {
@@ -295,7 +325,7 @@ function Tickets() {
                   <tr key={ticket.ticket_id} className="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer group"
                     aria-label={`Ticket ${ticket.ticket_number}, priority ${ticket.priority}, status ${ticket.status}`}>
                     <td className="p-4 text-white/50 group-hover:text-white transition-colors">{ticket.ticket_id}</td>
-                    <td className="p-4 text-[#A1CEBC] font-mono">{ticket.pending_duration}</td>
+                    <td className="p-4 font-mono">{calculateTimeRemaining(ticket.estimated_resolution, ticket.status)}</td>
                     <td className="p-4 text-white">{ticket.ticket_number}</td>
                     <td className="p-4">
                       <span className={`px-2 py-1 rounded text-xs font-bold ${
