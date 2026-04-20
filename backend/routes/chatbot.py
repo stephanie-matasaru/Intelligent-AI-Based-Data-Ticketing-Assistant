@@ -5,6 +5,7 @@ from ai_client import get_ai_client
 import os
 import re
 import uuid
+from typing import Optional
 
 router = APIRouter()
 
@@ -12,7 +13,7 @@ class ChatRequest(BaseModel):
     question: str
     history: list = []
     user_id: int = None
-    group_id: str = None  
+    group_id: Optional[str] = None
 
 INPUT_PROMPT = """
 You are a SQL assistant for a ticketing system using Microsoft SQL Server.
