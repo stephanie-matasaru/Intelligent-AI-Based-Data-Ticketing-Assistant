@@ -3,15 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import Navbar from './Navbar'
 import './Chatbot.css'
 
-const AI_RESPONSES = [
-  "I'm analyzing your request. Please hold while I gather the relevant data.",
-  "I've logged this issue and notified the appropriate team. You'll receive an update shortly.",
-  "I've identified a potential root cause. Running diagnostics now — this may take a moment.",
-  "Your ticket has been escalated to a senior analyst. Expected resolution time: 15 minutes.",
-  "I've cross-referenced this with similar past incidents. A mitigation strategy is being prepared.",
-  "Request acknowledged. I'm pulling the latest logs to investigate further.",
-]
-
 function Chatbot() {
   const [messages, setMessages] = useState([
     {
@@ -23,7 +14,11 @@ function Chatbot() {
   ])
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
+  const [groupId, setGroupId] = useState(null)
   const bottomRef = useRef(null)
+
+  // Set this however your app stores the logged-in user
+  const userId = 1
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -33,36 +28,90 @@ function Chatbot() {
     if (e.key === 'Enter') handleSend()
   }
 
-  function handleSend() {
-    if (!input.trim()) return
+  function buildHistory(messages) {
+    return messages
+      .filter(msg => msg.type === 'user' || msg.type === 'ai')
+      .map(msg => ({
+        role: msg.type === 'user' ? 'user' : 'assistant',
+        content: msg.text
+      }))
+  }
+
+  async function handleSend() {
+    if (!input.trim() || isTyping) return
+
+    const question = input.trim()
 
     const userMsg = {
       id: Date.now(),
       type: 'user',
-      text: input.trim(),
+      text: question,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
 
-    setMessages(prev => [...prev, userMsg])
+    const updatedMessages = [...messages, userMsg]
+
+    setMessages(updatedMessages)
     setInput('')
     setIsTyping(true)
 
-    setTimeout(() => {
+    try {
+      const response = await fetch('http://localhost:8000/chatbot/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          question,
+          history: buildHistory(messages),
+          user_id: userId,
+          group_id: groupId
+        })
+      })
+
+      if (!response.ok) {
+        let errorMessage = 'Something went wrong while contacting the assistant.'
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.detail || errorMessage
+        } catch {
+          // ignore JSON parse failure
+        }
+        throw new Error(errorMessage)
+      }
+
+      const data = await response.json()
+
+      if (data.group_id) {
+        setGroupId(data.group_id)
+      }
+
       const aiMsg = {
         id: Date.now() + 1,
         type: 'ai',
-        text: AI_RESPONSES[Math.floor(Math.random() * AI_RESPONSES.length)],
+        text: data.explanation || 'No response received.',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }
+
       setMessages(prev => [...prev, aiMsg])
+    } catch (error) {
+      const errorMsg = {
+        id: Date.now() + 1,
+        type: 'ai',
+        text: error.message || 'Unable to reach the backend.',
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }
+
+      setMessages(prev => [...prev, errorMsg])
+    } finally {
       setIsTyping(false)
-    }, 1500)
+    }
   }
 
   return (
     <div className="bg-[#0f0f1e] text-white font-body h-screen flex flex-col overflow-hidden">
 
-    <Navbar />
+      <Navbar />
 
       <main className="flex flex-1 overflow-hidden">
 
@@ -83,8 +132,12 @@ function Chatbot() {
               </div>
             </div>
             <div className="hidden md:block text-right">
-              <span className="font-label text-[0.6875rem] uppercase tracking-widest text-white/40 block mb-1">Session ID</span>
-              <span className="font-mono text-sm text-white/60">#AX-992-KLD</span>
+              <span className="font-label text-[0.6875rem] uppercase tracking-widest text-white/40 block mb-1">
+                Session ID
+              </span>
+              <span className="font-mono text-sm text-white/60">
+                {groupId ? groupId : '#AX-992-KLD'}
+              </span>
             </div>
           </div>
 
@@ -105,7 +158,9 @@ function Chatbot() {
               ) : (
                 <div key={msg.id} className="flex items-start gap-4">
                   <div className="mt-1 flex-shrink-0 h-8 w-8 rounded-full bg-gradient-to-br from-[#000000] to-[#28074C] flex items-center justify-center">
-                    <span className="material-symbols-outlined text-white text-[18px]" style={{fontVariationSettings: "'FILL' 1"}}>robot</span>
+                    <span className="material-symbols-outlined text-white text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                      robot
+                    </span>
                   </div>
                   <div className="max-w-[85%]">
                     <div className="bg-gradient-to-br from-[#0a0a1a] to-[#1a1a3a] backdrop-blur-xl p-6 rounded-2xl rounded-tl-none shadow-2xl">
@@ -122,13 +177,15 @@ function Chatbot() {
             {isTyping && (
               <div className="flex items-start gap-4">
                 <div className="mt-1 flex-shrink-0 h-8 w-8 rounded-full bg-gradient-to-br from-[#000000] to-[#28074C] flex items-center justify-center">
-                  <span className="material-symbols-outlined text-white text-[18px]" style={{fontVariationSettings: "'FILL' 1"}}>robot</span>
+                  <span className="material-symbols-outlined text-white text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                    robot
+                  </span>
                 </div>
                 <div className="bg-gradient-to-br from-[#0a0a1a] to-[#1a1a3a] px-6 py-4 rounded-2xl rounded-tl-none">
                   <div className="flex gap-1 items-center">
                     <span className="typing-dot"></span>
-                    <span className="typing-dot" style={{animationDelay: '0.2s'}}></span>
-                    <span className="typing-dot" style={{animationDelay: '0.4s'}}></span>
+                    <span className="typing-dot" style={{ animationDelay: '0.2s' }}></span>
+                    <span className="typing-dot" style={{ animationDelay: '0.4s' }}></span>
                   </div>
                 </div>
               </div>
@@ -159,7 +216,9 @@ function Chatbot() {
                   onClick={handleSend}
                   className="bg-gradient-to-br from-[#000000] to-[#3E2162] h-12 w-12 flex items-center justify-center rounded-xl text-white shadow-lg shadow-blue-900/20 active:scale-95 transition-transform"
                 >
-                  <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 1"}}>send</span>
+                  <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
+                    send
+                  </span>
                 </button>
               </div>
             </div>
@@ -171,7 +230,9 @@ function Chatbot() {
           <div className="px-8 mb-8">
             <div className="flex items-center gap-3 mb-2">
               <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#000000] to-[#28074C] flex items-center justify-center">
-                <span className="material-symbols-outlined text-white text-[20px]" style={{fontVariationSettings: "'FILL' 1"}}>robot</span>
+                <span className="material-symbols-outlined text-white text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  robot
+                </span>
               </div>
               <div>
                 <p className="font-headline text-white font-bold text-sm tracking-tight">AI Analyst</p>
@@ -196,11 +257,12 @@ function Chatbot() {
                     : 'text-white/50 hover:bg-white/5 hover:text-white hover:translate-x-1'
                 }`}
               >
-                <span className="material-symbols-outlined" style={item.active ? {fontVariationSettings: "'FILL' 1"} : {}}>{item.icon}</span>
+                <span className="material-symbols-outlined" style={item.active ? { fontVariationSettings: "'FILL' 1" } : {}}>
+                  {item.icon}
+                </span>
                 <span className="font-body text-sm uppercase tracking-widest">{item.label}</span>
               </div>
             ))}
-
           </nav>
         </aside>
       </main>
