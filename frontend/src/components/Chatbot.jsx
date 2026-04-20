@@ -56,7 +56,7 @@ function Chatbot() {
     setIsTyping(true)
 
     try {
-      const response = await fetch('http://localhost:8000/chatbot/', {
+      const response = await fetch('http://localhost:8000/api/chatbot/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
