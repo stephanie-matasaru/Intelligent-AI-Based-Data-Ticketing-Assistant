@@ -4,22 +4,35 @@ import Navbar from './Navbar'
 import './Chatbot.css'
 
 function Chatbot() {
-  const [messages, setMessages] = useState([
+  const [messages, setMessages] = useState(() => {
+  const saved = sessionStorage.getItem('chat_messages')
+  return saved ? JSON.parse(saved) : [
     {
       id: 1,
       type: 'ai',
       text: "Hello! I'm your AI Ticketing Assistant. Describe your issue and I'll help you resolve it.",
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
-  ])
+  ]
+})
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
-  const [groupId, setGroupId] = useState(null)
+  const [groupId, setGroupId] = useState(() => {
+    return sessionStorage.getItem('chat_group_id') || null
+  })
   const [isListening, setIsListening] = useState(false)
   const bottomRef = useRef(null)
 
   // Set this however your app stores the logged-in user
   const userId = 1
+
+  useEffect(() => {
+  sessionStorage.setItem('chat_messages', JSON.stringify(messages))
+  }, [messages])
+
+  useEffect(() => {
+    if (groupId) sessionStorage.setItem('chat_group_id', groupId)
+  }, [groupId])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
