@@ -15,6 +15,7 @@ function Chatbot() {
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [groupId, setGroupId] = useState(null)
+  const [isListening, setIsListening] = useState(false)
   const bottomRef = useRef(null)
 
   // Set this however your app stores the logged-in user
@@ -26,6 +27,30 @@ function Chatbot() {
 
   function handleKeyDown(e) {
     if (e.key === 'Enter') handleSend()
+  }
+
+  function handleMic() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (!SpeechRecognition) {
+      alert('Speech recognition is not supported in this browser. Try Chrome.')
+      return
+    }
+
+    const recognition = new SpeechRecognition()
+    recognition.lang = 'en-US'
+    recognition.interimResults = false
+
+    recognition.onstart = () => setIsListening(true)
+    recognition.onend = () => setIsListening(false)
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript
+      setInput(transcript)
+    }
+
+    recognition.onerror = () => setIsListening(false)
+
+    recognition.start()
   }
 
   function buildHistory(messages) {
@@ -209,7 +234,11 @@ function Chatbot() {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
                 />
-                <button className="h-10 w-10 flex items-center justify-center text-white/30 hover:text-white transition-colors">
+                <button
+                  onClick={handleMic}
+                  className="h-10 w-10 flex items-center justify-center transition-colors"
+                  style={{ color: isListening ? '#4fc093' : 'rgba(255,255,255,0.3)' }}
+                >
                   <span className="material-symbols-outlined">mic</span>
                 </button>
                 <button
