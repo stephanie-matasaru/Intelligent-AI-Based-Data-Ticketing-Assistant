@@ -21,7 +21,10 @@ function Chatbot() {
     return sessionStorage.getItem('chat_group_id') || null
   })
   const [isListening, setIsListening] = useState(false)
+  const [attachedFile, setAttachedFile] = useState(null)
+  const [voiceEnabled, setVoiceEnabled] = useState(false)
   const bottomRef = useRef(null)
+  const fileInputRef = useRef(null)
 
   // Set this however your app stores the logged-in user
   const userId = 1
@@ -132,6 +135,12 @@ function Chatbot() {
       }
 
       setMessages(prev => [...prev, aiMsg])
+
+      if (voiceEnabled && data.explanation) {
+        const utterance = new SpeechSynthesisUtterance(data.explanation)
+        utterance.lang = 'en-US'
+        window.speechSynthesis.speak(utterance)
+      }
     } catch (error) {
       const errorMsg = {
         id: Date.now() + 1,
@@ -236,9 +245,26 @@ function Chatbot() {
           <div className="flex-shrink-0 pt-4">
             <div className="bg-[#1a1a35] backdrop-blur-md border border-white/10 p-1.5 rounded-2xl shadow-[0_-20px_50px_rgba(0,0,0,0.3)] max-w-2xl mx-auto">
               <div className="flex items-center gap-2">
-                <button className="h-10 w-10 flex items-center justify-center text-white/30 hover:text-white transition-colors">
-                  <span className="material-symbols-outlined">add_circle</span>
+                <input
+                  type="file"
+                  accept=".xlsx,.csv"
+                  ref={fileInputRef}
+                  className="hidden"
+                  onChange={(e) => setAttachedFile(e.target.files[0] || null)}
+                />
+                <button
+                  className="h-10 w-10 flex items-center justify-center text-white/30 hover:text-white transition-colors"
+                  onClick={() => fileInputRef.current.click()}
+                >
+                  <span className="material-symbols-outlined">
+                    {attachedFile ? 'attach_file' : 'add_circle'}
+                  </span>
                 </button>
+                {attachedFile && (
+                  <span className="text-xs text-white/50 truncate max-w-[120px]">
+                    {attachedFile.name}
+                  </span>
+                )}
                 <input
                   className="flex-grow bg-transparent border-none outline-none text-white placeholder:text-white/30 font-body py-4 text-sm"
                   placeholder="Type an instruction for the analyst..."
@@ -253,6 +279,14 @@ function Chatbot() {
                   style={{ color: isListening ? '#4fc093' : 'rgba(255,255,255,0.3)' }}
                 >
                   <span className="material-symbols-outlined">mic</span>
+                </button>
+                <button
+                  onClick={() => voiceEnabled ? (window.speechSynthesis.cancel(), setVoiceEnabled(false)) : setVoiceEnabled(true)}
+                  className="h-10 w-10 flex items-center justify-center transition-colors"
+                  style={{ color: voiceEnabled ? '#4fc093' : 'rgba(255,255,255,0.3)' }}
+                  title={voiceEnabled ? 'Voice on' : 'Voice off'}
+                >
+                  <span className="material-symbols-outlined">record_voice_over</span>
                 </button>
                 <button
                   onClick={handleSend}
