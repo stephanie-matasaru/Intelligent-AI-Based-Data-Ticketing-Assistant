@@ -12,4 +12,3 @@ def is_safe_sql(sql: str) -> bool:
         bool(re.match(ALLOWED, sql.strip(), re.IGNORECASE)) and
         not re.search(FORBIDDEN, sql, re.IGNORECASE)
     )
-)
