@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+from agents.orchestrator_agent import generate_plan
 from agents.query_agent import generate_sql
 from agents.response_agent import generate_explanation
 from utils.sql_utils import is_safe_sql
@@ -16,7 +17,6 @@ class ChatRequest(BaseModel):
     user_id: int = None
     group_id: Optional[str] = None
 
-
 @router.post("/")
 def ask_chatbot(data: ChatRequest):
     group_id = data.group_id or str(uuid.uuid4())
@@ -29,63 +29,98 @@ def ask_chatbot(data: ChatRequest):
         group_id=group_id
     )
 
-    sql_query, tokens_used = generate_sql(data.question, data.history)
-
-    if sql_query.strip() == "NOT_RELATED":
-        explanation = "I can only answer questions about the ticketing system data."
-
-        save_message(
-            user_id=data.user_id,
-            sender="agent",
-            message=explanation,
-            status="Success",
-            tokens=tokens_used,
-            group_id=group_id
-        )
-
-        return {
-            "question": data.question,
-            "explanation": explanation,
-            "sql": None,
-            "results": None,
-            "group_id": group_id
-        }
-
-    if not is_safe_sql(sql_query):
-        save_message(
-            user_id=data.user_id,
-            sender="agent",
-            message="Invalid or unsafe SQL query generated.",
-            query=sql_query,
-            status="Error",
-            tokens=tokens_used,
-            group_id=group_id
-        )
-        raise HTTPException(status_code=400, detail="Invalid or unsafe SQL query generated.")
-
     try:
-        results = execute_query(sql_query)
+        plan, orchestration_tokens = generate_plan(data.question, data.history)
     except Exception as e:
         save_message(
             user_id=data.user_id,
             sender="agent",
             message=str(e),
-            query=sql_query,
             status="Error",
-            tokens=tokens_used,
             group_id=group_id
         )
-        raise HTTPException(status_code=500, detail=f"SQL error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Orchestration error: {str(e)}")
 
-    is_single_value = len(results) == 1 and len(results[0]) == 1
+    context = {
+        "question": data.question,
+        "history": data.history,
+        "sql_query": None,
+        "results": None,
+        "explanation": None
+    }
 
-    explanation, explanation_tokens = generate_explanation(
-        data.question,
-        data.history,
-        results
-    )
+    total_tokens = orchestration_tokens
 
-    total_tokens = tokens_used + explanation_tokens
+    for step in plan["steps"]:
+        step_type = step["type"]
+        step_name = step["name"]
+
+        if step_type == "agent" and step_name == "query_agent":
+            sql_query, used_tokens = generate_sql(
+                context["question"],
+                context["history"]
+            )
+
+            context["sql_query"] = sql_query
+            total_tokens += used_tokens
+
+            if sql_query.strip() == "NOT_RELATED":
+                context["explanation"] = "I can only answer questions about the ticketing system data."
+                break
+
+            if not is_safe_sql(sql_query):
+                save_message(
+                    user_id=data.user_id,
+                    sender="agent",
+                    message="Invalid or unsafe SQL query generated.",
+                    query=sql_query,
+                    status="Error",
+                    tokens=total_tokens,
+                    group_id=group_id
+                )
+                raise HTTPException(status_code=400, detail="Invalid or unsafe SQL query generated.")
+
+        elif step_type == "service" and step_name == "sql_service":
+            try:
+                context["results"] = execute_query(context["sql_query"])
+            except Exception as e:
+                save_message(
+                    user_id=data.user_id,
+                    sender="agent",
+                    message=str(e),
+                    query=context["sql_query"],
+                    status="Error",
+                    tokens=total_tokens,
+                    group_id=group_id
+                )
+                raise HTTPException(status_code=500, detail=f"SQL error: {str(e)}")
+
+        elif step_type == "agent" and step_name == "response_agent":
+            if context["explanation"] is None:
+                explanation, used_tokens = generate_explanation(
+                    context["question"],
+                    context["history"],
+                    context["results"]
+                )
+                context["explanation"] = explanation
+                total_tokens += used_tokens
+
+        else:
+            save_message(
+                user_id=data.user_id,
+                sender="agent",
+                message=f"Step not implemented yet: {step_name}",
+                status="Error",
+                tokens=total_tokens,
+                group_id=group_id
+            )
+            raise HTTPException(status_code=501, detail=f"Step not implemented yet: {step_name}")
+
+    sql_query = context["sql_query"]
+    results = context["results"]
+    explanation = context["explanation"]
+
+    is_single_value = bool(results) and len(results) == 1 and len(results[0]) == 1
 
     save_message(
         user_id=data.user_id,
