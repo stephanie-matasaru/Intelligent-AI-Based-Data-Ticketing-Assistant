@@ -2,6 +2,71 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from './Navbar'
 import './Chatbot.css'
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, LineChart, Line, CartesianGrid
+} from 'recharts'
+
+const CHART_COLORS = ['#A1CEBC', '#7b6cf6', '#e09a3a', '#e05c5c', '#4a9edd']
+
+function renderChart(chartSpec) {
+  if (!chartSpec || chartSpec.error) return null
+ 
+  const { chart_type, title, x_key, y_key, data } = chartSpec
+ 
+  return (
+    <div style={{ marginTop: '12px' }}>
+      {title && (
+        <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          {title}
+        </p>
+      )}
+      <ResponsiveContainer width="100%" height={200}>
+        {chart_type === 'bar' ? (
+          <BarChart data={data} barSize={28}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
+            <XAxis dataKey={x_key} stroke="#ffffff30" tick={{ fill: '#ffffff60', fontSize: 11 }} axisLine={false} tickLine={false} />
+            <YAxis stroke="#ffffff30" tick={{ fill: '#ffffff40', fontSize: 10 }} axisLine={false} tickLine={false} />
+            <Tooltip
+              contentStyle={{ background: '#1a1a35', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff' }}
+              cursor={{ fill: '#ffffff05' }}
+            />
+            <Bar dataKey={y_key} radius={[4, 4, 0, 0]}>
+              {data.map((_, i) => (
+                <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+              ))}
+            </Bar>
+          </BarChart>
+        ) : chart_type === 'line' ? (
+          <LineChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
+            <XAxis dataKey={x_key} stroke="#ffffff30" tick={{ fill: '#ffffff60', fontSize: 11 }} axisLine={false} tickLine={false} />
+            <YAxis stroke="#ffffff30" tick={{ fill: '#ffffff40', fontSize: 10 }} axisLine={false} tickLine={false} />
+            <Tooltip
+              contentStyle={{ background: '#1a1a35', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff' }}
+              cursor={{ stroke: '#A1CEBC', strokeWidth: 1 }}
+            />
+            <Line type="monotone" dataKey={y_key} stroke="#A1CEBC" strokeWidth={2.5}
+              dot={{ fill: '#A1CEBC', r: 3, strokeWidth: 0 }}
+              activeDot={{ r: 5, fill: '#4fc093' }} />
+          </LineChart>
+        ) : chart_type === 'pie' ? (
+          <PieChart>
+            <Pie data={data} cx="50%" cy="50%" outerRadius={80} dataKey={y_key} nameKey={x_key} paddingAngle={3}>
+              {data.map((_, i) => (
+                <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+              ))}
+            </Pie>
+            <Tooltip
+              contentStyle={{ background: '#1a1a35', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff' }}
+            />
+          </PieChart>
+        ) : null}
+      </ResponsiveContainer>
+    </div>
+  )
+}
+
 
 function Chatbot() {
   const [messages, setMessages] = useState(() => {
@@ -131,7 +196,8 @@ function Chatbot() {
         id: Date.now() + 1,
         type: 'ai',
         text: data.explanation || 'No response received.',
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        chart_spec: data.chart_spec || null
       }
 
       setMessages(prev => [...prev, aiMsg])
@@ -212,6 +278,7 @@ function Chatbot() {
                   <div className="max-w-[85%]">
                     <div className="bg-gradient-to-br from-[#0a0a1a] to-[#1a1a3a] backdrop-blur-xl p-6 rounded-2xl rounded-tl-none shadow-2xl">
                       <p className="text-white/80 leading-relaxed">{msg.text}</p>
+                      {msg.chart_spec && renderChart(msg.chart_spec)}
                     </div>
                     <span className="mt-2 block font-label text-[0.625rem] text-white/30 text-left">
                       AI Analyst • {msg.time}
