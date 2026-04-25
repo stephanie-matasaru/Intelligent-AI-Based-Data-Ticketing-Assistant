@@ -6,6 +6,8 @@ from agents.response_agent import generate_explanation
 from utils.sql_utils import is_safe_sql
 from services.chat_service import save_message, get_chat_history_by_user
 from services.sql_service import execute_query
+from agents.visualizer_agent import generate_chart_spec
+from services.graph_service import process_chart_spec
 import uuid
 from typing import Optional
 
@@ -46,7 +48,8 @@ def ask_chatbot(data: ChatRequest):
         "history": data.history,
         "sql_query": None,
         "results": None,
-        "explanation": None
+        "explanation": None,
+        "chart_spec": None
     }
 
     total_tokens = orchestration_tokens
@@ -104,7 +107,27 @@ def ask_chatbot(data: ChatRequest):
                 )
                 context["explanation"] = explanation
                 total_tokens += used_tokens
+        elif step_type == "agent" and step_name == "visualizer_agent":
+            chart_spec, used_tokens = generate_chart_spec(
+                context["question"],
+                context["results"]
+            )
+            context["chart_spec"] = chart_spec
+            total_tokens += used_tokens
 
+        elif step_type == "service" and step_name == "graph_service":
+            try:
+                context["chart_spec"] = process_chart_spec(context["chart_spec"])
+            except ValueError as e:
+                save_message(
+                    user_id=data.user_id,
+                    sender="agent",
+                    message=str(e),
+                    status="Error",
+                    tokens=total_tokens,
+                    group_id=group_id
+                )
+                raise HTTPException(status_code=500, detail=f"Chart processing error: {str(e)}")
         else:
             save_message(
                 user_id=data.user_id,
@@ -119,6 +142,7 @@ def ask_chatbot(data: ChatRequest):
     sql_query = context["sql_query"]
     results = context["results"]
     explanation = context["explanation"]
+    chart_spec = context["chart_spec"]
 
     is_single_value = bool(results) and len(results) == 1 and len(results[0]) == 1
 
@@ -138,6 +162,7 @@ def ask_chatbot(data: ChatRequest):
         "results": results,
         "explanation": explanation,
         "is_single_value": is_single_value,
+        "chart_spec": chart_spec,
         "group_id": group_id
     }
 
