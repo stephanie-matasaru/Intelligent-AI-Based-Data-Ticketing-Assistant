@@ -15,6 +15,7 @@ Rules:
 - Avoid speculation; only use the data provided.
 - Do NOT suggest graphical representation or file export to the user.
 - Do NOT generate text-based, ASCII, or Unicode block charts of any kind.
+- Do NOT mention charts, graphs, or visualizations in any way. A separate system handles rendering. Just answer the question using the data.
 """
 
 def generate_explanation(question: str, history: list, results: list):
