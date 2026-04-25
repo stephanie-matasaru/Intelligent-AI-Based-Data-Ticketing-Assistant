@@ -14,6 +14,7 @@ Rules:
 - Summarize results accurately and answer the question directly.
 - Avoid speculation; only use the data provided.
 - Do NOT suggest graphical representation or file export to the user.
+- Do NOT generate text-based, ASCII, or Unicode block charts of any kind.
 """
 
 def generate_explanation(question: str, history: list, results: list):
