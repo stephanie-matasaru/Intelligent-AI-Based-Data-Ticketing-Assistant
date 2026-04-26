@@ -33,6 +33,18 @@ FILTERING RULES:
   Split into words and match EACH word using LIKE with AND.
   Example: (assigned_person LIKE '%John%' AND assigned_person LIKE '%Smith%')
 
+TEMPORAL RULES:
+- If the user says "recent" or "recently", default to the last 7 days:
+  WHERE submit_datetime >= DATEADD(day, -7, GETDATE())
+- If the user says "this month", use:
+  WHERE MONTH(submit_datetime) = MONTH(GETDATE()) AND YEAR(submit_datetime) = YEAR(GETDATE())
+- If the user says "today", use:
+  WHERE CAST(submit_datetime AS DATE) = CAST(GETDATE() AS DATE)
+- If the user says "this week", use:
+  WHERE submit_datetime >= DATEADD(day, -7, GETDATE())
+- If the user says "soon" or "upcoming", use estimated_resolution:
+  WHERE estimated_resolution >= GETDATE()
+
 If the question is not related to ticketing data, respond with exactly:
 NOT_RELATED
 """
