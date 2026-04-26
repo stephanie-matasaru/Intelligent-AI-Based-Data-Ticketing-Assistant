@@ -67,8 +67,8 @@ function renderChart(chartSpec) {
   )
 }
 
-
 function Chatbot() {
+  const navigate = useNavigate()
   const [messages, setMessages] = useState(() => {
   const saved = sessionStorage.getItem('chat_messages')
   return saved ? JSON.parse(saved) : [
@@ -91,7 +91,6 @@ function Chatbot() {
   const bottomRef = useRef(null)
   const fileInputRef = useRef(null)
 
-  // Set this however your app stores the logged-in user
   const userId = 1
 
   useEffect(() => {
@@ -105,6 +104,26 @@ function Chatbot() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isTyping])
+
+  useEffect(() => {
+    sessionStorage.removeItem('chat_messages')
+    sessionStorage.removeItem('chat_group_id')
+    setGroupId(null)
+    setMessages([{
+      id: 1,
+      type: 'ai',
+      text: "Hello! I'm your AI Ticketing Assistant. Describe your issue and I'll help you resolve it.",
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }])
+
+    fetch('http://localhost:8000/api/auth/me', {
+      credentials: 'include'
+    })
+    .then(res => {
+      if (!res.ok) navigate('/')
+    })
+    .catch(() => navigate('/'))
+}, [])
 
   function handleKeyDown(e) {
     if (e.key === 'Enter') handleSend()
