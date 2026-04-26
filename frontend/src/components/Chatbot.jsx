@@ -407,7 +407,7 @@ function Chatbot() {
             {[
               { icon: 'chat_bubble', label: 'Active Chat', active: true },
               { icon: 'group', label: 'Agent Queue' },
-              { icon: 'menu_book', label: 'Knowledge Base' },
+              { icon: 'menu_book', label: 'Chat History' },
               { icon: 'query_stats', label: 'Insights' },
               { icon: 'hub', label: 'Team' },
             ].map((item) => (
