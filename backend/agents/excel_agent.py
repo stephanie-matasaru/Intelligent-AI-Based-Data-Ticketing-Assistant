@@ -44,15 +44,19 @@ def generate_excel_spec(question: str, results: list):
         max_completion_tokens=500
     )
 
-    # get the raw text
+    print("\n ---AI DIAGNOSTICS ---")
+    print(f"Finish Reason: {response.choices[0].finish_reason}")
+    print(f"Raw Message: {response.choices[0].message}")
+    print("-------------------------\n")
+
     content = response.choices[0].message.content
     
     if not content:
-        raise ValueError("Azure OpenAI returned an empty response.")
+        raise ValueError(f"Azure OpenAI returned an empty response. Finish reason: {response.choices[0].finish_reason}")
         
     content = content.strip()
+        
 
-    # 2. Print it to the terminal so we know exactly what the AI said
     print("\n--- RAW EXCEL AGENT RESPONSE ---")
     print(content)
     print("--------------------------------\n")
