@@ -69,14 +69,14 @@ def ask_chatbot(data: ChatRequest):
 
             if sql_query.strip() == "NOT_RELATED":
                 explanation, used_tokens = generate_explanation(
-                question=context["question"],
-                history=context["history"],
-                results=None,
-                final_output_type="unrelated"
-            )
-            context["explanation"] = explanation
-            total_tokens += used_tokens           
-            break 
+                    question=context["question"],
+                    history=context["history"],
+                    results=None,
+                    final_output_type="unrelated"
+                )
+                context["explanation"] = explanation
+                total_tokens += used_tokens
+                break
 
             if not is_safe_sql(sql_query):
                 save_message(
