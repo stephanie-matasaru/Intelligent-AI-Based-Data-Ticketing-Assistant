@@ -72,11 +72,11 @@ def ask_chatbot(data: ChatRequest):
                 question=context["question"],
                 history=context["history"],
                 results=None,
-                final_output_type="I can only answer questions about the ticketing system data."
+                final_output_type="unrelated"
             )
             context["explanation"] = explanation
-            total_tokens += used_tokens
-            break
+            total_tokens += used_tokens           
+            break 
 
             if not is_safe_sql(sql_query):
                 save_message(
@@ -114,8 +114,8 @@ def ask_chatbot(data: ChatRequest):
                     final_output_type=plan["final_output"],
                     chart_spec=context["chart_spec"]
                 )
-            context["explanation"] = explanation
-            total_tokens += used_tokens
+                context["explanation"] = explanation
+                total_tokens += used_tokens
 
         elif step_type == "agent" and step_name == "visualizer_agent":
             chart_spec, used_tokens = generate_chart_spec(
@@ -151,7 +151,7 @@ def ask_chatbot(data: ChatRequest):
 
     sql_query = context["sql_query"]
     results = context["results"]
-    explanation = context["explanation"]
+    explanation = context.get("explanation") or "I'm sorry, I could not generate a response."
     chart_spec = context["chart_spec"]
 
     is_single_value = bool(results) and len(results) == 1 and len(results[0]) == 1
