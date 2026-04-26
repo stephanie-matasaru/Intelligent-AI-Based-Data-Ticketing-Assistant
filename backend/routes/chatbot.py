@@ -151,6 +151,7 @@ def ask_chatbot(data: ChatRequest):
 
     sql_query = context["sql_query"]
     results = context["results"]
+    print("DEBUG context:", context)
     explanation = context.get("explanation") or "I'm sorry, I could not generate a response."
     chart_spec = context["chart_spec"]
 
