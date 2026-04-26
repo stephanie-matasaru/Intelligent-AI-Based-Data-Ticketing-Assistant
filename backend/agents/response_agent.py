@@ -22,7 +22,7 @@ Rules:
 - Focus only on summarizing the data in plain text. Do not mention charts, graphs, visualizations, or rendering of any kind.
 """
 
-def generate_explanation(question: str, history: list, results: list, final_output_type: str = None, chart_spec=None):
+def generate_explanation(question: str, history: list, results: list, final_output_type: str = None, chart_spec=None, excel_spec=None):
     client = get_ai_client()
 
     system_prompt = UNRELATED_PROMPT if final_output_type == "unrelated" else OUTPUT_PROMPT
