@@ -68,8 +68,15 @@ def ask_chatbot(data: ChatRequest):
             total_tokens += used_tokens
 
             if sql_query.strip() == "NOT_RELATED":
-                context["explanation"] = "I can only answer questions about the ticketing system data."
-                break
+                explanation, used_tokens = generate_explanation(
+                question=context["question"],
+                history=context["history"],
+                results=None,
+                final_output_type="I can only answer questions about the ticketing system data."
+            )
+            context["explanation"] = explanation
+            total_tokens += used_tokens
+            break
 
             if not is_safe_sql(sql_query):
                 save_message(
@@ -101,12 +108,15 @@ def ask_chatbot(data: ChatRequest):
         elif step_type == "agent" and step_name == "response_agent":
             if context["explanation"] is None:
                 explanation, used_tokens = generate_explanation(
-                    context["question"],
-                    context["history"],
-                    context["results"]
+                    question=context["question"],
+                    history=context["history"],
+                    results=context["results"],
+                    final_output_type=plan["final_output"],
+                    chart_spec=context["chart_spec"]
                 )
-                context["explanation"] = explanation
-                total_tokens += used_tokens
+            context["explanation"] = explanation
+            total_tokens += used_tokens
+
         elif step_type == "agent" and step_name == "visualizer_agent":
             chart_spec, used_tokens = generate_chart_spec(
                 context["question"],
