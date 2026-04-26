@@ -20,12 +20,18 @@ Rules:
 - Summarize results accurately and answer the question directly.
 - Avoid speculation; only use the data provided.
 - Focus only on summarizing the data in plain text. Do not mention charts, graphs, visualizations, or rendering of any kind.
+- IMPORTANT: If an Excel file was generated, you will be given an 'Excel Download URL'. You MUST include this exact markdown link in your response: [Download Excel Report](THE_URL_HERE)
 """
 
 def generate_explanation(question: str, history: list, results: list, final_output_type: str = None, chart_spec=None, excel_spec=None):
     client = get_ai_client()
 
     system_prompt = UNRELATED_PROMPT if final_output_type == "unrelated" else OUTPUT_PROMPT
+
+    user_content = f"User question: {question}\n\nData: {results}"
+
+    if excel_spec and "download_url" in excel_spec:
+        user_content += f"\n\nExcel Download URL: {excel_spec['download_url']}"
 
     explain_response = client.chat.completions.create(
         model=os.getenv("AZURE_OPENAI_MODEL"),
