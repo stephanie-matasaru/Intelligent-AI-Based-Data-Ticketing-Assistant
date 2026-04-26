@@ -20,6 +20,12 @@ Return ONLY valid JSON inside a ```json code block, exactly like this:
   "sheet_name": "Sheet1",
   "columns_to_include": ["col_name_1", "col_name_2"]
 }
+RULES:
+-filename must end in .xlsx and use underscores instead of spaces.
+-sheet_name should be a short, readable name (max 31 characters).
+-columns_to_include must be a list of exact dictionary keys found in the JSON rows.
+-only include columns that are relevant to the user's specific request. If they didn't specify, include all logical columns.
+-do NOT include explanations or any text outside the JSON block.
 """
 def generate_excel_spec(question: str, results: list):
     client = get_ai_client()
@@ -38,17 +44,28 @@ def generate_excel_spec(question: str, results: list):
         max_completion_tokens=500
     )
 
-    content = response.choices[0].message.content.strip()
-    # debug print
-    print("\n--- RAW AI RESPONSE ---")
+    # get the raw text
+    content = response.choices[0].message.content
+    
+    if not content:
+        raise ValueError("Azure OpenAI returned an empty response.")
+        
+    content = content.strip()
+
+    # 2. Print it to the terminal so we know exactly what the AI said
+    print("\n--- RAW EXCEL AGENT RESPONSE ---")
     print(content)
-    print("-----------------------\n")
+    print("--------------------------------\n")
+
     cleaned = clean_json_block(content)
+
+    if not cleaned:
+        cleaned = content
 
     try:
         excel_spec = json.loads(cleaned)
     except json.JSONDecodeError:
-        raise ValueError(f"Invalid JSON returned by excel agent: {content}")
+        raise ValueError(f"AI returned invalid JSON formatting. Raw output was: \n{content}")
 
     tokens_used = response.usage.total_tokens
     return excel_spec, tokens_used
