@@ -20,6 +20,9 @@ RULES:
 - Resolution time = DATEDIFF(minute, submit_datetime, resolved_datetime)
 - Always use proper T-SQL syntax.
 - Do NOT include unnecessary columns unless requested.
+- For SLA breach queries, use:
+  WHERE resolved_datetime > estimated_resolution
+  OR (resolved_datetime IS NULL AND estimated_resolution < GETDATE())
 
 OUTPUT FORMAT (MANDATORY):
 - Return ONLY the SQL query inside a code block, exactly like this:
