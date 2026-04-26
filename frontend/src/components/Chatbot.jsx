@@ -91,7 +91,7 @@ function Chatbot() {
   const bottomRef = useRef(null)
   const fileInputRef = useRef(null)
 
-  const userId = null
+  const userId = 1
 
   useEffect(() => {
   sessionStorage.setItem('chat_messages', JSON.stringify(messages))
