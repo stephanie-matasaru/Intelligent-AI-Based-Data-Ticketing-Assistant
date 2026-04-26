@@ -49,10 +49,12 @@ RULES:
   query_agent -> sql_service -> excel_agent -> excel_service -> response_agent
 - For SQL insertion script generation from uploaded files, use:
   script_generator_agent -> response_agent
-- If the request has absolutely nothing to do with ticketing data, IT systems, 
-  or anything related to the ticketing system, return a plan with ONLY the 
-  response_agent step and set final_output to "text" with the task clearly 
-  stating "inform the user this is unrelated to the ticketing system".
+- If the request is unrelated to ticketing data, IT systems, or the ticketing 
+  system (e.g. weather, sports, cooking, personal questions, general knowledge),
+  you MUST return ONLY the response_agent step and set final_output to "unrelated".
+  Do NOT use query_agent or sql_service for unrelated questions.
+  Examples of unrelated questions: "how is the weather?", "who won the game?", 
+  "what should I eat?", "tell me a joke".
 
 Return JSON in exactly this shape:
 {
