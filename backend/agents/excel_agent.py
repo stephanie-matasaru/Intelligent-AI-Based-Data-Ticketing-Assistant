@@ -41,7 +41,7 @@ def generate_excel_spec(question: str, results: list):
     response = client.chat.completions.create(
         model=os.getenv("AZURE_OPENAI_MODEL"),
         messages=messages,
-        max_completion_tokens=500
+        max_completion_tokens=1000
     )
 
     print("\n ---AI DIAGNOSTICS ---")
