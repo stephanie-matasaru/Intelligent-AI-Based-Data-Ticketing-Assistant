@@ -39,6 +39,10 @@ def generate_excel_spec(question: str, results: list):
     )
 
     content = response.choices[0].message.content.strip()
+    # debug print
+    print("\n--- RAW AI RESPONSE ---")
+    print(content)
+    print("-----------------------\n")
     cleaned = clean_json_block(content)
 
     try:
