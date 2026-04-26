@@ -1,6 +1,12 @@
 import os
 from ai_client import get_ai_client
 
+UNRELATED_PROMPT = """
+You are a helpful assistant. The user has asked a question that is not related
+to the available data. Politely inform them that you can only answer questions
+related to the data you have access to, and suggest they ask a data-related question.
+"""
+
 OUTPUT_PROMPT = """
 You are a professional data analyst assistant. Your task is to answer the
 user's question using only the query results provided.
@@ -16,13 +22,15 @@ Rules:
 - Focus only on summarizing the data in plain text. Do not mention charts, graphs, visualizations, or rendering of any kind.
 """
 
-def generate_explanation(question: str, history: list, results: list):
+def generate_explanation(question: str, history: list, results: list, final_output_type: str = None, chart_spec=None):
     client = get_ai_client()
+
+    system_prompt = UNRELATED_PROMPT if final_output_type == "unrelated" else OUTPUT_PROMPT
 
     explain_response = client.chat.completions.create(
         model=os.getenv("AZURE_OPENAI_MODEL"),
         messages=[
-            {"role": "system", "content": OUTPUT_PROMPT},
+            {"role": "system", "content": system_prompt},
             *history,
             {"role": "user", "content": f"User question: {question}\n\nData: {results}"}
         ],
