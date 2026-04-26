@@ -114,8 +114,6 @@ def ask_chatbot(data: ChatRequest):
                     final_output_type=plan["final_output"],
                     chart_spec=context["chart_spec"]
                 )
-                context["explanation"] = explanation
-                total_tokens += used_tokens
 
         elif step_type == "agent" and step_name == "visualizer_agent":
             chart_spec, used_tokens = generate_chart_spec(
@@ -151,7 +149,6 @@ def ask_chatbot(data: ChatRequest):
 
     sql_query = context["sql_query"]
     results = context["results"]
-    print("DEBUG context:", context)
     explanation = context.get("explanation") or "I'm sorry, I could not generate a response."
     chart_spec = context["chart_spec"]
 
