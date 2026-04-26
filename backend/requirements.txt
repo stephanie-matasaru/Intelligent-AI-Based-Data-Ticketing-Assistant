@@ -4,3 +4,5 @@ python-dotenv
 mssql-python
 openai
 bcrypt
+pandas
+openpyxl
