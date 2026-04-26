@@ -28,7 +28,7 @@ def generate_excel_spec(question: str, results: list):
         {"role": "system", "content": EXCEL_PROMPT},
         {
             "role": "user",
-            "content": f"User request: {question}\n\nQuery results (first 2 rows for schema): {json.dumps(results[:2])}"
+            "content": f"User request: {question}\n\nQuery results (first 2 rows for schema): {json.dumps(results[:2], default=str)}"
         }
     ]
 
