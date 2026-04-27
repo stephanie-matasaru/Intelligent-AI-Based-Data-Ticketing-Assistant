@@ -6,3 +6,4 @@ openai
 bcrypt
 pandas
 openpyxl
+python-multipart
