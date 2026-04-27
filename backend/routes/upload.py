@@ -66,10 +66,12 @@ async def upload_file(
     # Step 3: Response agent explains the results in natural language
     try:
         explanation, response_tokens = generate_upload_explanation(file.filename, validation_report)
+        if not explanation:
+            explanation = f"File processed: {validation_report.get('valid_rows', 0)} rows ready, {validation_report.get('skipped_rows', 0)} skipped."
     except Exception as e:
         explanation = f"File processed: {validation_report.get('valid_rows', 0)} rows ready, {validation_report.get('skipped_rows', 0)} skipped."
         response_tokens = 0
-
+        
     total_tokens = script_tokens + response_tokens
 
     # Log agent response

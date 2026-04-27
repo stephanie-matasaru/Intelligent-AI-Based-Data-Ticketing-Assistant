@@ -142,7 +142,10 @@ Rows:
             "unmapped_columns": [],
             "missing_columns": [],
             "defaults_applied": [],
-            "error": "Agent returned malformed output. Please try again."
+            "error": "Could not process file. The file may not be in the expected ticket format.",
+            "valid_rows": 0,
+            "skipped_rows": parsed_file["row_count"],
+            "total_rows": parsed_file["row_count"]
         }, tokens_used
 
     sql_script = result.get("sql_script") or None
