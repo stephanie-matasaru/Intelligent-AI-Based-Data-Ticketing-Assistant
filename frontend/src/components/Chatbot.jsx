@@ -323,7 +323,8 @@ function Chatbot() {
         type: 'ai',
         text: data.explanation || 'No response received.',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        chart_spec: data.chart_spec || null
+        chart_spec: data.chart_spec || null,
+        excel_spec: data.excel_spec || null
       }
 
       setMessages(prev => [...prev, aiMsg])
@@ -346,6 +347,27 @@ function Chatbot() {
       setIsTyping(false)
     }
   }
+
+  const handleDownloadExcel = (base64String, filename) => {
+    try {
+      const byteCharacters = atob(base64String);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      
+      const link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      link.download = filename || 'ticket_export.xlsx';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Error generating Excel download:", error);
+    }
+  };
 
   return (
     <div className="bg-[#0f0f1e] text-white font-body h-screen flex flex-col overflow-hidden">
@@ -402,8 +424,24 @@ function Chatbot() {
                     </span>
                   </div>
                   <div className="max-w-[85%]">
-                    <div className="bg-gradient-to-br from-[#0a0a1a] to-[#1a1a3a] backdrop-blur-xl p-6 rounded-2xl rounded-tl-none shadow-2xl">
-                      <p className="text-white/80 leading-relaxed">{msg.text}</p>
+                   <div className="bg-gradient-to-br from-[#0a0a1a] to-[#1a1a3a] backdrop-blur-xl p-6 rounded-2xl rounded-tl-none shadow-2xl">
+
+                      <p className="text-white/80 leading-relaxed">
+                        {msg.text ? msg.text.replace("[ACTION: DOWNLOAD_EXCEL]", "").trim() : ""}
+                      </p>
+
+                      {/* Render the excel download button if the tag and data exist */}
+                      {msg.text && msg.text.includes("[ACTION: DOWNLOAD_EXCEL]") && msg.excel_spec && msg.excel_spec.file_data_base64 && (
+                        <div className="mt-4">
+                          <button 
+                            onClick={() => handleDownloadExcel(msg.excel_spec.file_data_base64, msg.excel_spec.filename)}
+                            className="bg-[#4fc093] hover:bg-[#A1CEBC] text-[#0f0f1e] font-bold text-sm px-4 py-2.5 rounded-lg flex items-center gap-2 w-fit transition-colors shadow-lg"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">download</span>
+                            Download Spreadsheet
+                          </button>
+                        </div>
+                      )}
                       {msg.chart_spec && renderChart(msg.chart_spec)}
                       {msg.sql_script && (
                         <div className="mt-4">
