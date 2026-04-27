@@ -42,11 +42,22 @@ RULES:
 def generate_chart_spec(question: str, results: list):
     client = get_ai_client()
 
+    def serialize(obj):
+        from datetime import datetime, date
+        if isinstance(obj, (datetime, date)):
+            return obj.isoformat()
+        return obj
+
+    serialized_results = [
+        {k: serialize(v) for k, v in row.items()}
+        for row in results
+    ]
+
     messages = [
         {"role": "system", "content": VISUALIZER_PROMPT},
         {
             "role": "user",
-            "content": f"User question: {question}\n\nQuery results: {json.dumps(results)}"
+            "content": f"User question: {question}\n\nQuery results: {json.dumps(serialized_results)}"
         }
     ]
 
