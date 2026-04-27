@@ -79,10 +79,6 @@ def generate_explanation(question: str, history: list, results: list, final_outp
 
     user_content = f"User question: {question}\n\nTotal rows found: {total_rows}\nData Sample: {safe_results}"
 
-    # inject the URL
-    if excel_spec and "download_url" in excel_spec:
-        user_content += f"\n\nExcel Download URL: {excel_spec['download_url']}"
-
     explain_response = client.chat.completions.create(
         model=os.getenv("AZURE_OPENAI_MODEL"),
         messages=[
@@ -104,8 +100,10 @@ def generate_explanation(question: str, history: list, results: list, final_outp
     # failsafe: If the AI drops the response (content filter), manually build the text
     if not content:
         content = f"I found {total_rows} tickets matching your request."
-        if excel_spec and "download_url" in excel_spec:
-            content += f" \n\n[Download Excel Report]({excel_spec['download_url']})"
+
+    # inject the hidden action tag if base64 data exists from the Excel agent
+    if excel_spec and "file_data_base64" in excel_spec:
+        content += "\n\n[ACTION: DOWNLOAD_EXCEL]"
 
     tokens_used = explain_response.usage.total_tokens
 

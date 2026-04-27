@@ -1,6 +1,6 @@
 import pandas as pd
-import os
-import uuid
+import io
+import base64
 from openpyxl.utils import get_column_letter
 
 def process_excel_spec(excel_spec: dict) -> dict:
@@ -27,28 +27,23 @@ def process_excel_spec(excel_spec: dict) -> dict:
     df = pd.DataFrame(excel_spec["data"])
     df = df[excel_spec["columns_to_include"]]
 
-    safe_filename = f"{uuid.uuid4().hex[:8]}_{excel_spec['filename']}"
-    
-    export_dir = os.path.join(os.getcwd(), "static", "exports")
-    os.makedirs(export_dir, exist_ok=True)
-
-    file_path = os.path.join(export_dir, safe_filename)
-
     sheet_name = excel_spec["sheet_name"]
 
-    with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
+    buffer = io.BytesIO()
+
+    with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
         df.to_excel(writer, sheet_name=sheet_name, index=False)
-    
+        
         worksheet = writer.sheets[sheet_name]
-    
+        
         for idx, col in enumerate(df.columns):
             max_len = max(df[col].astype(str).map(len).max(), len(str(col))) + 2
-        
             col_letter = get_column_letter(idx + 1)
-        
             worksheet.column_dimensions[col_letter].width = max_len
 
-    excel_spec["download_url"] = f"/static/exports/{safe_filename}"
+    excel_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+
+    excel_spec["file_data_base64"] = excel_base64
     
     del excel_spec["data"]
 
