@@ -170,7 +170,15 @@ function Chatbot() {
   async function fetchSessions() {
     const res = await fetch(`http://localhost:8000/api/chatbot/history/${userId}`)
     const data = await res.json()
-    setSessions(data.history)
+    // group messages by group_id
+    const grouped = {}
+    for (const msg of data.history) {
+      if (!grouped[msg.group_id]) {
+        grouped[msg.group_id] = { group_id: msg.group_id, started_at: msg.date_added, message_count: 0 }
+      }
+      grouped[msg.group_id].message_count++
+    }
+    setSessions(Object.values(grouped))
     setShowHistory(true)
     setSelectedSession(null)
     setSessionMessages([])
