@@ -141,6 +141,8 @@ def ask_chatbot(data: ChatRequest):
                     chart_spec=context["chart_spec"],
                     excel_spec=context["excel_spec"]
                 )
+                context["explanation"] = explanation
+                total_tokens += used_tokens
 
         elif step_type == "agent" and step_name == "visualizer_agent":
             chart_spec, used_tokens = generate_chart_spec(
@@ -163,6 +165,10 @@ def ask_chatbot(data: ChatRequest):
                     group_id=group_id
                 )
                 raise HTTPException(status_code=500, detail=f"Chart processing error: {str(e)}")
+            
+        elif step_type == "agent" and step_name == "script_generator_agent":
+            pass
+        
         else:
             save_message(
                 user_id=data.user_id,
