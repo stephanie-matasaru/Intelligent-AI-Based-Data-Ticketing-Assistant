@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 import uuid
+from openpyxl.utils import get_column_letter
 
 def process_excel_spec(excel_spec: dict) -> dict:
     if "error" in excel_spec:
@@ -32,8 +33,20 @@ def process_excel_spec(excel_spec: dict) -> dict:
     os.makedirs(export_dir, exist_ok=True)
 
     file_path = os.path.join(export_dir, safe_filename)
+
+    sheet_name = excel_spec["sheet_name"]
+
     with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name=excel_spec['sheet_name'])
+        df.to_excel(writer, sheet_name=sheet_name, index=False)
+    
+        worksheet = writer.sheets[sheet_name]
+    
+        for idx, col in enumerate(df.columns):
+            max_len = max(df[col].astype(str).map(len).max(), len(str(col))) + 2
+        
+            col_letter = get_column_letter(idx + 1)
+        
+            worksheet.column_dimensions[col_letter].width = max_len
 
     excel_spec["download_url"] = f"/static/exports/{safe_filename}"
     
