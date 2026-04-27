@@ -8,6 +8,8 @@ from services.chat_service import save_message, get_chat_history_by_user
 from services.sql_service import execute_query
 from agents.visualizer_agent import generate_chart_spec
 from services.graph_service import process_chart_spec
+from agents.excel_agent import generate_excel_spec
+from services.excel_service import process_excel_spec
 import uuid
 from typing import Optional
 
@@ -49,7 +51,8 @@ def ask_chatbot(data: ChatRequest):
         "sql_query": None,
         "results": None,
         "explanation": None,
-        "chart_spec": None
+        "chart_spec": None,
+        "excel_spec": None
     }
 
     total_tokens = orchestration_tokens
@@ -104,6 +107,29 @@ def ask_chatbot(data: ChatRequest):
                     group_id=group_id
                 )
                 raise HTTPException(status_code=500, detail=f"SQL error: {str(e)}")
+            
+        elif step_type == "agent" and step_name == "excel_agent":
+            excel_spec, used_tokens = generate_excel_spec(
+                context["question"],
+                context["results"]
+            )
+            context["excel_spec"] = excel_spec
+            total_tokens += used_tokens
+
+        elif step_type == "service" and step_name == "excel_service":
+            try:
+                context["excel_spec"]["data"] = context["results"]
+                context["excel_spec"] = process_excel_spec(context["excel_spec"])
+            except ValueError as e:
+                save_message(
+                    user_id=data.user_id,
+                    sender="agent",
+                    message=str(e),
+                    status="Error",
+                    tokens=total_tokens,
+                    group_id=group_id
+                )
+                raise HTTPException(status_code=500, detail=f"Excel processing error: {str(e)}")
 
         elif step_type == "agent" and step_name == "response_agent":
             if context["explanation"] is None:
@@ -112,7 +138,8 @@ def ask_chatbot(data: ChatRequest):
                     history=context["history"],
                     results=context["results"],
                     final_output_type=plan["final_output"],
-                    chart_spec=context["chart_spec"]
+                    chart_spec=context["chart_spec"],
+                    excel_spec=context["excel_spec"]
                 )
 
         elif step_type == "agent" and step_name == "visualizer_agent":
@@ -151,6 +178,7 @@ def ask_chatbot(data: ChatRequest):
     results = context["results"]
     explanation = context.get("explanation") or "I'm sorry, I could not generate a response."
     chart_spec = context["chart_spec"]
+    excel_spec = context["excel_spec"]
 
     is_single_value = bool(results) and len(results) == 1 and len(results[0]) == 1
 
@@ -171,6 +199,7 @@ def ask_chatbot(data: ChatRequest):
         "explanation": explanation,
         "is_single_value": is_single_value,
         "chart_spec": chart_spec,
+        "excel_spec": excel_spec,
         "group_id": group_id
     }
 
