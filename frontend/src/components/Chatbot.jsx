@@ -2,19 +2,84 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from './Navbar'
 import './Chatbot.css'
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, LineChart, Line, CartesianGrid
+} from 'recharts'
+
+const CHART_COLORS = ['#A1CEBC', '#7b6cf6', '#e09a3a', '#e05c5c', '#4a9edd']
+
+function renderChart(chartSpec) {
+  if (!chartSpec || chartSpec.error) return null
+
+  const { chart_type, title, x_key, y_key, data } = chartSpec
+
+  return (
+    <div style={{ marginTop: '12px' }}>
+      {title && (
+        <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          {title}
+        </p>
+      )}
+      <ResponsiveContainer width="100%" height={200}>
+        {chart_type === 'bar' ? (
+          <BarChart data={data} barSize={28}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
+            <XAxis dataKey={x_key} stroke="#ffffff30" tick={{ fill: '#ffffff60', fontSize: 11 }} axisLine={false} tickLine={false} />
+            <YAxis stroke="#ffffff30" tick={{ fill: '#ffffff40', fontSize: 10 }} axisLine={false} tickLine={false} />
+            <Tooltip
+              contentStyle={{ background: '#1a1a35', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff' }}
+              cursor={{ fill: '#ffffff05' }}
+            />
+            <Bar dataKey={y_key} radius={[4, 4, 0, 0]}>
+              {data.map((_, i) => (
+                <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+              ))}
+            </Bar>
+          </BarChart>
+        ) : chart_type === 'line' ? (
+          <LineChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
+            <XAxis dataKey={x_key} stroke="#ffffff30" tick={{ fill: '#ffffff60', fontSize: 11 }} axisLine={false} tickLine={false} />
+            <YAxis stroke="#ffffff30" tick={{ fill: '#ffffff40', fontSize: 10 }} axisLine={false} tickLine={false} />
+            <Tooltip
+              contentStyle={{ background: '#1a1a35', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff' }}
+              cursor={{ stroke: '#A1CEBC', strokeWidth: 1 }}
+            />
+            <Line type="monotone" dataKey={y_key} stroke="#A1CEBC" strokeWidth={2.5}
+              dot={{ fill: '#A1CEBC', r: 3, strokeWidth: 0 }}
+              activeDot={{ r: 5, fill: '#4fc093' }} />
+          </LineChart>
+        ) : chart_type === 'pie' ? (
+          <PieChart>
+            <Pie data={data} cx="50%" cy="50%" outerRadius={80} dataKey={y_key} nameKey={x_key} paddingAngle={3}>
+              {data.map((_, i) => (
+                <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+              ))}
+            </Pie>
+            <Tooltip
+              contentStyle={{ background: '#1a1a35', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff' }}
+            />
+          </PieChart>
+        ) : null}
+      </ResponsiveContainer>
+    </div>
+  )
+}
 
 function Chatbot() {
+  const navigate = useNavigate()
   const [messages, setMessages] = useState(() => {
-  const saved = sessionStorage.getItem('chat_messages')
-  return saved ? JSON.parse(saved) : [
-    {
-      id: 1,
-      type: 'ai',
-      text: "Hello! I'm your AI Ticketing Assistant. Describe your issue and I'll help you resolve it.",
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    }
-  ]
-})
+    const saved = sessionStorage.getItem('chat_messages')
+    return saved ? JSON.parse(saved) : [
+      {
+        id: 1,
+        type: 'ai',
+        text: "Hello! I'm your AI Ticketing Assistant. Describe your issue and I'll help you resolve it.",
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }
+    ]
+  })
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [groupId, setGroupId] = useState(() => {
@@ -23,14 +88,18 @@ function Chatbot() {
   const [isListening, setIsListening] = useState(false)
   const [attachedFile, setAttachedFile] = useState(null)
   const [voiceEnabled, setVoiceEnabled] = useState(false)
+  const [showHistory, setShowHistory] = useState(false)
+  const [sessions, setSessions] = useState([])
+  const [sessionMessages, setSessionMessages] = useState([])
+  const [selectedSession, setSelectedSession] = useState(null)
   const bottomRef = useRef(null)
   const fileInputRef = useRef(null)
 
-  // Set this however your app stores the logged-in user
-  const userId = 1
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
+  const userId = user?.user_id || 1
 
   useEffect(() => {
-  sessionStorage.setItem('chat_messages', JSON.stringify(messages))
+    sessionStorage.setItem('chat_messages', JSON.stringify(messages))
   }, [messages])
 
   useEffect(() => {
@@ -40,6 +109,26 @@ function Chatbot() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isTyping])
+
+  useEffect(() => {
+    sessionStorage.removeItem('chat_messages')
+    sessionStorage.removeItem('chat_group_id')
+    setGroupId(null)
+    setMessages([{
+      id: 1,
+      type: 'ai',
+      text: "Hello! I'm your AI Ticketing Assistant. Describe your issue and I'll help you resolve it.",
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }])
+
+    fetch('http://localhost:8000/api/auth/me', {
+      credentials: 'include'
+    })
+      .then(res => {
+        if (!res.ok) navigate('/')
+      })
+      .catch(() => navigate('/'))
+  }, [])
 
   function handleKeyDown(e) {
     if (e.key === 'Enter') handleSend()
@@ -76,6 +165,22 @@ function Chatbot() {
         role: msg.type === 'user' ? 'user' : 'assistant',
         content: msg.text
       }))
+  }
+
+  async function fetchSessions() {
+    const res = await fetch(`http://localhost:8000/api/chatbot/history/${userId}`)
+    const data = await res.json()
+    setSessions(data.history)
+    setShowHistory(true)
+    setSelectedSession(null)
+    setSessionMessages([])
+  }
+
+  async function fetchMessages(groupId) {
+    const res = await fetch(`http://localhost:8000/api/chat/messages/${groupId}`)
+    const data = await res.json()
+    setSessionMessages(data)
+    setSelectedSession(groupId)
   }
 
   function handleDownload(sqlScript, filename) {
@@ -209,7 +314,8 @@ function Chatbot() {
         id: Date.now() + 1,
         type: 'ai',
         text: data.explanation || 'No response received.',
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        chart_spec: data.chart_spec || null
       }
 
       setMessages(prev => [...prev, aiMsg])
@@ -290,6 +396,7 @@ function Chatbot() {
                   <div className="max-w-[85%]">
                     <div className="bg-gradient-to-br from-[#0a0a1a] to-[#1a1a3a] backdrop-blur-xl p-6 rounded-2xl rounded-tl-none shadow-2xl">
                       <p className="text-white/80 leading-relaxed">{msg.text}</p>
+                      {msg.chart_spec && renderChart(msg.chart_spec)}
                       {msg.sql_script && (
                         <div className="mt-4">
                           <pre className="bg-black/40 text-[#A1CEBC] text-xs rounded-xl p-4 overflow-auto max-h-48 font-mono leading-relaxed border border-white/10">
@@ -410,27 +517,83 @@ function Chatbot() {
           </div>
 
           <nav className="mt-8">
-            {[
-              { icon: 'chat_bubble', label: 'Active Chat', active: true },
-              { icon: 'group', label: 'Agent Queue' },
-              { icon: 'menu_book', label: 'Knowledge Base' },
-              { icon: 'query_stats', label: 'Insights' },
-              { icon: 'hub', label: 'Team' },
-            ].map((item) => (
-              <div
-                key={item.label}
-                className={`mx-4 my-1 p-4 flex items-center gap-3 rounded-xl cursor-pointer transition-all duration-200 ${
-                  item.active
-                    ? 'bg-gradient-to-br from-[#000000] to-[#6B4D90] text-white shadow-lg shadow-blue-900/20'
-                    : 'text-white/50 hover:bg-white/5 hover:text-white hover:translate-x-1'
-                }`}
-              >
-                <span className="material-symbols-outlined" style={item.active ? { fontVariationSettings: "'FILL' 1" } : {}}>
-                  {item.icon}
-                </span>
-                <span className="font-body text-sm uppercase tracking-widest">{item.label}</span>
+            {/* Active Chat */}
+            <div
+              onClick={() => { setShowHistory(false); setSelectedSession(null); setSessionMessages([]) }}
+              className={`mx-4 my-1 p-4 flex items-center gap-3 rounded-xl cursor-pointer transition-all duration-200 ${
+                !showHistory
+                  ? 'bg-gradient-to-br from-[#000000] to-[#6B4D90] text-white shadow-lg shadow-blue-900/20'
+                  : 'text-white/50 hover:bg-white/5 hover:text-white hover:translate-x-1'
+              }`}
+            >
+              <span className="material-symbols-outlined" style={!showHistory ? { fontVariationSettings: "'FILL' 1" } : {}}>chat_bubble</span>
+              <span className="font-body text-sm uppercase tracking-widest">Active Chat</span>
+            </div>
+
+            {/* Chat History */}
+            <div
+              onClick={fetchSessions}
+              className={`mx-4 my-1 p-4 flex items-center gap-3 rounded-xl cursor-pointer transition-all duration-200 ${
+                showHistory
+                  ? 'bg-gradient-to-br from-[#000000] to-[#6B4D90] text-white shadow-lg shadow-blue-900/20'
+                  : 'text-white/50 hover:bg-white/5 hover:text-white hover:translate-x-1'
+              }`}
+            >
+              <span className="material-symbols-outlined" style={showHistory ? { fontVariationSettings: "'FILL' 1" } : {}}>history</span>
+              <span className="font-body text-sm uppercase tracking-widest">Chat History</span>
+            </div>
+
+            {/* Session list */}
+            {showHistory && !selectedSession && (
+              <div className="mx-4 mt-2 space-y-1">
+                {sessions.length === 0 && (
+                  <p className="text-white/30 text-xs px-2 py-3">No past sessions found.</p>
+                )}
+                {sessions.map((s) => (
+                  <div
+                    key={s.group_id}
+                    onClick={() => fetchMessages(s.group_id)}
+                    className="p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-all"
+                  >
+                    <p className="text-white/70 text-xs font-mono truncate">{s.group_id.slice(0, 8)}...</p>
+                    <p className="text-white/30 text-[0.6rem] mt-1">{s.started_at.slice(0, 16)} • {s.message_count} messages</p>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
+
+            {/* Messages in selected session */}
+            {showHistory && selectedSession && (
+              <div className="mx-4 mt-2">
+                <button
+                  onClick={() => setSelectedSession(null)}
+                  className="text-white/40 hover:text-white text-xs flex items-center gap-1 mb-3 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[14px]">arrow_back</span>
+                  Back to sessions
+                </button>
+                <div className="space-y-2">
+                  {sessionMessages.map((msg, i) => (
+                    <div key={i} className={`p-3 rounded-xl text-xs ${msg.sender === 'user' ? 'bg-[#6B4D90]/30 text-white/80' : 'bg-white/5 text-white/60'}`}>
+                      <p className="font-bold uppercase tracking-widest text-[0.6rem] mb-1 opacity-50">{msg.sender}</p>
+                      <p className="leading-relaxed">{msg.message}</p>
+                      <p className="text-white/20 text-[0.6rem] mt-1">{msg.date_added.slice(0, 16)}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Sign Out */}
+            <div className="mt-4 pt-4 border-t border-white/5">
+              <div
+                onClick={() => navigate('/')}
+                className="text-white/50 mx-4 my-1 p-4 flex items-center gap-3 hover:bg-white/5 hover:text-white rounded-xl transition-all cursor-pointer"
+              >
+                <span className="material-symbols-outlined">logout</span>
+                <span className="font-body text-sm uppercase tracking-widest">Sign Out</span>
+              </div>
+            </div>
           </nav>
         </aside>
       </main>
