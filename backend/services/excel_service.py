@@ -37,7 +37,7 @@ def process_excel_spec(excel_spec: dict) -> dict:
         worksheet = writer.sheets[sheet_name]
         
         for idx, col in enumerate(df.columns):
-            max_len = max(df[col].astype(str).map(len).max(), len(str(col))) + 2
+            max_len = max(df[col].fillna("").astype(str).str.len().max(), len(str(col))) + 2
             col_letter = get_column_letter(idx + 1)
             worksheet.column_dimensions[col_letter].width = max_len
 
