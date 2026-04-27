@@ -144,3 +144,21 @@
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #7987d1; border-radius: 10px; }
+
+/* Export button */
+.export-btn {
+  background: none;
+  border: 1px solid #ffffff20;
+  border-radius: 6px;
+  color: #ffffff60;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 4px 6px;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.export-btn:hover {
+  border-color: #A1CEBC;
+  color: #A1CEBC;
+}

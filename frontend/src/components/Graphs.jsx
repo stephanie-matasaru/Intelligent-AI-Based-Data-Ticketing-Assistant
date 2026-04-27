@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import { useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -72,9 +71,23 @@ function Graphs() {
   })
 
   const [priorityData, setPriorityData] = useState(MOCK_PRIORITY)
-  const [statusData, setStatusData]     = useState(MOCK_STATUS)
-  const [slaData, setSlaData]           = useState(MOCK_SLA)
+  const [statusData, setStatusData] = useState(MOCK_STATUS)
+  const [slaData, setSlaData] = useState(MOCK_SLA)
   const [timelineData, setTimelineData] = useState(MOCK_TIMELINE)
+
+  const priorityRef = useRef(null)
+  const slaRef = useRef(null)
+  const timelineRef = useRef(null)
+  const statusRef = useRef(null)
+
+  async function exportChart(ref, filename) {
+    const html2canvas = (await import('html2canvas')).default
+    const canvas = await html2canvas(ref.current, { backgroundColor: '#1a1a2e' })
+    const link = document.createElement('a')
+    link.download = filename
+    link.href = canvas.toDataURL('image/png')
+    link.click()
+  }
 
   const { hash } = useLocation()
 
@@ -194,11 +207,18 @@ function Graphs() {
         <div className="charts-grid">
 
           {/* 1. Bar – Priority */}
-          <div className="chart-card" id="priority">
+          <div className="chart-card" id="priority" ref={priorityRef}>
             <div className="chart-card-header">
-              <h2 className="chart-title">Tickets by Priority</h2>
-              <span className="chart-badge">{priorityData.reduce((s,d) => s+d.count, 0)} total</span>
+              <h2 className="chart-title">Tickets by Priority</h2> 
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="chart-badge">{priorityData.reduce((s,d) => s+d.count, 0)} total</span>
+                <button className="export-btn" onClick={() => exportChart(priorityRef, 'priority.png')}
+                  aria-label="Export priority chart as PNG">
+                  <span className="material-symbols-outlined" style={{ fontSize: 16 }}>download</span>
+                </button>
+              </div>
             </div>
+
             {/* screen reader table */}
             <table className="sr-only" aria-label="Tickets by priority data">
               <thead><tr><th scope="col">Priority</th><th scope="col">Count</th></tr></thead>
@@ -226,12 +246,18 @@ function Graphs() {
           </div>
 
           {/* 2. Donut – SLA */}
-          <div className="chart-card" id="sla">
+          <div className="chart-card" id="sla" ref={slaRef}>
             <div className="chart-card-header">
               <h2 className="chart-title">SLA Compliance</h2>
+               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span className="chart-badge">
                 {Math.round(slaData[0].value / (slaData[0].value + slaData[1].value) * 100)}% met
               </span>
+                <button className="export-btn" onClick={() => exportChart(slaRef, 'sla.png')}
+                  aria-label="Export SLA chart as PNG">
+                  <span className="material-symbols-outlined" style={{ fontSize: 16 }}>download</span>
+                </button>
+              </div>
             </div>
             {/* screen reader table */}
             <table className="sr-only" aria-label="SLA compliance data">
@@ -273,17 +299,23 @@ function Graphs() {
           </div>
 
           {/* 3. Line – Timeline */}
-          <div className="chart-card chart-card--wide" id="timeline">
+          <div className="chart-card chart-card--wide" id="timeline" ref={timelineRef}>
             <div className="chart-card-header">
               <h2 className="chart-title">Tickets Created Over Time</h2>
-              <div className="timeline-toggle">
-                {['Daily', 'Weekly', 'Monthly'].map(t => (
-                  <button key={t} className={`toggle-btn ${t === 'Weekly' ? 'toggle-btn--active' : ''}`}
-                    aria-pressed={t === 'Weekly'}>
-                    {t}
-                  </button>
-                ))}
-              </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div className="timeline-toggle">
+                    {['Daily', 'Weekly', 'Monthly'].map(t => (
+                      <button key={t} className={`toggle-btn ${t === 'Weekly' ? 'toggle-btn--active' : ''}`}
+                        aria-pressed={t === 'Weekly'}>
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                <button className="export-btn" onClick={() => exportChart(timelineRef, 'timeline.png')}
+                  aria-label="Export timeline chart as PNG">
+                  <span className="material-symbols-outlined" style={{ fontSize: 16 }}>download</span>
+                </button>
+            </div>
             </div>
             {/* screen reader table */}
             <table className="sr-only" aria-label="Tickets created over time data">
@@ -310,10 +342,16 @@ function Graphs() {
           </div>
 
           {/* 4. Bar – Status */}
-          <div className="chart-card chart-card--wide" id="status">
+          <div className="chart-card chart-card--wide" id="status" ref={statusRef}>
             <div className="chart-card-header">
               <h2 className="chart-title">Tickets by Status</h2>
-              <span className="chart-badge">{statusData.reduce((s,d) => s+d.count, 0)} total</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="chart-badge">{statusData.reduce((s,d) => s+d.count, 0)} total</span>
+                <button className="export-btn" onClick={() => exportChart(statusRef, 'status.png')}
+                  aria-label="Export status chart as PNG">
+                  <span className="material-symbols-outlined" style={{ fontSize: 16 }}>download</span>
+                </button>
+              </div>
             </div>
             {/* screen reader table */}
             <table className="sr-only" aria-label="Tickets by status data">
