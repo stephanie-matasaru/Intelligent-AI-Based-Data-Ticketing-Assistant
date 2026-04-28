@@ -191,18 +191,11 @@ function Chatbot() {
   setSessionMessages([])
 }
 
-  async function fetchMessages(groupId) {
+ async function fetchMessages(groupId) {
   try {
     const res = await fetch(`http://localhost:8000/api/chat/messages/${groupId}`)
     const data = await res.json()
-    const loaded = Array.isArray(data) ? data : []
-    setMessages(loaded.map((msg, i) => ({
-      id: i,
-      type: msg.sender === 'user' ? 'user' : 'ai',
-      text: msg.message,
-      time: msg.date_added.slice(11, 16)
-    })))
-    setShowHistory(false)
+    setSessionMessages(Array.isArray(data) ? data : [])
     setSelectedSession(groupId)
   } catch (error) {
     console.error('Error fetching messages:', error)
