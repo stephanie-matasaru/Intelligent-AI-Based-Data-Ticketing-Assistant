@@ -53,8 +53,11 @@ RULES:
   system (e.g. weather, sports, cooking, personal questions, general knowledge),
   you MUST return ONLY the response_agent step and set final_output to "unrelated".
   Do NOT use query_agent or sql_service for unrelated questions.
+  Do NOT attempt to query the database for unrelated questions.
   Examples of unrelated questions: "how is the weather?", "who won the game?", 
-  "what should I eat?", "tell me a joke".
+  "what should I eat?", "tell me a joke", "how are you?", "what's up?",
+  "who are you?", "good morning", "hello", "thanks", "what time is it?",
+  "what is your name?", "can you help me?", "what can you do?".
 
 Return JSON in exactly this shape:
 {
