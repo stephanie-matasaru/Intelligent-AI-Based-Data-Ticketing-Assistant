@@ -140,6 +140,7 @@ function Chatbot() {
       alert('Speech recognition is not supported in this browser. Try Chrome.')
       return
     }
+  
 
     const recognition = new SpeechRecognition()
     recognition.lang = 'en-US'
@@ -157,6 +158,20 @@ function Chatbot() {
 
     recognition.start()
   }
+
+  function handleNewChat() {
+    sessionStorage.removeItem('chat_messages')
+    sessionStorage.removeItem('chat_group_id')
+    setGroupId(null)
+    setMessages([{
+      id: 1,
+      type: 'ai',
+      text: "Hello! I'm your AI Ticketing Assistant. Describe your issue and I'll help you resolve it.",
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }])
+    setShowHistory(false)
+    setSelectedSession(null)
+}
 
   function buildHistory(messages) {
     return messages
@@ -577,6 +592,15 @@ function Chatbot() {
             >
               <span className="material-symbols-outlined" style={!showHistory ? { fontVariationSettings: "'FILL' 1" } : {}}>chat_bubble</span>
               <span className="font-body text-sm uppercase tracking-widest">Active Chat</span>
+            </div>
+
+            {/* New Chat */}
+            <div
+              onClick={handleNewChat}
+              className="mx-4 my-1 p-4 flex items-center gap-3 rounded-xl cursor-pointer text-white/50 hover:bg-white/5 hover:text-white transition-all duration-200"
+            >
+              <span className="material-symbols-outlined">add_circle</span>
+              <span className="font-body text-sm uppercase tracking-widest">New Chat</span>
             </div>
 
             {/* Chat History */}
