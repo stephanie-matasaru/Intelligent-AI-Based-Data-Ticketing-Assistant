@@ -146,7 +146,6 @@ Then continue with the rest of the relevant scenario above.
 SCENARIO 6 - Missing columns with defaults:
 Add one line after the summary: "These expected columns were missing and defaults were applied: [list them with their defaults]."
 Then continue with the rest of the relevant scenario above.
-  an AI ticketing assistant and list 2-3 examples of what you can help with.
 """
 
 PROMPT_MAP = {
