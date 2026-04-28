@@ -18,7 +18,7 @@ app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(graphs.router, prefix="/api/graphs", tags=["graphs"])
 app.include_router(dropdown.router, prefix="/api/dropdown", tags=["dropdown"])
 app.include_router(upload.router, prefix="/api/upload", tags=["upload"])
-app.include_router(chat_history.router, prefix="/api/chat_history", tags=["chat_history"])
+app.include_router(chat_history.router, prefix="/api/chat", tags=["chat"])
 
 @app.get("/")
 def root():
