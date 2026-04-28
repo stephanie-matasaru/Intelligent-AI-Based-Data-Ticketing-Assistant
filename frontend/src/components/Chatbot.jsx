@@ -168,28 +168,31 @@ function Chatbot() {
   }
 
   async function fetchSessions() {
-    const res = await fetch(`http://localhost:8000/api/chatbot/history/${userId}`)
-    const data = await res.json()
-    // group messages by group_id
-    const grouped = {}
-    for (const msg of data.history) {
-      if (!grouped[msg.group_id]) {
-        grouped[msg.group_id] = { group_id: msg.group_id, started_at: msg.date_added, message_count: 0 }
-      }
-      grouped[msg.group_id].message_count++
-    }
-    setSessions(Object.values(grouped))
-    setShowHistory(true)
-    setSelectedSession(null)
-    setSessionMessages([])
-  }
+  const res = await fetch(`http://localhost:8000/api/chat/sessions/${userId}`)
+  const data = await res.json()
+  setSessions(Array.isArray(data) ? data : [])
+  setShowHistory(true)
+  setSelectedSession(null)
+  setSessionMessages([])
+}
 
   async function fetchMessages(groupId) {
+  try {
     const res = await fetch(`http://localhost:8000/api/chat/messages/${groupId}`)
     const data = await res.json()
-    setSessionMessages(data)
+    const loaded = Array.isArray(data) ? data : []
+    setMessages(loaded.map((msg, i) => ({
+      id: i,
+      type: msg.sender === 'user' ? 'user' : 'ai',
+      text: msg.message,
+      time: msg.date_added.slice(11, 16)
+    })))
+    setShowHistory(false)
     setSelectedSession(groupId)
+  } catch (error) {
+    console.error('Error fetching messages:', error)
   }
+}
 
   function handleDownload(sqlScript, filename) {
     const blob = new Blob([sqlScript], { type: 'text/plain' })
