@@ -195,10 +195,30 @@ function MyWorkspace() {
 
                 {/* Excel badge */}
                 {item.type === 'excel' && item.excel_spec && (
-                  <div className="flex items-center gap-2 bg-[#4fc093]/10 border border-[#4fc093]/20 rounded-lg px-3 py-2 w-fit">
-                    <span className="material-symbols-outlined text-[#4fc093] text-[14px]">table_chart</span>
-                    <span className="text-[#4fc093] text-xs">{item.excel_spec.filename || 'export.xlsx'}</span>
-                  </div>
+                <div className="flex items-center gap-2">
+                    {item.excel_spec.file_data_base64 ? (
+                    <button
+                        onClick={() => {
+                        const byteCharacters = atob(item.excel_spec.file_data_base64)
+                        const byteArray = new Uint8Array([...byteCharacters].map(c => c.charCodeAt(0)))
+                        const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+                        const link = document.createElement('a')
+                        link.href = URL.createObjectURL(blob)
+                        link.download = item.excel_spec.filename || 'export.xlsx'
+                        link.click()
+                        }}
+                        className="flex items-center gap-2 bg-[#4fc093]/10 border border-[#4fc093]/20 hover:bg-[#4fc093]/20 rounded-lg px-3 py-2 w-fit transition-colors"
+                    >
+                        <span className="material-symbols-outlined text-[#4fc093] text-[14px]">download</span>
+                        <span className="text-[#4fc093] text-xs">{item.excel_spec.filename || 'export.xlsx'}</span>
+                    </button>
+                    ) : (
+                    <div className="flex items-center gap-2 bg-[#4fc093]/10 border border-[#4fc093]/20 rounded-lg px-3 py-2 w-fit">
+                        <span className="material-symbols-outlined text-[#4fc093] text-[14px]">table_chart</span>
+                        <span className="text-[#4fc093] text-xs">{item.excel_spec.filename || 'export.xlsx'}</span>
+                    </div>
+                    )}
+                </div>
                 )}
 
                 {/* Timestamp */}

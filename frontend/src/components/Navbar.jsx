@@ -39,6 +39,7 @@ function Navbar() {
           <Link to="/tickets" className={`nav-link ${pathname === '/tickets' ? 'nav-link--active' : ''}`} aria-current={pathname === '/tickets' ? 'page' : undefined}>Tickets</Link>
           <Link to="/graphs" className={`nav-link ${pathname === '/graphs' ? 'nav-link--active' : ''}`} aria-current={pathname === '/graphs' ? 'page' : undefined}>Archive</Link>
           <Link to="/chat" className={`nav-link ${pathname === '/chat' ? 'nav-link--active' : ''}`} aria-current={pathname === '/chat' ? 'page' : undefined}>Chatbot</Link>
+          <Link to="/workspace" className={`nav-link ${pathname === '/workspace' ? 'nav-link--active' : ''}`} aria-current={pathname === '/workspace' ? 'page' : undefined}>Workspace</Link>
         </div>
       </div>
       <div className="nav-right">
