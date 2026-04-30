@@ -79,6 +79,8 @@ def ask_chatbot(data: ChatRequest):
                 )
                 context["explanation"] = explanation
                 total_tokens += used_tokens
+                if plan["final_output"] == "text_and_excel" and context.get("excel_spec"):
+                    context["explanation"] = context["explanation"] + " [ACTION: DOWNLOAD_EXCEL]"
                 break
 
             if not is_safe_sql(sql_query):

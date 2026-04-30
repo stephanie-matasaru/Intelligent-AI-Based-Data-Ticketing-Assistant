@@ -163,6 +163,7 @@ def generate_explanation(
     results: list = None,
     final_output_type: str = "text",
     chart_spec: dict = None,
+    excel_spec: dict = None,
     script_summary: dict = None,
     error_message: str = None
 ):
