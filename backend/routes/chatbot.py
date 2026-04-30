@@ -79,8 +79,6 @@ def ask_chatbot(data: ChatRequest):
                 )
                 context["explanation"] = explanation
                 total_tokens += used_tokens
-                if plan["final_output"] == "text_and_excel" and context.get("excel_spec"):
-                    context["explanation"] = context["explanation"] + " [ACTION: DOWNLOAD_EXCEL]"
                 break
 
             if not is_safe_sql(sql_query):
@@ -145,6 +143,8 @@ def ask_chatbot(data: ChatRequest):
                 )
                 context["explanation"] = explanation
                 total_tokens += used_tokens
+                if plan["final_output"] == "text_and_excel" and context.get("excel_spec"):
+                    context["explanation"] = context["explanation"] + " [ACTION: DOWNLOAD_EXCEL]"
 
         elif step_type == "agent" and step_name == "visualizer_agent":
             chart_spec, used_tokens = generate_chart_spec(
