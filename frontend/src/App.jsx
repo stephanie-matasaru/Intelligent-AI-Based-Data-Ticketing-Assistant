@@ -4,6 +4,7 @@ import Chatbot from './components/Chatbot'
 import Tickets from './components/Tickets'
 import Graphs from './components/Graphs'
 import Dashboard from './components/Dashboard'
+import MyWorkspace from './components/MyWorkspace'
 import './App.css'
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
         <Route path="/tickets" element={<Tickets />} />
         <Route path="/graphs" element = {<Graphs />} />
         <Route path="/dashboard" element = {<Dashboard />} />
+        <Route path="/workspace" element={<MyWorkspace />} />
       </Routes>
     </BrowserRouter>
   )

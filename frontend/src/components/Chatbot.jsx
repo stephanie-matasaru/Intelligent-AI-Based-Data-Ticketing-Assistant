@@ -67,6 +67,20 @@ function renderChart(chartSpec) {
   )
 }
 
+function saveToWorkspace(msg) {
+  const existing = JSON.parse(localStorage.getItem('workspace_items') || '[]')
+  const item = {
+    id: Date.now(),
+    savedAt: new Date().toISOString(),
+    text: msg.text,
+    chart_spec: msg.chart_spec || null,
+    excel_spec: msg.excel_spec || null,
+    label: msg.chart_spec?.title || msg.text?.slice(0, 60) || 'Saved insight',
+    type: msg.chart_spec ? 'chart' : msg.excel_spec ? 'excel' : 'text',
+  }
+  localStorage.setItem('workspace_items', JSON.stringify([item, ...existing]))
+}
+
 function Chatbot() {
   const navigate = useNavigate()
   const [messages, setMessages] = useState(() => {
@@ -94,6 +108,7 @@ function Chatbot() {
   const [selectedSession, setSelectedSession] = useState(null)
   const bottomRef = useRef(null)
   const fileInputRef = useRef(null)
+  const [savedIds, setSavedIds] = useState([])
 
   const user = JSON.parse(localStorage.getItem('user') || '{}')
   const userId = user?.user_id || 1
@@ -454,6 +469,23 @@ function Chatbot() {
                         </div>
                       )}
                       {msg.chart_spec && renderChart(msg.chart_spec)}
+                      {msg.chart_spec && renderChart(msg.chart_spec)}
+                      {(msg.chart_spec || msg.excel_spec) && (
+                        <button
+                          onClick={() => {
+                            saveToWorkspace(msg)
+                            setSavedIds(prev => [...prev, msg.id])
+                          }}
+                          disabled={savedIds.includes(msg.id)}
+                          className="mt-2 flex items-center gap-1 text-[0.625rem] uppercase tracking-widest transition-colors"
+                          style={{ color: savedIds.includes(msg.id) ? '#4fc093' : 'rgba(255,255,255,0.3)' }}
+                        >
+                          <span className="material-symbols-outlined text-[14px]">
+                            {savedIds.includes(msg.id) ? 'bookmark' : 'bookmark_add'}
+                          </span>
+                          {savedIds.includes(msg.id) ? 'Saved to Workspace' : 'Save to Workspace'}
+                        </button>
+                      )}
                       {msg.sql_script && (
                         <div className="mt-4">
                           <pre className="bg-black/40 text-[#A1CEBC] text-xs rounded-xl p-4 overflow-auto max-h-48 font-mono leading-relaxed border border-white/10">

@@ -15,12 +15,12 @@ const NAV_CARDS = [
     route: '/tickets',
   },
   {
-    id: 'alerts',
-    icon: 'traffic',
-    label: 'Alerts',
-    description: 'Active system alerts',
+    id: 'workspace',
+    icon: 'dashboard_customize',
+    label: 'My Workspace',
+    description: 'Your saved insights & charts',
     accent: '#e05c5c',
-    route: '/alerts',
+    route: '/workspace'
   },
   {
     id: 'chatbot',
