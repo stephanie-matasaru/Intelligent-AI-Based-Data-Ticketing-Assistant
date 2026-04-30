@@ -56,7 +56,7 @@ Rules:
 - Keep the response short and professional.
 """
 
-TEXT_AND_EXCEL_PROMPT = """
+TEXT_AND_FILE_PROMPT = """
 You are a professional data analyst assistant. Your task is to confirm to the
 user that their Excel export has been generated.
 
