@@ -20,7 +20,7 @@ const NAV_CARDS = [
     label: 'My Workspace',
     description: 'Your saved insights & charts',
     accent: '#e05c5c',
-    route: '/workspace'
+    route: '/workspace',
   },
   {
     id: 'chatbot',
@@ -36,23 +36,7 @@ const NAV_CARDS = [
     label: 'Charts',
     description: 'KPI & analytics dashboard',
     accent: '#4fc093',
-    route: '/graphs#priority',
-  },
-  {
-    id: 'piechart',
-    icon: 'donut_large',
-    label: 'Pie Chart',
-    description: 'Distribution breakdown',
-    accent: '#e09a3a',
-    route: '/graphs#sla',
-  },
-  {
-    id: 'incidents',
-    icon: 'crisis_alert',
-    label: 'Daily Incidents',
-    description: "Today's incident log",
-    accent: '#e0d43a',
-    route: '/incidents',
+    route: '/graphs',
   },
 ]
 
