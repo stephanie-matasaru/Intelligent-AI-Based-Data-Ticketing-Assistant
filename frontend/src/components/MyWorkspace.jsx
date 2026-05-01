@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from './Navbar'
 import {
@@ -48,6 +48,17 @@ function MyWorkspace() {
   const navigate = useNavigate()
   const [items, setItems] = useState([])
   const [filter, setFilter] = useState('all') // all | chart | text | excel
+
+  const chartRefs = useRef({})
+
+  async function exportChart(ref, filename) {
+    const html2canvas = (await import('html2canvas')).default
+    const canvas = await html2canvas(ref, { backgroundColor: '#1a1a2e' })
+    const link = document.createElement('a')
+    link.download = filename
+    link.href = canvas.toDataURL('image/png')
+    link.click()
+  }
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('workspace_items') || '[]')
@@ -189,7 +200,9 @@ function MyWorkspace() {
                         {item.chart_spec.title}
                       </p>
                     )}
-                    {renderChart(item.chart_spec)}
+                    <div ref={el => { if (el) chartRefs.current[item.id] = el }}>
+                      {renderChart(item.chart_spec)}
+                    </div>
                   </div>
                 )}
 
@@ -222,9 +235,20 @@ function MyWorkspace() {
                 )}
 
                 {/* Timestamp */}
-                <p className="text-white/20 text-[0.6rem] mt-auto pt-2 border-t border-white/5">
-                  Saved {new Date(item.savedAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
-                </p>
+                <div className="flex items-center justify-between mt-auto pt-2 border-t border-white/5">
+                  <p className="text-white/20 text-[0.6rem]">
+                    Saved {new Date(item.savedAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+                  </p>
+                  {item.chart_spec && !item.chart_spec.error && (
+                    <button
+                      onClick={() => exportChart(chartRefs.current[item.id], `${item.label?.slice(0, 20) || 'chart'}.png`)}
+                      className="flex items-center gap-1 text-[0.6rem] uppercase tracking-widest text-white/20 hover:text-white/60 transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[13px]">download</span>
+                      Export PNG
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
