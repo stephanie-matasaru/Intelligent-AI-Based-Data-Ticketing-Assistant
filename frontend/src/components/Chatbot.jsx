@@ -469,7 +469,6 @@ function Chatbot() {
                         </div>
                       )}
                       {msg.chart_spec && renderChart(msg.chart_spec)}
-                      {msg.chart_spec && renderChart(msg.chart_spec)}
                       {(msg.chart_spec || msg.excel_spec) && (
                         <button
                           onClick={() => {
