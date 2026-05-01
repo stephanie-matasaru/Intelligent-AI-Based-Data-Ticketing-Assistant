@@ -109,6 +109,7 @@ function Chatbot() {
   const bottomRef = useRef(null)
   const fileInputRef = useRef(null)
   const [savedIds, setSavedIds] = useState([])
+  const chartRefs = useRef({})
 
   const user = JSON.parse(localStorage.getItem('user') || '{}')
   const userId = user?.user_id || 1
@@ -373,6 +374,14 @@ function Chatbot() {
       setIsTyping(false)
     }
   }
+  async function exportChart(ref, filename) {
+    const html2canvas = (await import('html2canvas')).default
+    const canvas = await html2canvas(ref, { backgroundColor: '#1a1a2e' })
+    const link = document.createElement('a')
+    link.download = filename
+    link.href = canvas.toDataURL('image/png')
+    link.click()
+  }
 
   const handleDownloadExcel = (base64String, filename) => {
     try {
@@ -468,22 +477,39 @@ function Chatbot() {
                           </button>
                         </div>
                       )}
-                      {msg.chart_spec && renderChart(msg.chart_spec)}
+                      {msg.chart_spec && (
+                        <div ref={el => { if (el) chartRefs.current[msg.id] = el }}>
+                          {renderChart(msg.chart_spec)}
+                        </div>
+                      )}
                       {(msg.chart_spec || msg.excel_spec) && (
-                        <button
-                          onClick={() => {
-                            saveToWorkspace(msg)
-                            setSavedIds(prev => [...prev, msg.id])
-                          }}
-                          disabled={savedIds.includes(msg.id)}
-                          className="mt-2 flex items-center gap-1 text-[0.625rem] uppercase tracking-widest transition-colors"
-                          style={{ color: savedIds.includes(msg.id) ? '#4fc093' : 'rgba(255,255,255,0.3)' }}
-                        >
-                          <span className="material-symbols-outlined text-[14px]">
-                            {savedIds.includes(msg.id) ? 'bookmark' : 'bookmark_add'}
-                          </span>
-                          {savedIds.includes(msg.id) ? 'Saved to Workspace' : 'Save to Workspace'}
-                        </button>
+                        <div className="mt-2 flex items-center gap-3">
+                          <button
+                            onClick={() => {
+                              saveToWorkspace(msg)
+                              setSavedIds(prev => [...prev, msg.id])
+                            }}
+                            disabled={savedIds.includes(msg.id)}
+                            className="flex items-center gap-1 text-[0.625rem] uppercase tracking-widest transition-colors"
+                            style={{ color: savedIds.includes(msg.id) ? '#4fc093' : 'rgba(255,255,255,0.3)' }}
+                          >
+                            <span className="material-symbols-outlined text-[14px]">
+                              {savedIds.includes(msg.id) ? 'bookmark' : 'bookmark_add'}
+                            </span>
+                            {savedIds.includes(msg.id) ? 'Saved to Workspace' : 'Save to Workspace'}
+                          </button>
+
+                          {msg.chart_spec && (
+                            <button
+                              onClick={() => exportChart(chartRefs.current[msg.id], `chart-${msg.id}.png`)}
+                              className="flex items-center gap-1 text-[0.625rem] uppercase tracking-widest transition-colors"
+                              style={{ color: 'rgba(255,255,255,0.3)' }}
+                            >
+                              <span className="material-symbols-outlined text-[14px]">download</span>
+                              Export PNG
+                            </button>
+                          )}
+                        </div>
                       )}
                       {msg.sql_script && (
                         <div className="mt-4">
