@@ -21,6 +21,10 @@ def parse_uploaded_file(filename: str, file_bytes: bytes) -> dict:
         return _parse_csv(file_bytes)
     elif ext in ("xlsx", "xls"):
         return _parse_excel(file_bytes)
+    elif ext == "pdf":
+        return _parse_pdf(file_bytes)
+    elif ext in ("docx", "doc"):
+        return _parse_word(file_bytes)
     else:
         raise ValueError(f"Unsupported file type: .{ext}. Please upload a .xlsx or .csv file.")
 
@@ -107,3 +111,10 @@ def _coerce_value(value: Any) -> Any:
     if hasattr(value, "isoformat"):
         return value.isoformat()
     return value
+
+def _parse_pdf(file_bytes: bytes) -> dict:
+    raise NotImplementedError("PDF parsing not implemented yet.")
+
+
+def _parse_word(file_bytes: bytes) -> dict:
+    raise NotImplementedError("Word parsing not implemented yet.")

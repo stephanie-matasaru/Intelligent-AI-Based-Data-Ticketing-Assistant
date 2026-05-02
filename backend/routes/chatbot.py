@@ -9,6 +9,7 @@ from services.sql_service import execute_query
 from agents.visualizer_agent import generate_chart_spec
 from services.graph_service import process_chart_spec
 from agents.excel_agent import generate_excel_spec
+from agents.file_agent import generate_document_context
 from services.excel_service import process_excel_spec
 import uuid
 from typing import Optional
@@ -20,6 +21,7 @@ class ChatRequest(BaseModel):
     history: list = []
     user_id: int = None
     group_id: Optional[str] = None
+    files: Optional[list] = []   # <-- add this
 
 @router.post("/")
 def ask_chatbot(data: ChatRequest):
@@ -52,7 +54,8 @@ def ask_chatbot(data: ChatRequest):
         "results": None,
         "explanation": None,
         "chart_spec": None,
-        "excel_spec": None
+        "excel_spec": None,
+        "document_context": None
     }
 
     total_tokens = orchestration_tokens
@@ -169,8 +172,13 @@ def ask_chatbot(data: ChatRequest):
                 raise HTTPException(status_code=500, detail=f"Chart processing error: {str(e)}")
             
         elif step_type == "agent" and step_name == "script_generator_agent":
-            pass
-        
+            document_context, used_tokens = generate_document_context(
+                context["question"],
+                context["history"],
+                data.files)
+            context["document_context"] = document_context
+            total_tokens += used_tokens        
+
         else:
             save_message(
                 user_id=data.user_id,
