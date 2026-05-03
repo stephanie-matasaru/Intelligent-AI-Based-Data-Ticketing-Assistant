@@ -23,7 +23,7 @@ def parse_uploaded_file(filename: str, file_bytes: bytes) -> dict:
         return _parse_excel(file_bytes)
     elif ext == "pdf":
         return _parse_pdf(file_bytes)
-    elif ext in ("docx", "doc"):
+    elif ext == "docx":
         return _parse_word(file_bytes)
     else:
         raise ValueError(f"Unsupported file type: .{ext}. Please upload a .xlsx or .csv file.")
@@ -113,8 +113,82 @@ def _coerce_value(value: Any) -> Any:
     return value
 
 def _parse_pdf(file_bytes: bytes) -> dict:
-    raise NotImplementedError("PDF parsing not implemented yet.")
+    try:
+        import fitz  # PyMuPDF
+    except ImportError:
+        raise ImportError("PyMuPDF is required for PDF parsing. Run: pip install pymupdf")
 
+    warnings = []
+    pages = []
+
+    try:
+        pdf = fitz.open(stream=file_bytes, filetype="pdf")
+
+        for page_number, page in enumerate(pdf, start=1):
+            text = page.get_text("text").strip()
+
+            if text:
+                pages.append({
+                    "page": page_number,
+                    "text": text
+                })
+
+        if not pages:
+            warnings.append("No readable text was found in the PDF. It may be scanned or image-based.")
+
+        return {
+            "type": "pdf",
+            "pages": pages,
+            "page_count": len(pdf),
+            "warnings": warnings
+        }
+
+    except Exception as e:
+        raise ValueError(f"Could not parse PDF file: {str(e)}")
 
 def _parse_word(file_bytes: bytes) -> dict:
-    raise NotImplementedError("Word parsing not implemented yet.")
+    try:
+        from docx import Document
+    except ImportError:
+        raise ImportError("python-docx is required for Word parsing. Run: pip install python-docx")
+
+    warnings = []
+
+    try:
+        document = Document(io.BytesIO(file_bytes))
+
+        paragraphs = []
+        for paragraph in document.paragraphs:
+            text = paragraph.text.strip()
+            if text:
+                paragraphs.append(text)
+
+        tables = []
+        for table_index, table in enumerate(document.tables, start=1):
+            table_rows = []
+
+            for row in table.rows:
+                row_values = [cell.text.strip() for cell in row.cells]
+                if any(row_values):
+                    table_rows.append(row_values)
+
+            if table_rows:
+                tables.append({
+                    "table": table_index,
+                    "rows": table_rows
+                })
+
+        if not paragraphs and not tables:
+            warnings.append("The Word document appears to contain no readable text.")
+
+        return {
+            "type": "docx",
+            "paragraphs": paragraphs,
+            "tables": tables,
+            "paragraph_count": len(paragraphs),
+            "table_count": len(tables),
+            "warnings": warnings
+        }
+
+    except Exception as e:
+        raise ValueError(f"Could not parse Word document: {str(e)}")

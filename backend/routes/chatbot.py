@@ -142,7 +142,8 @@ def ask_chatbot(data: ChatRequest):
                     results=context["results"],
                     final_output_type=plan["final_output"],
                     chart_spec=context["chart_spec"],
-                    excel_spec=context["excel_spec"]
+                    excel_spec=context["excel_spec"],
+                    document_context=context["document_context"]
                 )
                 context["explanation"] = explanation
                 total_tokens += used_tokens
@@ -171,7 +172,7 @@ def ask_chatbot(data: ChatRequest):
                 )
                 raise HTTPException(status_code=500, detail=f"Chart processing error: {str(e)}")
             
-        elif step_type == "agent" and step_name == "script_generator_agent":
+        elif step_type == "agent" and step_name == "file_agent":
             document_context, used_tokens = generate_document_context(
                 context["question"],
                 context["history"],
@@ -216,6 +217,7 @@ def ask_chatbot(data: ChatRequest):
         "is_single_value": is_single_value,
         "chart_spec": chart_spec,
         "excel_spec": excel_spec,
+        "document_context": context["document_context"],
         "group_id": group_id
     }
 

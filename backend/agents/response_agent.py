@@ -164,15 +164,18 @@ def generate_explanation(
     chart_spec: dict = None,
     excel_spec: dict = None,
     script_summary: dict = None,
-    error_message: str = None
+    error_message: str = None,
+    document_context: str = None
 ):
 
     client = get_ai_client()
     system_prompt = PROMPT_MAP.get(final_output_type, TEXT_PROMPT)
+    document_section = ""
+    if document_context:
+        document_section = f"\n\nUploaded file context:\n{document_context}"
 
     if final_output_type == "text" or final_output_type == "text_and_graph":
-        user_content = f"User question: {question}\n\nData: {results or []}"
-
+        user_content = f"User question: {question}\n\nData: {results or []}{document_section}"
     elif final_output_type == "text_and_excel":
         row_count = len(results) if results else 0
         user_content = (
@@ -203,8 +206,7 @@ def generate_explanation(
         )
 
     else:
-        user_content = f"User question: {question}\n\nData: {results or []}"
-
+        user_content = f"User question: {question}\n\nData: {results or []}{document_section}"
     messages = [
         {"role": "system", "content": system_prompt},
         *history,

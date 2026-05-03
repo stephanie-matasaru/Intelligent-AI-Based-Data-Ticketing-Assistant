@@ -7,3 +7,5 @@ bcrypt
 pandas
 openpyxl
 python-multipart
+pymupdf
+python-docx
