@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from fastapi.responses import JSONResponse
 from services.file_parser_service import parse_uploaded_file
-from agents.script_generator_agent import generate_sql_script
+from agents.file_agent import generate_document_context
 from agents.response_agent import generate_upload_explanation
 from services.chat_service import save_message
 from typing import Optional
