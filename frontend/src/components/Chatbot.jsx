@@ -228,83 +228,46 @@ function Chatbot() {
     window.URL.revokeObjectURL(url)
   }
 
-  async function handleUpload() {
-    if (!attachedFile || isTyping) return
+async function handleUpload() {
+  if (!attachedFile) return null
 
-    const userMsg = {
-      id: Date.now(),
-      type: 'user',
-      text: `Uploaded file: ${attachedFile.name}`,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    }
-    setMessages(prev => [...prev, userMsg])
-    setIsTyping(true)
+  const formData = new FormData()
+  formData.append('file', attachedFile)
+  formData.append('user_id', userId)
+  if (groupId) formData.append('group_id', groupId)
 
+  const response = await fetch('http://localhost:8000/api/upload/', {
+    method: 'POST',
+    body: formData
+  })
+
+  if (!response.ok) {
+    let errorMessage = 'Something went wrong while processing the file.'
     try {
-      const formData = new FormData()
-      formData.append('file', attachedFile)
-      formData.append('user_id', userId)
-      if (groupId) formData.append('group_id', groupId)
-
-      const response = await fetch('http://localhost:8000/api/upload/', {
-        method: 'POST',
-        body: formData
-      })
-
-      if (!response.ok) {
-        let errorMessage = 'Something went wrong while processing the file.'
-        try {
-          const errorData = await response.json()
-          errorMessage = errorData.detail || errorMessage
-        } catch {
-          // ignore JSON parse failure
-        }
-        throw new Error(errorMessage)
-      }
-
-      const data = await response.json()
-
-      if (data.group_id) setGroupId(data.group_id)
-
-      const aiMsg = {
-        id: Date.now() + 1,
-        type: 'ai',
-        text: data.explanation || 'File processed.',
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        sql_script: data.sql_script || null,
-        script_filename: data.script_filename || 'import.sql'
-      }
-
-      setMessages(prev => [...prev, aiMsg])
-      setAttachedFile(null)
-      fileInputRef.current.value = ''
-    } catch (error) {
-      const errorMsg = {
-        id: Date.now() + 1,
-        type: 'ai',
-        text: error.message || 'Unable to process the file.',
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      }
-      setMessages(prev => [...prev, errorMsg])
-    } finally {
-      setIsTyping(false)
+      const errorData = await response.json()
+      errorMessage = errorData.detail || errorMessage
+    } catch {
+      // ignore JSON parse failure
     }
+    throw new Error(errorMessage)
   }
 
+  const data = await response.json()
+
+  if (data.group_id) setGroupId(data.group_id)
+
+  return data.parsed_file
+}
+
   async function handleSend() {
-    if (attachedFile) {
-      await handleUpload()
-      return
-    }
+    if ((!input.trim() && !attachedFile) || isTyping) return
 
-    if (!input.trim() || isTyping) return
-
-    const question = input.trim()
+    const question = input.trim() || `Please analyze the uploaded file: ${attachedFile.name}`
 
     const userMsg = {
       id: Date.now(),
       type: 'user',
-      text: question,
+      text: attachedFile ? `${question}\nAttached file: ${attachedFile.name}` : question,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
 
@@ -315,6 +278,13 @@ function Chatbot() {
     setIsTyping(true)
 
     try {
+    let parsedFiles = []
+
+    if (attachedFile) {
+      const parsedFile = await handleUpload()
+      if (parsedFile) parsedFiles = [parsedFile]
+    }
+
       const response = await fetch('http://localhost:8000/api/chatbot/', {
         method: 'POST',
         headers: {
@@ -324,7 +294,8 @@ function Chatbot() {
           question,
           history: buildHistory(messages),
           user_id: userId,
-          group_id: groupId
+          group_id: groupId,
+          files: parsedFiles
         })
       })
 
@@ -355,7 +326,8 @@ function Chatbot() {
       }
 
       setMessages(prev => [...prev, aiMsg])
-
+      setAttachedFile(null)
+      if (fileInputRef.current) fileInputRef.current.value = ''
       if (voiceEnabled && data.explanation) {
         const utterance = new SpeechSynthesisUtterance(data.explanation)
         utterance.lang = 'en-US'
