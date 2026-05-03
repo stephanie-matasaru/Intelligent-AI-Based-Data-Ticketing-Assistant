@@ -560,7 +560,7 @@ function Chatbot() {
               <div className="flex items-center gap-2">
                 <input
                   type="file"
-                  accept=".xlsx,.csv"
+                  accept=".xlsx,.xls,.csv,.pdf,.docx"
                   ref={fileInputRef}
                   className="hidden"
                   onChange={(e) => setAttachedFile(e.target.files[0] || null)}
