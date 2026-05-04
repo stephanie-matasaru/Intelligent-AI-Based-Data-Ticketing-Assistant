@@ -1,7 +1,30 @@
 from fastapi import APIRouter
 from db import get_connection
+from ai_client import get_ai_client
+import os
 
 router = APIRouter()
+
+def generate_title(first_message: str) -> str:
+    try:
+        client = get_ai_client()
+        response = client.chat.completions.create(
+            model=os.getenv("AZURE_OPENAI_MODEL"),
+            messages=[
+                {
+                    "role": "system",
+                    "content": "Generate a very short title (max 5 words) for a chat that started with this message. Return ONLY the title, nothing else."
+                },
+                {
+                    "role": "user",
+                    "content": first_message
+                }
+            ],
+            max_completion_tokens=20
+        )
+        return response.choices[0].message.content.strip()
+    except:
+        return first_message[:50]
 
 @router.get("/sessions/{user_id}")
 def get_sessions(user_id: int):
@@ -9,7 +32,7 @@ def get_sessions(user_id: int):
     cursor = conn.cursor()
     cursor.execute("""
         SELECT cm.group_id, MIN(cm.date_added) as started_at, COUNT(*) as message_count,
-               MAX(CASE WHEN cm.sender = 'user' THEN cm.message END) as first_user_message
+               MAX(cm.title) as title
         FROM chat_messages cm
         WHERE cm.user_id = ?
         GROUP BY cm.group_id
