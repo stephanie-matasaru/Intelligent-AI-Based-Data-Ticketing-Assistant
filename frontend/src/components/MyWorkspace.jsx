@@ -118,7 +118,7 @@ function MyWorkspace() {
         {/* Filter tabs */}
         {items.length > 0 && (
           <div className="flex gap-2 mb-6">
-            {['all', 'chart', 'text', 'excel'].map(f => (
+            {['all', 'chart', 'excel'].map(f => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
