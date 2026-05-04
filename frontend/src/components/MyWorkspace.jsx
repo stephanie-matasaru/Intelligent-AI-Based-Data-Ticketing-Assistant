@@ -61,19 +61,24 @@ function MyWorkspace() {
   }
 
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('workspace_items') || '[]')
-    setItems(saved)
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    const userId = user?.user_id || 1
+    fetch(`http://localhost:8000/api/workspace/${userId}`)
+      .then(res => res.json())
+      .then(data => setItems(data))
+      .catch(err => console.error('Failed to load workspace:', err))
   }, [])
 
   function removeItem(id) {
-    const updated = items.filter(item => item.id !== id)
-    setItems(updated)
-    localStorage.setItem('workspace_items', JSON.stringify(updated))
+    fetch(`http://localhost:8000/api/workspace/${id}`, { method: 'DELETE' })
+      .then(() => setItems(prev => prev.filter(item => item.id !== id)))
+      .catch(err => console.error('Failed to delete item:', err))
   }
 
   function clearAll() {
-    setItems([])
-    localStorage.removeItem('workspace_items')
+    Promise.all(items.map(item =>
+      fetch(`http://localhost:8000/api/workspace/${item.id}`, { method: 'DELETE' })
+    )).then(() => setItems([]))
   }
 
   const filtered = filter === 'all' ? items : items.filter(i => i.type === filter)

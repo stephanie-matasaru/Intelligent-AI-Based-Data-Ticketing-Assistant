@@ -67,18 +67,20 @@ function renderChart(chartSpec) {
   )
 }
 
-function saveToWorkspace(msg) {
-  const existing = JSON.parse(localStorage.getItem('workspace_items') || '[]')
-  const item = {
-    id: Date.now(),
-    savedAt: new Date().toISOString(),
-    text: msg.text,
-    chart_spec: msg.chart_spec || null,
-    excel_spec: msg.excel_spec || null,
-    label: msg.chart_spec?.title || msg.text?.slice(0, 60) || 'Saved insight',
-    type: msg.chart_spec ? 'chart' : msg.excel_spec ? 'excel' : 'text',
-  }
-  localStorage.setItem('workspace_items', JSON.stringify([item, ...existing]))
+async function saveToWorkspace(msg) {
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
+  const userId = user?.user_id || 1
+  await fetch('http://localhost:8000/api/workspace/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      user_id: userId,
+      type: msg.chart_spec ? 'chart' : 'excel',
+      label: msg.chart_spec?.title || msg.text?.slice(0, 60) || 'Saved insight',
+      chart_spec: msg.chart_spec || null,
+      excel_spec: msg.excel_spec || null,
+    })
+  })
 }
 
 function Chatbot() {
