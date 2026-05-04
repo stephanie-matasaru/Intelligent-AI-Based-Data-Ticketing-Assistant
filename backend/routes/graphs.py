@@ -73,13 +73,14 @@ def tickets_timeline(
     end_date: Optional[datetime] = Query(None),
     priority: Optional[Literal["Critical", "High", "Medium", "Low"]] = Query(None),
     status: Optional[Literal["Open", "In Progress", "Pending", "Resolved", "Closed"]] = Query(None),
-    team: Optional[str] = Query(None)
+    team: Optional[str] = Query(None),
+    group_by: Optional[Literal["daily", "weekly", "monthly"]] = Query("weekly")
 ):
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("EXEC dbo.GetTicketsOverTime @StartDate=?, @EndDate=?, @Priority=?, @Status=?, @Team=?",
-        (start_date, end_date, priority, status, team)
-        )
+    cursor.execute("EXEC dbo.GetTicketsOverTime @StartDate=?, @EndDate=?, @Priority=?, @Status=?, @Team=?, @GroupBy=?",
+        (start_date, end_date, priority, status, team, group_by)
+    )
     rows = cursor.fetchall()
     conn.close()
     return [{"day": str(row[0]), "count": row[1]} for row in rows]
