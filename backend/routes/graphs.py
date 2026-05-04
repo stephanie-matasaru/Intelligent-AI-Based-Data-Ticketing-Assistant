@@ -83,3 +83,41 @@ def tickets_timeline(
     rows = cursor.fetchall()
     conn.close()
     return [{"day": str(row[0]), "count": row[1]} for row in rows]
+
+# Frontend: BarChart "Tickets by Category" (cat_t1)
+# Returns: [{"name": "App", "count": 312}, ...]
+@router.get("/by-category")
+def tickets_by_category(
+    start_date: Optional[datetime] = Query(None),
+    end_date: Optional[datetime] = Query(None),
+    priority: Optional[Literal["Critical", "High", "Medium", "Low"]] = Query(None),
+    status: Optional[Literal["Open", "In Progress", "Pending", "Resolved", "Closed"]] = Query(None),
+    team: Optional[str] = Query(None)
+):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("EXEC dbo.GetTicketsByCategory @StartDate=?, @EndDate=?, @Priority=?, @Status=?, @Team=?",
+        (start_date, end_date, priority, status, team)
+    )
+    rows = cursor.fetchall()
+    conn.close()
+    return [{"name": row[0], "count": row[1]} for row in rows]
+
+# Frontend: BarChart "Tickets by Team"
+# Returns: [{"name": "Support", "count": 143}, ...]
+@router.get("/by-team")
+def tickets_by_team(
+    start_date: Optional[datetime] = Query(None),
+    end_date: Optional[datetime] = Query(None),
+    priority: Optional[Literal["Critical", "High", "Medium", "Low"]] = Query(None),
+    status: Optional[Literal["Open", "In Progress", "Pending", "Resolved", "Closed"]] = Query(None),
+    team: Optional[str] = Query(None)
+):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("EXEC dbo.GetTicketsByTeam @StartDate=?, @EndDate=?, @Priority=?, @Status=?, @Team=?",
+        (start_date, end_date, priority, status, team)
+    )
+    rows = cursor.fetchall()
+    conn.close()
+    return [{"name": row[0], "count": row[1]} for row in rows]
