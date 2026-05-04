@@ -112,27 +112,29 @@ def ask_chatbot(data: ChatRequest):
                 raise HTTPException(status_code=500, detail=f"SQL error: {str(e)}")
             
         elif step_type == "agent" and step_name == "excel_agent":
-            excel_spec, used_tokens = generate_excel_spec(
-                context["question"],
-                context["results"]
-            )
-            context["excel_spec"] = excel_spec
-            total_tokens += used_tokens
+            if context.get("results") and len(context["results"]) > 0: # only trigger excel_agent if the SQL query found data
+                excel_spec, used_tokens = generate_excel_spec(
+                    context["question"],
+                    context["results"]
+                )
+                context["excel_spec"] = excel_spec
+                total_tokens += used_tokens
 
         elif step_type == "service" and step_name == "excel_service":
-            try:
-                context["excel_spec"]["data"] = context["results"]
-                context["excel_spec"] = process_excel_spec(context["excel_spec"])
-            except ValueError as e:
-                save_message(
-                    user_id=data.user_id,
-                    sender="agent",
-                    message=str(e),
-                    status="Error",
-                    tokens=total_tokens,
-                    group_id=group_id
-                )
-                raise HTTPException(status_code=500, detail=f"Excel processing error: {str(e)}")
+            if context.get("excel_spec"): # only trigger excel_service if the agent successfully made a blueprint
+                try:
+                    context["excel_spec"]["data"] = context["results"]
+                    context["excel_spec"] = process_excel_spec(context["excel_spec"])
+                except ValueError as e:
+                    save_message(
+                        user_id=data.user_id,
+                        ender="agent",
+                        message=str(e),
+                        status="Error",
+                        tokens=total_tokens,
+                        group_id=group_id
+                    )
+                    raise HTTPException(status_code=500, detail=f"Excel processing error: {str(e)}")
 
         elif step_type == "agent" and step_name == "response_agent":
             if context["explanation"] is None:
