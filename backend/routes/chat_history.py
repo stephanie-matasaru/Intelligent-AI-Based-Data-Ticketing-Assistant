@@ -52,21 +52,24 @@ def get_sessions(user_id: int):
 
 @router.get("/messages/{group_id}")
 def get_messages(group_id: str):
+    import json
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT sender, message, date_added, export_file_path
+        SELECT sender, message, date_added, json_chart, json_export
         FROM chat_messages
         WHERE group_id = ?
         ORDER BY date_added ASC
     """, group_id)
     rows = cursor.fetchall()
+    conn.close()
     return [
         {
             "sender": row[0],
             "message": row[1],
             "date_added": str(row[2]),
-            "export_file_path": row[3]
+            "chart_spec": json.loads(row[3]) if row[3] else None,
+            "excel_spec": json.loads(row[4]) if row[4] else None,
         }
         for row in rows
     ]
