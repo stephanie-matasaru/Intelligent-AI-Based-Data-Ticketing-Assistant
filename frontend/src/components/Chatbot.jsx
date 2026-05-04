@@ -191,15 +191,15 @@ function Chatbot() {
     setSelectedSession(null)
 }
 
-  function buildHistory(messages) {
-    return messages
-      .filter(msg => msg.type === 'user' || msg.type === 'ai')
-      .map(msg => ({
-        role: msg.type === 'user' ? 'user' : 'assistant',
-        content: msg.text
-      }))
-  }
-
+function buildHistory(messages) {
+  return messages
+    .filter(msg => msg.type === 'user' || msg.type === 'ai')
+    .slice(-10)
+    .map(msg => ({
+      role: msg.type === 'user' ? 'user' : 'assistant',
+      content: msg.text.slice(0, 500)
+    }))
+}
   async function fetchSessions() {
   console.log('userId:', userId)
   const res = await fetch(`http://localhost:8000/api/chat/sessions/${userId}`)
