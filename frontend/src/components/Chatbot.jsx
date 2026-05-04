@@ -207,11 +207,18 @@ function Chatbot() {
   setSessionMessages([])
 }
 
- async function fetchMessages(groupId) {
+async function fetchMessages(groupId) {
   try {
     const res = await fetch(`http://localhost:8000/api/chat/messages/${groupId}`)
     const data = await res.json()
-    setSessionMessages(Array.isArray(data) ? data : [])
+    const loaded = Array.isArray(data) ? data : []
+    setMessages(loaded.map((msg, i) => ({
+      id: i,
+      type: msg.sender === 'user' ? 'user' : 'ai',
+      text: msg.message,
+      time: msg.date_added.slice(11, 16)
+    })))
+    setShowHistory(false)
     setSelectedSession(groupId)
   } catch (error) {
     console.error('Error fetching messages:', error)
@@ -650,7 +657,7 @@ async function handleUpload() {
                     onClick={() => fetchMessages(s.group_id)}
                     className="p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-all"
                   >
-                    <p className="text-white/70 text-xs font-mono truncate">{s.group_id.slice(0, 8)}...</p>
+                    <p className="text-white/70 text-xs truncate">{s.title}</p>
                     <p className="text-white/30 text-[0.6rem] mt-1">{s.started_at.slice(0, 16)} • {s.message_count} messages</p>
                   </div>
                 ))}
