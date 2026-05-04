@@ -18,4 +18,6 @@ CREATE TABLE chat_messages (
 
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
+
+ALTER TABLE chat_messages ADD title NVARCHAR(255) NULL;
 GO
