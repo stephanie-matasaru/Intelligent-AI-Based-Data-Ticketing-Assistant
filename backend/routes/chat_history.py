@@ -8,7 +8,8 @@ def get_sessions(user_id: int):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT DISTINCT cm.group_id, MIN(cm.date_added) as started_at, COUNT(*) as message_count
+        SELECT cm.group_id, MIN(cm.date_added) as started_at, COUNT(*) as message_count,
+               MAX(CASE WHEN cm.sender = 'user' THEN cm.message END) as first_user_message
         FROM chat_messages cm
         WHERE cm.user_id = ?
         GROUP BY cm.group_id
@@ -19,7 +20,8 @@ def get_sessions(user_id: int):
         {
             "group_id": str(row[0]),
             "started_at": str(row[1]),
-            "message_count": row[2]
+            "message_count": row[2],
+            "title": str(row[3])[:50] if row[3] else "Untitled Chat"
         }
         for row in rows
     ]
