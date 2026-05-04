@@ -1,7 +1,12 @@
 import pandas as pd
 import io
 import base64
+import os
+import uuid
 from openpyxl.utils import get_column_letter
+
+EXPORTS_DIR = os.path.join(os.path.dirname(__file__), '..', 'static', 'exports')
+os.makedirs(EXPORTS_DIR, exist_ok=True)
 
 def process_excel_spec(excel_spec: dict) -> dict:
     if "error" in excel_spec:
@@ -41,10 +46,14 @@ def process_excel_spec(excel_spec: dict) -> dict:
             col_letter = get_column_letter(idx + 1)
             worksheet.column_dimensions[col_letter].width = max_len
 
-    excel_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    file_id = str(uuid.uuid4())[:8]
+    safe_filename = f"{file_id}_{excel_spec['filename']}"
+    file_path = os.path.join(EXPORTS_DIR, safe_filename)
+    with open(file_path, 'wb') as f:
+        f.write(buffer.getvalue())
 
-    excel_spec["file_data_base64"] = excel_base64
+    excel_spec["file_data_base64"] = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    excel_spec["file_path"] = f"/static/exports/{safe_filename}"
     
     del excel_spec["data"]
-
     return excel_spec
