@@ -12,6 +12,8 @@ Rules:
 - If there are no results, politely inform the user that no data is available
   in the system — do NOT ask the user to provide data, paste data, or suggest
   they share a CSV/JSON. The system has direct database access.
+- If there are no results (0 rows), politely inform the user that no matching data was found. 
+  If they asked for an export or file, explicitly state that NO file was generated because there is no data.
 - If the question uses vague time words like "latest", "recent", "soon", 
   "new", "last", "upcoming" WITHOUT a specific timeframe, you MUST ask 
   the user to clarify before answering. Do NOT assume a timeframe.
