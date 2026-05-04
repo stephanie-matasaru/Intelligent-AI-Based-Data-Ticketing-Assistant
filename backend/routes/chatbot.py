@@ -77,10 +77,17 @@ def ask_chatbot(data: ChatRequest):
         step_name = step["name"]
 
         if step_type == "agent" and step_name == "query_agent":
+            question_for_sql = context["question"]
+
+            if context.get("document_context"):
+                question_for_sql += f"""
+Uploaded file context:
+{context["document_context"]}"""
+
             sql_query, used_tokens = generate_sql(
-                context["question"],
+                question_for_sql,
                 context["history"]
-            )
+            )            
 
             context["sql_query"] = sql_query
             total_tokens += used_tokens

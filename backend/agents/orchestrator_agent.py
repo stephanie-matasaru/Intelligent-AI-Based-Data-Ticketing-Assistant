@@ -49,10 +49,12 @@ RULES:
   query_agent -> sql_service -> excel_agent -> excel_service -> response_agent
 - If the user asks a question based on an uploaded file, use:
   file_agent -> response_agent
-
+- If the user asks "how many", "count", "breakdown", "show", "list", "which tickets", or asks for ticket data related to an uploaded file, use:
+  file_agent -> query_agent -> sql_service -> response_agent
 - If the user asks a ticket data question that also depends on an uploaded file, use:
   file_agent -> query_agent -> sql_service -> response_agent
-
+- If the user asks for a chart, graph, KPI, trend, or breakdown related to an uploaded file, use:
+  file_agent -> query_agent -> sql_service -> visualizer_agent -> graph_service -> response_agent
 - If the user asks for a graph/chart/KPI that depends on an uploaded file, use:
   file_agent -> query_agent -> sql_service -> visualizer_agent -> graph_service -> response_agent
 
