@@ -116,13 +116,13 @@ function Chatbot() {
   const user = JSON.parse(localStorage.getItem('user') || '{}')
   const userId = user?.user_id || 1
 
-  (() => {
+  useEffect(() => {
     sessionStorage.setItem('chat_messages', JSON.stringify(messages))
   }, [messages])
 
-  (() => {
+  useEffect(() => {
     if (groupId) sessionStorage.setItem('chat_group_id', groupId)
-  },useEffect [groupId])
+  }, [groupId])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -220,8 +220,11 @@ async function fetchMessages(groupId) {
       id: i,
       type: msg.sender === 'user' ? 'user' : 'ai',
       text: msg.message,
-      time: msg.date_added.slice(11, 16)
+      time: msg.date_added.slice(11, 16),
+      chart_spec: msg.chart_spec || null,
+      excel_spec: msg.excel_spec || null
     })))
+    setGroupId(groupId)
     setShowHistory(false)
     setSelectedSession(groupId)
   } catch (error) {
@@ -357,14 +360,31 @@ async function handleUpload() {
       setIsTyping(false)
     }
   }
-  async function exportChart(ref, filename) {
-    const html2canvas = (await import('html2canvas')).default
-    const canvas = await html2canvas(ref, { backgroundColor: '#1a1a2e' })
+async function exportChart(ref, filename) {
+  const svg = ref.querySelector('svg')
+  if (!svg) return
+
+  const svgData = new XMLSerializer().serializeToString(svg)
+  const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' })
+  const url = URL.createObjectURL(svgBlob)
+
+  const img = new Image()
+  img.onload = () => {
+    const canvas = document.createElement('canvas')
+    canvas.width = svg.clientWidth || 500
+    canvas.height = svg.clientHeight || 300
+    const ctx = canvas.getContext('2d')
+    ctx.fillStyle = '#1a1a2e'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.drawImage(img, 0, 0)
     const link = document.createElement('a')
     link.download = filename
     link.href = canvas.toDataURL('image/png')
     link.click()
+    URL.revokeObjectURL(url)
   }
+  img.src = url
+}
 
   const handleDownloadExcel = (base64String, filename) => {
     try {
