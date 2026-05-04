@@ -1,5 +1,6 @@
 import os
 import json
+from xmlrpc import client
 from ai_client import get_ai_client
 from utils.json_utils import clean_json_block
 
@@ -61,19 +62,25 @@ def generate_chart_spec(question: str, results: list):
         }
     ]
 
-    response = client.chat.completions.create(
-        model=os.getenv("AZURE_OPENAI_MODEL"),
-        messages=messages,
-        max_completion_tokens=1000
-    )
-
-    content = response.choices[0].message.content.strip()
-    cleaned = clean_json_block(content)
+    for attempt in range(3):
+        response = client.chat.completions.create(
+            model=os.getenv("AZURE_OPENAI_MODEL"),
+            messages=messages,
+            max_completion_tokens=1000
+        )
+        content = response.choices[0].message.content.strip()
+        cleaned = clean_json_block(content)
+        if cleaned:
+            break
+    
+    tokens_used = response.usage.total_tokens
+    
+    if not cleaned:
+        return {"error": "Visualization not available"}, tokens_used
 
     try:
         chart_spec = json.loads(cleaned)
     except json.JSONDecodeError:
-        raise ValueError(f"Invalid JSON returned by visualizer agent: {content}")
+        return {"error": "Visualization not available"}, tokens_used
 
-    tokens_used = response.usage.total_tokens
     return chart_spec, tokens_used
