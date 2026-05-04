@@ -199,8 +199,10 @@ function Chatbot() {
   }
 
   async function fetchSessions() {
+  console.log('userId:', userId)
   const res = await fetch(`http://localhost:8000/api/chat/sessions/${userId}`)
   const data = await res.json()
+  console.log('Sessions data:', data)
   setSessions(Array.isArray(data) ? data : [])
   setShowHistory(true)
   setSelectedSession(null)
@@ -663,7 +665,6 @@ async function handleUpload() {
                 ))}
               </div>
             )}
-
             {/* Messages in selected session */}
             {showHistory && selectedSession && (
               <div className="mx-4 mt-2">
