@@ -11,6 +11,7 @@ from services.graph_service import process_chart_spec
 from agents.excel_agent import generate_excel_spec
 from agents.file_agent import generate_document_context
 from services.excel_service import process_excel_spec
+from db import get_connection
 import uuid
 from typing import Optional
 
@@ -34,6 +35,17 @@ def ask_chatbot(data: ChatRequest):
         status="pending",
         group_id=group_id
     )
+
+    if not data.group_id:
+        from routes.chat_history import generate_title
+        title = generate_title(data.question)
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE chat_messages SET title = ? WHERE group_id = ?
+        """, title, group_id)
+        conn.commit()
+        conn.close()
 
     try:
         plan, orchestration_tokens = generate_plan(data.question, data.history)
