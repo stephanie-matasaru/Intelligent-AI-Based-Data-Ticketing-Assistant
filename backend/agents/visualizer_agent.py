@@ -48,10 +48,20 @@ def generate_chart_spec(question: str, results: list):
             return obj.isoformat()
         return obj
 
+    limited_results = results[:50]
     serialized_results = [
         {k: serialize(v) for k, v in row.items()}
-        for row in results
+        for row in limited_results
     ]
+
+    if serialized_results and len(serialized_results[0]) > 5:
+        key_cols = ['status', 'priority_name', 'team', 'company', 'service', 'assigned_person', 'submit_datetime', 'cat_t1']
+        available = [k for k in key_cols if k in serialized_results[0]]
+        if available:
+            serialized_results = [
+                {k: row[k] for k in available if k in row}
+                for row in serialized_results
+            ]
 
     messages = [
         {"role": "system", "content": VISUALIZER_PROMPT},
