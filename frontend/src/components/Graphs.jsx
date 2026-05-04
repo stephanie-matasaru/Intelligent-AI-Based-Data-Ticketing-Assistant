@@ -36,6 +36,21 @@ const MOCK_TIMELINE = [
   { day: '03/04', count: 47  },
 ]
 
+const MOCK_CATEGORY = [
+  { name: 'App',   count: 312 },
+  { name: 'Infra', count: 198 },
+  { name: 'Other', count: 47  },
+]
+
+const MOCK_TEAM = [
+  { name: 'Support',  count: 143 },
+  { name: 'Backend',  count: 118 },
+  { name: 'Network',  count: 97  },
+  { name: 'DevOps',   count: 84  },
+  { name: 'Frontend', count: 76  },
+  { name: 'Data',     count: 55  },
+]
+
 const PRIORITY_COLORS = {
   Critical: '#e05c5c',
   High:     '#e09a3a',
@@ -52,6 +67,8 @@ const STATUS_COLORS = {
 }
 
 const SLA_COLORS = ['#4fc093', '#e05c5c']
+const CATEGORY_COLORS = ['#7b6cf6', '#4a9edd', '#e09a3a']
+const TEAM_COLORS     = ['#A1CEBC', '#7b6cf6', '#4a9edd', '#e09a3a', '#e05c5c', '#4fc093']
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -74,11 +91,15 @@ function Graphs() {
   const [statusData, setStatusData] = useState(MOCK_STATUS)
   const [slaData, setSlaData] = useState(MOCK_SLA)
   const [timelineData, setTimelineData] = useState(MOCK_TIMELINE)
+  const [categoryData, setCategoryData] = useState(MOCK_CATEGORY)
+  const [teamData, setTeamData]         = useState(MOCK_TEAM)
 
   const priorityRef = useRef(null)
   const slaRef = useRef(null)
   const timelineRef = useRef(null)
   const statusRef = useRef(null)
+  const categoryRef = useRef(null)
+  const teamRef     = useRef(null)
 
   async function exportChart(ref, filename) {
     const html2canvas = (await import('html2canvas')).default
@@ -118,6 +139,8 @@ function Graphs() {
         { name: 'SLA Met',      value: d.sla_met      },
         { name: 'SLA Breached', value: d.sla_breached },
       ]))
+    fetch(`${base}/by-category${q}`).then(r => r.json()).then(setCategoryData)
+    fetch(`${base}/by-team${q}`).then(r => r.json()).then(setTeamData)
   }, [filters])
 
   function handleFilter(key, value) {
@@ -378,7 +401,71 @@ function Graphs() {
               </ResponsiveContainer>
             </div>
           </div>
+          {/* 5. Bar – Category */}
+          <div className="chart-card" id="category" ref={categoryRef}>
+            <div className="chart-card-header">
+              <h2 className="chart-title">Tickets by Category</h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="chart-badge">{categoryData.reduce((s,d) => s+d.count, 0)} total</span>
+                <button className="export-btn" onClick={() => exportChart(categoryRef, 'category.png')}
+                  aria-label="Export category chart as PNG">
+                  <span className="material-symbols-outlined" style={{ fontSize: 16 }}>download</span>
+                </button>
+              </div>
+            </div>
+            <table className="sr-only" aria-label="Tickets by category data">
+              <thead><tr><th scope="col">Category</th><th scope="col">Count</th></tr></thead>
+              <tbody>{categoryData.map(d => <tr key={d.name}><td>{d.name}</td><td>{d.count}</td></tr>)}</tbody>
+            </table>
+            <div aria-hidden="true">
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={categoryData} barSize={48}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
+                  <XAxis dataKey="name" stroke="#ffffff30" tick={{ fill: '#ffffff60', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis stroke="#ffffff30" tick={{ fill: '#ffffff40', fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: '#ffffff05' }} />
+                  <Bar dataKey="count" radius={[4,4,0,0]}>
+                    {categoryData.map((entry, i) => (
+                      <Cell key={entry.name} fill={CATEGORY_COLORS[i % CATEGORY_COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
 
+          {/* 6. Bar – Team */}
+          <div className="chart-card" id="team" ref={teamRef}>
+            <div className="chart-card-header">
+              <h2 className="chart-title">Tickets by Team</h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="chart-badge">{teamData.reduce((s,d) => s+d.count, 0)} total</span>
+                <button className="export-btn" onClick={() => exportChart(teamRef, 'team.png')}
+                  aria-label="Export team chart as PNG">
+                  <span className="material-symbols-outlined" style={{ fontSize: 16 }}>download</span>
+                </button>
+              </div>
+            </div>
+            <table className="sr-only" aria-label="Tickets by team data">
+              <thead><tr><th scope="col">Team</th><th scope="col">Count</th></tr></thead>
+              <tbody>{teamData.map(d => <tr key={d.name}><td>{d.name}</td><td>{d.count}</td></tr>)}</tbody>
+            </table>
+            <div aria-hidden="true">
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={teamData} barSize={36}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
+                  <XAxis dataKey="name" stroke="#ffffff30" tick={{ fill: '#ffffff60', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis stroke="#ffffff30" tick={{ fill: '#ffffff40', fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: '#ffffff05' }} />
+                  <Bar dataKey="count" radius={[4,4,0,0]}>
+                    {teamData.map((entry, i) => (
+                      <Cell key={entry.name} fill={TEAM_COLORS[i % TEAM_COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
         </div>
       </main>
     </div>
