@@ -128,7 +128,7 @@ def ask_chatbot(data: ChatRequest):
                 except ValueError as e:
                     save_message(
                         user_id=data.user_id,
-                        ender="agent",
+                        sender="agent",
                         message=str(e),
                         status="Error",
                         tokens=total_tokens,
