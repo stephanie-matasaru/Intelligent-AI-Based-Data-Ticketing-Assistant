@@ -137,6 +137,11 @@ def ask_chatbot(data: ChatRequest):
                     raise HTTPException(status_code=500, detail=f"Excel processing error: {str(e)}")
 
         elif step_type == "agent" and step_name == "response_agent":
+            if not context.get("results") or len(context["results"]) == 0: # if the excel has 0 rows the plan goes back to only text
+                context["excel_spec"] = None
+                if plan.get("final_output") == "text_and_excel":
+                    plan["final_output"] = "text"
+
             if context["explanation"] is None:
                 explanation, used_tokens = generate_explanation(
                     question=context["question"],
