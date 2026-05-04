@@ -35,6 +35,7 @@ FILTERING RULES:
 - If a name contains multiple words (e.g., "John Smith"):
   Split into words and match EACH word using LIKE with AND.
   Example: (assigned_person LIKE '%John%' AND assigned_person LIKE '%Smith%')
+- When a user asks to filter by a status, priority, or team (e.g., "open", "resolved", "high priority", "backend"), you MUST use exact literal string matches in your SQL (e.g., `WHERE status = 'Open'`). Never group, bundle, or assume related categories (e.g., do not bundle 'Pending' or 'In Progress' into 'Open') unless the user explicitly asks you to combine them.
 
 TEMPORAL RULES:
 - If the user says "recent" or "recently", default to the last 7 days:
