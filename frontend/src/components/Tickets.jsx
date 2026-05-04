@@ -5,6 +5,8 @@ import * as XLSX from 'xlsx'
 
 function Tickets() {
   const navigate = useNavigate()
+
+  const [selectedTicket, setSelectedTicket] = useState(null)
   
   const [search, setSearch] = useState('')
   const [startDate, setStartDate] = useState('2026-01-01')
@@ -323,6 +325,7 @@ function Tickets() {
               <tbody className="text-sm">
                 {displayedTickets.map((ticket) => (
                   <tr key={ticket.ticket_id} className="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer group"
+                    onClick={() => setSelectedTicket(ticket)}
                     aria-label={`Ticket ${ticket.ticket_number}, priority ${ticket.priority}, status ${ticket.status}`}>
                     <td className="p-4 text-white/50 group-hover:text-white transition-colors">{ticket.ticket_id}</td>
                     <td className="p-4 font-mono">{calculateTimeRemaining(ticket.estimated_resolution, ticket.status)}</td>
@@ -422,7 +425,94 @@ function Tickets() {
 
         </section>
 
-      </main>
+      </main> 
+
+      {selectedTicket && (
+        <>
+          <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setSelectedTicket(null)} />
+          <div className="fixed right-0 top-0 h-full w-[480px] bg-[#13132a] border-l border-white/10 z-50 overflow-y-auto shadow-2xl flex flex-col">
+            
+            {/* Header */}
+            <div className="flex items-start justify-between p-6 border-b border-white/10">
+              <div>
+                <p className="text-[0.625rem] uppercase tracking-widest text-[#A1CEBC] mb-1">Ticket</p>
+                <h2 className="text-xl font-bold text-white">{selectedTicket.ticket_number}</h2>
+              </div>
+              <button onClick={() => setSelectedTicket(null)} className="text-white/30 hover:text-white transition-colors mt-1">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            {/* Badges */}
+            <div className="flex gap-2 px-6 py-4 border-b border-white/5">
+              <span className={`px-2 py-1 rounded text-xs font-bold ${
+                selectedTicket.priority === 'Critical' ? 'bg-red-500/20 text-red-400' :
+                selectedTicket.priority === 'High' ? 'bg-orange-500/20 text-orange-400' :
+                selectedTicket.priority === 'Medium' ? 'bg-yellow-500/20 text-yellow-400' :
+                'bg-blue-500/20 text-blue-400'
+              }`}>{selectedTicket.priority || 'Unknown'}</span>
+              <span className="px-2 py-1 rounded text-xs font-bold bg-white/10 text-white/70">{selectedTicket.status}</span>
+              {selectedTicket.estimated_resolution && new Date(selectedTicket.estimated_resolution) < new Date() && selectedTicket.status !== 'Resolved' && selectedTicket.status !== 'Closed' && (
+                <span className="px-2 py-1 rounded text-xs font-bold bg-red-500/20 text-red-400">SLA Breached</span>
+              )}
+            </div>
+
+            {/* Fields */}
+            <div className="flex flex-col gap-5 p-6">
+              
+              {[
+                { label: 'Company', value: selectedTicket.company },
+                { label: 'Project', value: selectedTicket.project },
+                { label: 'Team', value: selectedTicket.team },
+                { label: 'Assigned To', value: selectedTicket.assigned_person },
+                { label: 'Service', value: selectedTicket.service },
+              ].map(({ label, value }) => (
+                <div key={label}>
+                  <p className="text-[0.625rem] uppercase tracking-widest text-white/30 mb-1">{label}</p>
+                  <p className="text-white/80 text-sm">{value || '—'}</p>
+                </div>
+              ))}
+
+              <div>
+                <p className="text-[0.625rem] uppercase tracking-widest text-white/30 mb-1">Description</p>
+                <p className="text-white/80 text-sm leading-relaxed bg-black/20 rounded-lg p-3">{selectedTicket.description || '—'}</p>
+              </div>
+
+              {selectedTicket.notes && (
+                <div>
+                  <p className="text-[0.625rem] uppercase tracking-widest text-white/30 mb-1">Notes</p>
+                  <p className="text-white/80 text-sm leading-relaxed bg-black/20 rounded-lg p-3">{selectedTicket.notes}</p>
+                </div>
+              )}
+
+              {selectedTicket.resolution && (
+                <div>
+                  <p className="text-[0.625rem] uppercase tracking-widest text-white/30 mb-1">Resolution</p>
+                  <p className="text-white/80 text-sm leading-relaxed bg-black/20 rounded-lg p-3">{selectedTicket.resolution}</p>
+                </div>
+              )}
+
+              {/* Timestamps */}
+              <div className="border-t border-white/5 pt-4 grid grid-cols-2 gap-4">
+                {[
+                  { label: 'Submitted', value: selectedTicket.submit_datetime },
+                  { label: 'Estimated Resolution', value: selectedTicket.estimated_resolution },
+                  { label: 'Resolved', value: selectedTicket.resolved_datetime },
+                  { label: 'Closed', value: selectedTicket.closed_datetime },
+                  { label: 'Last Modified', value: selectedTicket.last_modified },
+                ].map(({ label, value }) => (
+                  <div key={label}>
+                    <p className="text-[0.625rem] uppercase tracking-widest text-white/30 mb-1">{label}</p>
+                    <p className="text-white/70 text-xs font-mono">{value ? new Date(value).toLocaleString() : '—'}</p>
+                  </div>
+                ))}
+              </div>
+
+            </div>
+          </div>
+        </>
+      )}
+
     </div>
   )
 }
