@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from routes import tickets, chatbot, auth, graphs, dropdown, upload, chat_history, workspace
 
 app = FastAPI()
@@ -11,6 +12,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.include_router(tickets.router, prefix="/api/tickets", tags=["tickets"])
 app.include_router(chatbot.router, prefix="/api/chatbot", tags=["chatbot"])

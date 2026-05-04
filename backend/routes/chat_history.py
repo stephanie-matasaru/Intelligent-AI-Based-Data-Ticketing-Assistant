@@ -55,7 +55,7 @@ def get_messages(group_id: str):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT sender, message, date_added
+        SELECT sender, message, date_added, export_file_path
         FROM chat_messages
         WHERE group_id = ?
         ORDER BY date_added ASC
@@ -65,7 +65,8 @@ def get_messages(group_id: str):
         {
             "sender": row[0],
             "message": row[1],
-            "date_added": str(row[2])
+            "date_added": str(row[2]),
+            "export_file_path": row[3]
         }
         for row in rows
     ]
