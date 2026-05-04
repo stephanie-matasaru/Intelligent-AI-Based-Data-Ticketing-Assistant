@@ -93,6 +93,7 @@ function Graphs() {
   const [timelineData, setTimelineData] = useState(MOCK_TIMELINE)
   const [categoryData, setCategoryData] = useState(MOCK_CATEGORY)
   const [teamData, setTeamData]         = useState(MOCK_TEAM)
+  const [timelineGroup, setTimelineGroup] = useState('weekly')
 
   const priorityRef = useRef(null)
   const slaRef = useRef(null)
@@ -132,7 +133,9 @@ function Graphs() {
 
     fetch(`${base}/by-priority${q}`).then(r => r.json()).then(setPriorityData)
     fetch(`${base}/by-status${q}`).then(r => r.json()).then(setStatusData)
-    fetch(`${base}/timeline${q}`).then(r => r.json()).then(setTimelineData)
+    const tq = new URLSearchParams(params)
+    tq.append('group_by', timelineGroup)
+    fetch(`${base}/timeline?${tq.toString()}`).then(r => r.json()).then(setTimelineData)
     fetch(`${base}/sla${q}`)
       .then(r => r.json())
       .then(d => setSlaData([
@@ -141,7 +144,7 @@ function Graphs() {
       ]))
     fetch(`${base}/by-category${q}`).then(r => r.json()).then(setCategoryData)
     fetch(`${base}/by-team${q}`).then(r => r.json()).then(setTeamData)
-  }, [filters])
+  }, [filters, timelineGroup])
 
   function handleFilter(key, value) {
     setFilters(prev => ({ ...prev, [key]: value }))
@@ -328,8 +331,10 @@ function Graphs() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <div className="timeline-toggle">
                     {['Daily', 'Weekly', 'Monthly'].map(t => (
-                      <button key={t} className={`toggle-btn ${t === 'Weekly' ? 'toggle-btn--active' : ''}`}
-                        aria-pressed={t === 'Weekly'}>
+                      <button key={t}
+                        className={`toggle-btn ${timelineGroup === t.toLowerCase() ? 'toggle-btn--active' : ''}`}
+                        aria-pressed={timelineGroup === t.toLowerCase()}
+                        onClick={() => setTimelineGroup(t.toLowerCase())}>
                         {t}
                       </button>
                     ))}
@@ -418,20 +423,33 @@ function Graphs() {
               <tbody>{categoryData.map(d => <tr key={d.name}><td>{d.name}</td><td>{d.count}</td></tr>)}</tbody>
             </table>
             <div aria-hidden="true">
-              <ResponsiveContainer width="100%" height={240}>
-                <BarChart data={categoryData} barSize={48}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
-                  <XAxis dataKey="name" stroke="#ffffff30" tick={{ fill: '#ffffff60', fontSize: 12 }} axisLine={false} tickLine={false} />
-                  <YAxis stroke="#ffffff30" tick={{ fill: '#ffffff40', fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: '#ffffff05' }} />
-                  <Bar dataKey="count" radius={[4,4,0,0]}>
+            <div className="donut-wrapper">
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie data={categoryData} cx="50%" cy="50%" innerRadius={65} outerRadius={90}
+                    paddingAngle={3} dataKey="count" nameKey="name">
                     {categoryData.map((entry, i) => (
                       <Cell key={entry.name} fill={CATEGORY_COLORS[i % CATEGORY_COLORS.length]} />
                     ))}
-                  </Bar>
-                </BarChart>
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                </PieChart>
               </ResponsiveContainer>
+              <div className="donut-center">
+                <span className="donut-number">{categoryData.reduce((s,d) => s+d.count, 0)}</span>
+                <span className="donut-sub">Total</span>
+              </div>
             </div>
+            <div className="sla-legend">
+              {categoryData.map((entry, i) => (
+                <div key={entry.name} className="sla-legend-item">
+                  <span className="sla-dot" style={{ background: CATEGORY_COLORS[i % CATEGORY_COLORS.length] }} aria-hidden="true" />
+                  <span className="sla-legend-label">{entry.name}</span>
+                  <span className="sla-legend-value">{entry.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
           </div>
 
           {/* 6. Bar – Team */}
