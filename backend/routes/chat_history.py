@@ -23,7 +23,8 @@ def generate_title(first_message: str) -> str:
             max_completion_tokens=20
         )
         return response.choices[0].message.content.strip()
-    except:
+    except Exception as e:
+        print(f"Title generation error: {e}")
         return first_message[:50]
 
 @router.get("/sessions/{user_id}")
