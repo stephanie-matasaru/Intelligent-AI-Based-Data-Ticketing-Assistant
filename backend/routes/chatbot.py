@@ -208,7 +208,7 @@ def ask_chatbot(data: ChatRequest):
         query=sql_query,
         tokens=total_tokens,
         status="Success",
-        group_id=group_id
+        group_id=group_id,
         export_file_path=excel_spec.get("file_path") if excel_spec else None
     )
 
