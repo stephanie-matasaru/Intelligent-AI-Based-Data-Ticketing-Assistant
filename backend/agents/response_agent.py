@@ -3,9 +3,10 @@ from ai_client import get_ai_client
 
 TEXT_PROMPT = """
 You are a professional data analyst assistant. Your task is to answer the
-user's question using only the query results provided.
+user's question using only the query results and/or the uploaded file context provided.
 
 Rules:
+- If uploaded file context is provided and the user asks about the uploaded document or file, prioritize the uploaded file context.
 - CRITICAL INSTRUCTION FOR AN EMPTY EXPORT:
   If the results contain 0 rows, you MUST explicitly state: "I found 0 tickets matching your criteria, so no Excel file was generated." 
   Do NOT claim that an empty file, template, or export was created.
@@ -31,7 +32,7 @@ Rules:
 
 TEXT_AND_GRAPH_PROMPT = """
 You are a professional data analyst assistant. Your task is to answer the
-user's question using only the query results provided.
+user's question using only the query results and/or uploaded file context provided.
 
 Rules:
 - If the user's question continues a previous topic, include relevant context
@@ -56,19 +57,6 @@ Rules:
 - Briefly describe what the file contains based on the query results.
 - Do NOT mention SQL, queries, or technical implementation details.
 - Do NOT mention charts or graphs.
-- Keep the response short and professional.
-"""
-
-TEXT_AND_FILE_PROMPT = """
-You are a professional data analyst assistant. Your task is to confirm to the user that their SQL insertion script has been generated.
-
-Rules:
-- Respond in clear, concise, and professional natural language in English.
-- Confirm that the script was generated successfully.
-- Mention how many rows were processed if the information is available.
-- If there are warnings or rejected rows, mention them clearly but professionally.
-- Explain briefly that the script can be executed in MS SQL Server to insert the data.
-- Do NOT mention technical implementation details beyond what is necessary.
 - Keep the response short and professional.
 """
 
@@ -104,57 +92,10 @@ Rules:
 - Keep the response short and professional.
 """
 
-UPLOAD_PROMPT = """
-You are a professional data import assistant for a ticketing system.
-
-The user has uploaded a file to be converted into a SQL INSERT script.
-You will receive a validation report and must explain the results clearly and concisely.
-
-STRICT FORMATTING RULES (apply to every scenario):
-- Maximum 8 lines total.
-- Never use headers like "What went wrong" or "Next steps".
-- Never use nested bullet points.
-- Use short, direct sentences.
-- Always start with a one-line summary.
-- Always end with a single action line telling the user what to do next.
-- Never mention SQL, INSERT statements, databases, or technical terms.
-
-SCENARIO 1 - Perfect file (valid_rows > 0, no issues, no defaults, no skipped rows):
-Summary line: "X rows validated successfully — ready to import."
-Then: one sentence confirming everything looks good.
-End: "You can preview and download the script below."
-
-SCENARIO 2 - Wrong format file (valid_rows = 0):
-Summary line: "0 rows ready — the file doesn't appear to be in the correct format."
-Then: one sentence saying none of the columns matched ticket fields.
-Then: one line listing minimum required columns: ticket_number, status, priority, company, project, team, service, description, submit_datetime.
-End: "Please fix the file and re-upload."
-
-SCENARIO 3 - Partial success (valid_rows > 0, skipped_rows > 0):
-Summary line: "X rows ready, Y rows skipped."
-Then: one bullet per skipped row explaining why it was skipped (max one sentence each).
-Then: one sentence saying the script only includes the valid rows.
-End: "Fix the skipped rows and re-upload to include them."
-
-SCENARIO 4 - Warnings/defaults applied (valid_rows > 0, row_issues not empty):
-Summary line: "X rows ready — some values were not recognized and were defaulted."
-Then: one bullet per affected row listing the issue and what it defaulted to.
-End: "Please review the script carefully before running it."
-
-SCENARIO 5 - Extra unmapped columns:
-Add one line after the summary: "The following columns were not recognized and were ignored: [list them]."
-Then continue with the rest of the relevant scenario above.
-
-SCENARIO 6 - Missing columns with defaults:
-Add one line after the summary: "These expected columns were missing and defaults were applied: [list them with their defaults]."
-Then continue with the rest of the relevant scenario above.
-"""
-
 PROMPT_MAP = {
     "text":           TEXT_PROMPT,
     "text_and_graph": TEXT_AND_GRAPH_PROMPT,
     "text_and_excel": TEXT_AND_EXCEL_PROMPT,
-    "text_and_file":  TEXT_AND_FILE_PROMPT,
     "unrelated":      UNRELATED_PROMPT,
     "error":          ERROR_PROMPT,
 }
@@ -187,18 +128,6 @@ def generate_explanation(
             f"Data sample: {results[:3] if results else []}"
         )
 
-    elif final_output_type == "text_and_file":
-        rows_processed = script_summary.get("rows_processed", "unknown") if script_summary else "unknown"
-        warnings = script_summary.get("warnings", []) if script_summary else []
-        rejected = script_summary.get("rejected_rows", 0) if script_summary else 0
-        user_content = (
-            f"User question: {question}\n\n"
-            f"Script generation summary:\n"
-            f"- Rows processed: {rows_processed}\n"
-            f"- Rejected rows: {rejected}\n"
-            f"- Warnings: {warnings if warnings else 'None'}"
-        )
-
     elif final_output_type == "unrelated":
             user_content = f"User question: {question}"
 
@@ -228,18 +157,4 @@ def generate_explanation(
     print("DEBUG explanation:", explanation)
     print("DEBUG tokens used:", tokens_used)
 
-    return explanation, tokens_used
-
-def generate_upload_explanation(filename: str, validation_report: dict) -> tuple[str, int]:
-    client = get_ai_client()
-    response = client.chat.completions.create(
-        model=os.getenv("AZURE_OPENAI_MODEL"),
-        messages=[
-            {"role": "system", "content": UPLOAD_PROMPT},
-            {"role": "user", "content": f"Filename: {filename}\n\nValidation report:\n{os.linesep.join([f'{k}: {v}' for k, v in validation_report.items()])}"}
-        ],
-        max_completion_tokens=1000
-    )
-    explanation = response.choices[0].message.content.strip()
-    tokens_used = response.usage.total_tokens
     return explanation, tokens_used

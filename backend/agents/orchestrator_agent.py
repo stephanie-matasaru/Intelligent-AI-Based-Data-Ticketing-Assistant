@@ -34,7 +34,7 @@ RULES:
 - Conversation history is always available and should always be assumed relevant context.
 - The response_agent must always be the final step in the plan.
 - The plan must contain:
-  - final_output: one of ["text", "text_and_graph", "text_and_excel", "text_and_file", "unrelated"]
+  - final_output: one of ["text", "text_and_graph", "text_and_excel", "unrelated"]
   - steps: ordered list of steps
 - Each step must contain:
   - type: must be either "agent" or "service"
@@ -58,6 +58,7 @@ RULES:
 
 - If the user asks for an Excel export that depends on an uploaded file, use:
   file_agent -> query_agent -> sql_service -> excel_agent -> excel_service -> response_agent
+- For uploaded file questions, final_output must be "text" unless the user explicitly asks for a graph or Excel export.
 - If the request is unrelated to ticketing data, IT systems, or the ticketing 
   system (e.g. weather, sports, cooking, personal questions, general knowledge),
   you MUST return ONLY the response_agent step and set final_output to "unrelated".
