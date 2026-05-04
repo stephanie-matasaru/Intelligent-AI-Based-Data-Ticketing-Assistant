@@ -114,13 +114,13 @@ function Chatbot() {
   const user = JSON.parse(localStorage.getItem('user') || '{}')
   const userId = user?.user_id || 1
 
-  useEffect(() => {
+  (() => {
     sessionStorage.setItem('chat_messages', JSON.stringify(messages))
   }, [messages])
 
-  useEffect(() => {
+  (() => {
     if (groupId) sessionStorage.setItem('chat_group_id', groupId)
-  }, [groupId])
+  },useEffect [groupId])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -299,7 +299,7 @@ async function handleUpload() {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
+          body: JSON.stringify({
           question,
           history: buildHistory(messages),
           user_id: userId,
