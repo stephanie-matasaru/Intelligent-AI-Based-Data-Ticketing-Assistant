@@ -1,3 +1,6 @@
+USE TicketingSystem;
+GO
+
 CREATE PROCEDURE dbo.GetTicketsByCategory
     @StartDate  DATETIME2 = NULL,
     @EndDate    DATETIME2 = NULL,
