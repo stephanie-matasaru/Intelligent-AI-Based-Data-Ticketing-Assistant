@@ -23,6 +23,11 @@ RULES:
 - For SLA breach queries, use:
   WHERE resolved_datetime > estimated_resolution
   OR (resolved_datetime IS NULL AND estimated_resolution < GETDATE())
+If uploaded file context is provided and the user asks for related, similar, matching, or associated tickets, you MUST generate a SELECT query.
+Do NOT return an empty response.
+Do NOT return NOT_RELATED if the request involves uploaded file context and ticket data.
+If exact ticket numbers are available, use them.
+If semantic clues are available, search them using LIKE against description, notes, resolution, service, cat_t1, cat_t2, and cat_t3.
 
 UPLOADED FILE CONTEXT RULES:
 - If uploaded file extracted context is provided as JSON, use database_filters as the source of truth.
