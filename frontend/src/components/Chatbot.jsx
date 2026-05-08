@@ -292,27 +292,24 @@ async function handleUpload() {
     setIsTyping(true)
 
     try {
-    let parsedFiles = []
+    const formData = new FormData()
 
-    if (attachedFile) {
-      const parsedFile = await handleUpload()
-      if (parsedFile) parsedFiles = [parsedFile]
+    formData.append('question', question)
+    formData.append('history', JSON.stringify(buildHistory(messages)))
+    formData.append('user_id', String(userId))
+
+    if (groupId) {
+      formData.append('group_id', groupId)
     }
 
-      const response = await fetch('http://localhost:8000/api/chatbot/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-          body: JSON.stringify({
-          question,
-          history: buildHistory(messages),
-          user_id: userId,
-          group_id: groupId,
-          files: parsedFiles
-        })
-      })
+    if (attachedFile) {
+      formData.append('files', attachedFile)
+    }
 
+    const response = await fetch('http://localhost:8000/api/chatbot/', {
+      method: 'POST',
+      body: formData
+    })
       if (!response.ok) {
         let errorMessage = 'Something went wrong while contacting the assistant.'
         try {
