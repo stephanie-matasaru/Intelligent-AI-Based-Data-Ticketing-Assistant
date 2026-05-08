@@ -56,20 +56,30 @@ def force_file_agent_if_needed(plan: dict, has_files: bool) -> dict:
     if any(step.get("name") == "file_agent" for step in steps):
         return plan
 
-    response_index = next(
-        (i for i, step in enumerate(steps) if step.get("name") == "response_agent"),
-        len(steps)
+    query_index = next(
+        (i for i, step in enumerate(steps) if step.get("name") == "query_agent"),
+        None
     )
 
-    steps.insert(response_index, {
-        "type": "agent",
-        "name": "file_agent",
-        "task": "Extract context from uploaded file"
-    })
+    if query_index is not None:
+        steps.insert(query_index, {
+            "type": "agent",
+            "name": "file_agent",
+            "task": "Extract context from uploaded file"
+        })
+    else:
+        response_index = next(
+            (i for i, step in enumerate(steps) if step.get("name") == "response_agent"),
+            len(steps)
+        )
+        steps.insert(response_index, {
+            "type": "agent",
+            "name": "file_agent",
+            "task": "Extract context from uploaded file"
+        })
 
     plan["steps"] = steps
     return plan
-
 
 @router.post("/")
 async def ask_chatbot(
