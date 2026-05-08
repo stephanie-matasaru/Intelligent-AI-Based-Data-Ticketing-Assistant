@@ -1,5 +1,4 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from agents.orchestrator_agent import generate_plan
 from agents.query_agent import generate_sql
 from agents.response_agent import generate_explanation
@@ -13,32 +12,93 @@ from agents.file_agent import generate_document_context
 from services.excel_service import process_excel_spec
 from db import get_connection
 import uuid
-from typing import Optional
+from typing import Optional, List
+import json
+from services.file_parser_service import parse_uploaded_file
+
 
 router = APIRouter()
 
-class ChatRequest(BaseModel):
-    question: str
-    history: list = []
-    user_id: int = None
-    group_id: Optional[str] = None
-    files: Optional[list] = []   # <-- add this
+ALLOWED_EXTENSIONS = {"xlsx", "xls", "csv", "pdf", "docx"}
+
+
+async def parse_chat_files(files: Optional[List[UploadFile]]) -> list:
+    parsed_files = []
+
+    if not files:
+        return parsed_files
+
+    for file in files:
+        ext = file.filename.lower().split(".")[-1]
+
+        if ext not in ALLOWED_EXTENSIONS:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unsupported file type: .{ext}."
+            )
+
+        file_bytes = await file.read()
+        parsed = parse_uploaded_file(file.filename, file_bytes)
+
+        parsed["filename"] = file.filename
+        parsed["extension"] = ext
+        parsed_files.append(parsed)
+
+    return parsed_files
+
+
+def force_file_agent_if_needed(plan: dict, has_files: bool) -> dict:
+    if not has_files:
+        return plan
+
+    steps = plan.get("steps", [])
+
+    if any(step.get("name") == "file_agent" for step in steps):
+        return plan
+
+    response_index = next(
+        (i for i, step in enumerate(steps) if step.get("name") == "response_agent"),
+        len(steps)
+    )
+
+    steps.insert(response_index, {
+        "type": "agent",
+        "name": "file_agent",
+        "task": "Extract context from uploaded file"
+    })
+
+    plan["steps"] = steps
+    return plan
+
 
 @router.post("/")
-def ask_chatbot(data: ChatRequest):
-    group_id = data.group_id or str(uuid.uuid4())
+async def ask_chatbot(
+    question: str = Form(...),
+    history: str = Form("[]"),
+    user_id: Optional[int] = Form(None),
+    group_id: Optional[str] = Form(None),
+    files: Optional[List[UploadFile]] = File(None)
+):
+    is_new_group = not group_id
+    group_id = group_id or str(uuid.uuid4())
 
+    try:
+        parsed_history = json.loads(history)
+    except json.JSONDecodeError:
+        parsed_history = []
+
+    parsed_files = await parse_chat_files(files)
     save_message(
-        user_id=data.user_id,
+        user_id=user_id,
         sender="user",
-        message=data.question,
+        message=question,
         status="pending",
         group_id=group_id
     )
 
-    if not data.group_id:
+    if is_new_group:
         from routes.chat_history import generate_title
-        title = generate_title(data.question)
+        title = generate_title(question)
         conn = get_connection()
         cursor = conn.cursor()
         cursor.execute("""
@@ -48,10 +108,16 @@ def ask_chatbot(data: ChatRequest):
         conn.close()
 
     try:
-        plan, orchestration_tokens = generate_plan(data.question, data.history)
+        planning_question = question
+
+        if parsed_files:
+            planning_question += "\n\nUploaded files are present."
+
+        plan, orchestration_tokens = generate_plan(planning_question, parsed_history)
+        plan = force_file_agent_if_needed(plan, bool(parsed_files))
     except Exception as e:
         save_message(
-            user_id=data.user_id,
+            user_id=user_id,
             sender="agent",
             message=str(e),
             status="Error",
@@ -60,8 +126,8 @@ def ask_chatbot(data: ChatRequest):
         raise HTTPException(status_code=500, detail=f"Orchestration error: {str(e)}")
 
     context = {
-        "question": data.question,
-        "history": data.history,
+        "question": question,
+        "history": parsed_history,
         "sql_query": None,
         "results": None,
         "explanation": None,
@@ -105,7 +171,7 @@ Uploaded file context:
 
             if not is_safe_sql(sql_query):
                 save_message(
-                    user_id=data.user_id,
+                    user_id=user_id,
                     sender="agent",
                     message="Invalid or unsafe SQL query generated.",
                     query=sql_query,
@@ -120,7 +186,7 @@ Uploaded file context:
                 context["results"] = execute_query(context["sql_query"])
             except Exception as e:
                 save_message(
-                    user_id=data.user_id,
+                    user_id=user_id,
                     sender="agent",
                     message=str(e),
                     query=context["sql_query"],
@@ -146,7 +212,7 @@ Uploaded file context:
                     context["excel_spec"] = process_excel_spec(context["excel_spec"])
                 except ValueError as e:
                     save_message(
-                        user_id=data.user_id,
+                        user_id=user_id,
                         sender="agent",
                         message=str(e),
                         status="Error",
@@ -189,7 +255,7 @@ Uploaded file context:
                 context["chart_spec"] = process_chart_spec(context["chart_spec"])
             except ValueError as e:
                 save_message(
-                    user_id=data.user_id,
+                    user_id=user_id,
                     sender="agent",
                     message=str(e),
                     status="Error",
@@ -202,13 +268,13 @@ Uploaded file context:
             document_context, used_tokens = generate_document_context(
                 context["question"],
                 context["history"],
-                data.files)
+                parsed_files)
             context["document_context"] = document_context
             total_tokens += used_tokens        
 
         else:
             save_message(
-                user_id=data.user_id,
+                user_id=user_id,
                 sender="agent",
                 message=f"Step not implemented yet: {step_name}",
                 status="Error",
@@ -226,7 +292,7 @@ Uploaded file context:
     is_single_value = bool(results) and len(results) == 1 and len(results[0]) == 1
 
     save_message(
-        user_id=data.user_id,
+        user_id=user_id,
         sender="agent",
         message=explanation,
         query=sql_query,
@@ -239,7 +305,7 @@ Uploaded file context:
     )
 
     return {
-        "question": data.question,
+        "question": question,
         "sql": sql_query,
         "results": results,
         "explanation": explanation,

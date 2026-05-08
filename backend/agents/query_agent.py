@@ -24,6 +24,17 @@ RULES:
   WHERE resolved_datetime > estimated_resolution
   OR (resolved_datetime IS NULL AND estimated_resolution < GETDATE())
 
+UPLOADED FILE CONTEXT RULES:
+- If uploaded file extracted context is provided as JSON, use database_filters as the source of truth.
+- For services, companies, projects, teams, statuses, priorities, categories, ticket numbers, and people extracted from the file, filter using those exact values.
+- If multiple services are extracted and the user asks about tickets related to them, use OR logic:
+  service LIKE '%Service A%' OR service LIKE '%Service B%'
+- For multiple ticket numbers, use IN (...).
+- For multiple statuses, priorities, teams, companies, or projects, use IN (...) when exact values are available.
+- Do not ignore extracted file filters.
+- Do not invent filters that are not present in the user question or uploaded file context.
+- If only keywords are available, search them in description, notes, service, cat_t1, cat_t2, cat_t3 using LIKE.
+
 OUTPUT FORMAT (MANDATORY):
 - Return ONLY the SQL query inside a code block, exactly like this:
 ```sql
