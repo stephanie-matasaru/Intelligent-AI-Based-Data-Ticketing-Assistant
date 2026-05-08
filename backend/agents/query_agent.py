@@ -79,7 +79,11 @@ def generate_sql(question: str, history: list):
         max_completion_tokens=1000
     )
 
-    sql_query = clean_sql(response.choices[0].message.content)
+    raw_content = response.choices[0].message.content
+    print("RAW QUERY AGENT OUTPUT:", raw_content)
+
+    sql_query = clean_sql(raw_content)
+    print("CLEANED SQL:", sql_query)
     tokens_used = response.usage.total_tokens
 
     return sql_query, tokens_used
