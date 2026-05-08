@@ -170,6 +170,7 @@ Uploaded file context:
                 break
 
             if not is_safe_sql(sql_query):
+                print("REJECTED SQL:", sql_query)
                 save_message(
                     user_id=user_id,
                     sender="agent",
