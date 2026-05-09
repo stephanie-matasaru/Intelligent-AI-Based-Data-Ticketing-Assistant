@@ -65,6 +65,8 @@ TEMPORAL RULES:
 - If the user says "soon" or "upcoming", use estimated_resolution:
   WHERE estimated_resolution >= GETDATE()
 
+IMPORTANT: If the user message contains "Uploaded file context (JSON):", you MUST generate a SELECT query using the filters provided. Never return NOT_RELATED in this case.
+    
 If the question is not related to ticketing data, respond with exactly:
 NOT_RELATED
 """

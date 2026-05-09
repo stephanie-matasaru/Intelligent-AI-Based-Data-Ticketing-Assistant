@@ -1,3 +1,5 @@
+from multiprocessing import context
+
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from agents.orchestrator_agent import generate_plan
 from agents.query_agent import generate_sql
@@ -52,6 +54,16 @@ def force_file_agent_if_needed(plan: dict, has_files: bool) -> dict:
         return plan
 
     steps = plan.get("steps", [])
+
+    if plan.get("final_output") == "unrelated":
+        plan["final_output"] = "text"
+        plan["steps"] = [
+            {"type": "agent",   "name": "file_agent",    "task": "Extract context from uploaded file"},
+            {"type": "agent",   "name": "query_agent",   "task": "Generate SQL using file context"},
+            {"type": "service", "name": "sql_service",   "task": "Execute the SQL query"},
+            {"type": "agent",   "name": "response_agent","task": "Generate the final answer"},
+        ]
+        return plan
 
     if any(step.get("name") == "file_agent" for step in steps):
         return plan
@@ -121,6 +133,7 @@ async def ask_chatbot(
         planning_question = question
 
         if parsed_files:
+            filenames = ", ".join(f["filename"] for f in parsed_files)
             planning_question += "\n\nUploaded files are present."
 
         plan, orchestration_tokens = generate_plan(planning_question, parsed_history)
@@ -155,11 +168,14 @@ async def ask_chatbot(
         if step_type == "agent" and step_name == "query_agent":
             question_for_sql = context["question"]
 
-            if context.get("document_context"):
-                question_for_sql += f"""
-Uploaded file context:
-{context["document_context"]}"""
+        if context.get("document_context"):
+            question_for_sql = f"""User question: {context["question"]}
 
+The user has uploaded a file. Use the extracted context below to build your SQL query.
+Do NOT return NOT_RELATED — this is a ticketing data question that requires database filtering based on the file.
+
+Uploaded file context (JSON):
+{context["document_context"]}"""
             sql_query, used_tokens = generate_sql(
                 question_for_sql,
                 context["history"]
@@ -169,6 +185,10 @@ Uploaded file context:
             total_tokens += used_tokens
 
             if sql_query.strip() == "NOT_RELATED":
+                if context.get("document_context"):
+                    # file context was provided — don't treat as unrelated, fail gracefully instead
+                    context["explanation"] = "I couldn't generate a query from the uploaded file context. Please try rephrasing your question."
+                    break
                 explanation, used_tokens = generate_explanation(
                     question=context["question"],
                     history=context["history"],
