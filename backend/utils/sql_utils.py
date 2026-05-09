@@ -5,6 +5,8 @@ ALLOWED = r"^(select|declare|with)"
 
 def clean_sql(sql: str) -> str:
     sql = re.sub(r"```sql|```", "", sql)
+    if sql.endswith(";"):
+        sql = sql[:-1]
     return sql.strip()
 
 def is_safe_sql(sql: str) -> bool:
