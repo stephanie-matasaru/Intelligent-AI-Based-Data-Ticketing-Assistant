@@ -16,6 +16,8 @@ class LoginRequest(BaseModel):
 def parse_expires_at(expires_at):
     """Safely parse expires_at whether it's already a datetime or a string."""
     if isinstance(expires_at, datetime):
+        if expires_at.tzinfo is None:
+            return expires_at.replace(tzinfo=timezone.utc)
         return expires_at
     for fmt in ("%Y-%m-%d %H:%M:%S.%f", "%Y-%m-%d %H:%M:%S"):
         try:
