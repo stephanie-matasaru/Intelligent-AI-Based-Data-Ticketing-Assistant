@@ -169,13 +169,40 @@ async def ask_chatbot(
             question_for_sql = context["question"]
 
         if context.get("document_context"):
+            try:
+                doc = json.loads(context["document_context"])
+                
+                slim_context = {
+                    "file_summary": doc.get("file_summary", ""),
+                    "database_filters": doc.get("database_filters", {}),
+                    "semantic_clues": doc.get("semantic_clues", {}),
+                }
+
+                # document_context can be very long for PDFs/Word docs - truncate it
+                narrative = doc.get("document_context", "")
+                if len(narrative) > 500:
+                    slim_context["document_context"] = narrative[:500] + "... [truncated]"
+                else:
+                    slim_context["document_context"] = narrative
+
+                # ticket records capped at 50
+                records = doc.get("file_ticket_records", [])
+                if records:
+                    slim_context["file_ticket_records"] = records[:50]
+                    if len(records) > 50:
+                        slim_context["file_ticket_records_truncated"] = True
+
+                slim_context_str = json.dumps(slim_context, indent=2)
+            except Exception:
+                slim_context_str = context["document_context"]
+
             question_for_sql = f"""User question: {context["question"]}
 
 The user has uploaded a file. Use the extracted context below to build your SQL query.
 Do NOT return NOT_RELATED — this is a ticketing data question that requires database filtering based on the file.
 
 Uploaded file context (JSON):
-{context["document_context"]}"""
+{slim_context_str}"""
             sql_query, used_tokens = generate_sql(
                 question_for_sql,
                 context["history"]

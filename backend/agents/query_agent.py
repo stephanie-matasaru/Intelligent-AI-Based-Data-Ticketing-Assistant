@@ -83,7 +83,7 @@ def generate_sql(question: str, history: list):
     response = client.chat.completions.create(
         model=os.getenv("AZURE_OPENAI_MODEL"),
         messages=messages,
-        max_completion_tokens=1000
+        max_completion_tokens=2000
     )
 
     raw_content = response.choices[0].message.content
