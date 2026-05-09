@@ -139,6 +139,7 @@ async def ask_chatbot(
         plan, orchestration_tokens = generate_plan(planning_question, parsed_history)
         plan = force_file_agent_if_needed(plan, bool(parsed_files))
         print("DEBUG PLAN:", json.dumps(plan, indent=2))
+        print("DEBUG FINAL STEPS:", [s["name"] for s in plan["steps"]])
     except Exception as e:
         save_message(
             user_id=user_id,
@@ -304,7 +305,7 @@ Uploaded file context (JSON):
                 total_tokens += used_tokens
                 if plan["final_output"] == "text_and_excel" and context.get("excel_spec"):
                     context["explanation"] = context["explanation"] + " [ACTION: DOWNLOAD_EXCEL]"
-                    
+
             print("DEBUG: response_agent step reached")
             print("DEBUG results:", context["results"])
             print("DEBUG explanation before:", context["explanation"])
