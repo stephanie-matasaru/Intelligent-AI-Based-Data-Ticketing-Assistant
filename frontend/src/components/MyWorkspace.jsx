@@ -62,7 +62,11 @@ function MyWorkspace() {
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user') || '{}')
-    const userId = user?.user_id || 1
+    const userId = user?.user_id
+    if (!userId) {
+      console.error('No user in localStorage')
+      return
+    }
     fetch(`http://localhost:8000/api/workspace/${userId}`)
       .then(res => res.json())
       .then(data => setItems(data))

@@ -3,7 +3,8 @@ import Navbar from './Navbar'
 import './Dashboard.css'
 import bgImage from '../assets/dash_background.jpg'
 
-const CURRENT_USER = 'test'
+const user = JSON.parse(localStorage.getItem('user') || '{}')
+const CURRENT_USER = user?.username || 'Guest'
 
 const NAV_CARDS = [
   {

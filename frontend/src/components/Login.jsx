@@ -59,6 +59,7 @@ function Login() {
         throw new Error(data.detail || 'Login failed')
       }
 
+      localStorage.setItem('user', JSON.stringify(data.user))
       setSuccess(true)
       setTimeout(() => { navigate('/dashboard') }, 800)
 
