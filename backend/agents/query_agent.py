@@ -86,6 +86,9 @@ def generate_sql(question: str, history: list):
         max_completion_tokens=2000
     )
 
+    print("DEBUG finish_reason:", response.choices[0].finish_reason)
+    print("DEBUG raw content repr:", repr(response.choices[0].message.content))
+
     raw_content = response.choices[0].message.content
     print("RAW QUERY AGENT OUTPUT:", raw_content)
 

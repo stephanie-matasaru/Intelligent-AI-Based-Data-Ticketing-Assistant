@@ -205,6 +205,8 @@ Do NOT return NOT_RELATED — this is a ticketing data question that requires da
 
 Uploaded file context (JSON):
 {slim_context_str}"""
+            print("DEBUG question_for_sql length:", len(question_for_sql))
+            print("DEBUG question_for_sql preview:", question_for_sql[:300])
             sql_query, used_tokens = generate_sql(
                 question_for_sql,
                 context["history"]
