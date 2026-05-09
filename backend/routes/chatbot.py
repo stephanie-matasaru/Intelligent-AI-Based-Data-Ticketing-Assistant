@@ -138,6 +138,7 @@ async def ask_chatbot(
 
         plan, orchestration_tokens = generate_plan(planning_question, parsed_history)
         plan = force_file_agent_if_needed(plan, bool(parsed_files))
+        print("DEBUG PLAN:", json.dumps(plan, indent=2))
     except Exception as e:
         save_message(
             user_id=user_id,
@@ -222,6 +223,8 @@ Uploaded file context (JSON):
                     results=None,
                     final_output_type="unrelated"
                 )
+                print("DEBUG EXPLANATION RESULT:", explanation)
+                print("DEBUG EXPLANATION TOKENS:", used_tokens)
                 context["explanation"] = explanation
                 total_tokens += used_tokens
                 break
@@ -295,10 +298,16 @@ Uploaded file context (JSON):
                     excel_spec=context["excel_spec"],
                     document_context=context["document_context"]
                 )
+                print("DEBUG EXPLANATION RESULT:", explanation)
+                print("DEBUG EXPLANATION TOKENS:", used_tokens)
                 context["explanation"] = explanation
                 total_tokens += used_tokens
                 if plan["final_output"] == "text_and_excel" and context.get("excel_spec"):
                     context["explanation"] = context["explanation"] + " [ACTION: DOWNLOAD_EXCEL]"
+                    
+            print("DEBUG: response_agent step reached")
+            print("DEBUG results:", context["results"])
+            print("DEBUG explanation before:", context["explanation"])
 
         elif step_type == "agent" and step_name == "visualizer_agent":
             chart_spec, used_tokens = generate_chart_spec(
