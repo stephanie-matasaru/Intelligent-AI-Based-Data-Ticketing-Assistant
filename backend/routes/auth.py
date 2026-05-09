@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Response, Cookie
 from pydantic import BaseModel
 import bcrypt
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from db import get_connection
 
 router = APIRouter()
@@ -12,6 +12,17 @@ SESSION_EXPIRE_HOURS = 24
 class LoginRequest(BaseModel):
     username: str
     password: str
+
+def parse_expires_at(expires_at):
+    """Safely parse expires_at whether it's already a datetime or a string."""
+    if isinstance(expires_at, datetime):
+        return expires_at
+    for fmt in ("%Y-%m-%d %H:%M:%S.%f", "%Y-%m-%d %H:%M:%S"):
+        try:
+            return datetime.strptime(str(expires_at), fmt).replace(tzinfo=timezone.utc)
+        except ValueError:
+            continue
+    raise ValueError(f"Cannot parse expires_at: {expires_at!r}")
 
 @router.post("/login")
 def login(data: LoginRequest, response: Response):
@@ -33,8 +44,10 @@ def login(data: LoginRequest, response: Response):
         conn.close()
         raise HTTPException(status_code=401, detail="Invalid username or password")
     
+    cursor.execute("DELETE FROM sessions WHERE user_id = ?", (user_id,))
+    
     session_id = str(uuid.uuid4())
-    expires_at = datetime.utcnow() + timedelta(hours=SESSION_EXPIRE_HOURS)
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=SESSION_EXPIRE_HOURS)
 
     cursor.execute(
         "INSERT INTO sessions (session_id, user_id, username, expires_at) VALUES (?, ?, ?, ?)",
@@ -88,7 +101,12 @@ def get_me(session_id: str = Cookie(None)):
     user_id, username, expires_at = row
 
     # check if session is expired
-    if datetime.utcnow() > expires_at:
+    try:
+        expires_dt = parse_expires_at(expires_at)
+    except ValueError:
+        raise HTTPException(status_code=401, detail="Malformed session expiry")
+
+    if datetime.now(timezone.utc) > expires_dt:
         raise HTTPException(status_code=401, detail="Session expired")
 
     return {
