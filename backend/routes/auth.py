@@ -65,7 +65,7 @@ def login(data: LoginRequest, response: Response):
         max_age=SESSION_EXPIRE_HOURS * 60 * 60
     )
 
-    return {"success": True, "user": {"username": username}}
+    return {"success": True, "user": {"user_id": user_id, "username": username}}
 
 
 @router.post("/logout")
