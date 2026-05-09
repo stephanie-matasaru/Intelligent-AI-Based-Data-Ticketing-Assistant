@@ -209,7 +209,7 @@ Uploaded file context (JSON):
             print("DEBUG question_for_sql preview:", question_for_sql[:300])
             sql_query, used_tokens = generate_sql(
                 question_for_sql,
-                context["history"]
+                []
             )            
 
             context["sql_query"] = sql_query

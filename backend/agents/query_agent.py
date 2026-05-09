@@ -83,7 +83,7 @@ def generate_sql(question: str, history: list):
     response = client.chat.completions.create(
         model=os.getenv("AZURE_OPENAI_MODEL"),
         messages=messages,
-        max_completion_tokens=2000
+        max_completion_tokens=5000
     )
 
     print("DEBUG finish_reason:", response.choices[0].finish_reason)
