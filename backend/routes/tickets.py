@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Query
 from db import get_connection
-from typing import Optional
+from typing import Optional, Literal
 from enum import Enum
 
 router = APIRouter()
@@ -34,7 +34,10 @@ def get_tickets(
     priority: PriorityEnum = Query(PriorityEnum.all),
     project: Optional[str] = Query(None),
     service: Optional[str] = Query(None),
-    assignee: Optional[str] = Query(None)
+    assignee: Optional[str] = Query(None),
+    team: Optional[str] = Query(None),
+    cat_t1: Optional[str] = Query(None),
+    sla_status: Optional[Literal["met", "breached"]] = Query(None)
 ):
     conn = get_connection()
     cursor = conn.cursor()
@@ -51,7 +54,10 @@ def get_tickets(
             @Priority = ?,
             @Project = ?,
             @Service = ?,
-            @Assignee = ?
+            @Assignee = ?,
+            @Team = ?,
+            @CatT1 = ?,
+            @SlaStatus = ?
         """,
         (
             page,
@@ -63,7 +69,10 @@ def get_tickets(
             priority.value,
             project,
             service,
-            assignee
+            assignee,
+            team,
+            cat_t1,
+            sla_status
         )
     )
 
