@@ -13,14 +13,10 @@ def generate_title(first_message: str) -> str:
             messages=[
                 {
                     "role": "system",
-                    "content": "You are a title generator for a technical support chatbot. Given the user's first message, respond with ONLY a short title of 3-5 words that summarizes what they are asking about. No punctuation, no quotes, no explanation. Just the title words. Example: 'SLA Breach Count' or 'Open Tickets Export'"
+                    "content": "Generate a very short title (max 5 words) for a chat that started with this message. Return ONLY the title, nothing else. Message: {first_message}"
                 },
-                {
-                    "role": "user",
-                    "content": first_message
-                }
             ],
-            max_completion_tokens=50
+            max_completion_tokens=500
         )
         title = response.choices[0].message.content.strip()
         print(f"DEBUG generate_title result: '{title}'")
