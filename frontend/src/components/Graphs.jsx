@@ -83,7 +83,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null
 }
 
-function DrillDownPanel({ drillDown, onClose, onExport }) {
+function DrillDownPanel({ drillDown, onClose, onExportCSV, onExportExcel }) {
   if (!drillDown) return null
  
   const priorityStyle = (p) => {
