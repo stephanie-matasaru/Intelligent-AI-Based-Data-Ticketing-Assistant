@@ -82,6 +82,171 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null
 }
 
+function DrillDownPanel({ drillDown, onClose, onExport }) {
+  if (!drillDown) return null
+ 
+  const priorityStyle = (p) => {
+    const map = {
+      Critical: { bg: 'rgba(224,92,92,0.2)',   color: '#e05c5c' },
+      High:     { bg: 'rgba(224,154,58,0.2)',  color: '#e09a3a' },
+      Medium:   { bg: 'rgba(224,212,58,0.2)',  color: '#e0d43a' },
+      Low:      { bg: 'rgba(79,192,147,0.2)',  color: '#4fc093' },
+    }
+    return map[p] || { bg: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)' }
+  }
+ 
+  return (
+    <>
+      {/* backdrop */}
+      <div
+        onClick={onClose}
+        style={{
+          position: 'fixed', inset: 0,
+          background: 'rgba(0,0,0,0.55)',
+          zIndex: 40,
+          backdropFilter: 'blur(2px)',
+        }}
+      />
+ 
+      {/* panel */}
+      <div style={{
+        position: 'fixed', right: 0, top: 0,
+        height: '100%', width: '580px',
+        background: '#13132a',
+        borderLeft: '1px solid rgba(255,255,255,0.08)',
+        zIndex: 50,
+        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        boxShadow: '-12px 0 48px rgba(0,0,0,0.5)',
+      }}>
+ 
+        {/* header */}
+        <div style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+          padding: '24px', borderBottom: '1px solid rgba(255,255,255,0.08)',
+          position: 'sticky', top: 0, background: '#13132a', zIndex: 1,
+        }}>
+          <div>
+            <p style={{ fontSize: '0.625rem', textTransform: 'uppercase', letterSpacing: '0.12em', color: '#A1CEBC', marginBottom: 6, margin: 0 }}>
+              Drill-down
+            </p>
+            <h2 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'white', margin: '4px 0 0 0' }}>
+              {drillDown.label}
+            </h2>
+            {!drillDown.loading && (
+              <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', marginTop: 4, marginBottom: 0 }}>
+                {drillDown.tickets.length} ticket{drillDown.tickets.length !== 1 ? 's' : ''}
+              </p>
+            )}
+          </div>
+ 
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {!drillDown.loading && !drillDown.error && drillDown.tickets.length > 0 && (
+              <button
+                onClick={onExport}
+                style={{
+                  background: '#4fc093', color: '#0f0f1e',
+                  border: 'none', borderRadius: 8,
+                  padding: '8px 16px',
+                  fontSize: '0.6875rem', fontWeight: 700,
+                  cursor: 'pointer',
+                  textTransform: 'uppercase', letterSpacing: '0.08em',
+                  display: 'flex', alignItems: 'center', gap: 6,
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 15 }}>download</span>
+                Export CSV
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', cursor: 'pointer', padding: 4, display: 'flex' }}
+              aria-label="Close panel"
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
+          </div>
+        </div>
+ 
+        {/* body */}
+        <div style={{ flex: 1, overflow: 'auto' }}>
+          {drillDown.loading && (
+            <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.35)', padding: 48, fontSize: '0.875rem' }}>
+              Loading tickets...
+            </div>
+          )}
+ 
+          {drillDown.error && (
+            <div style={{ textAlign: 'center', color: '#e05c5c', padding: 48, fontSize: '0.875rem' }}>
+              Failed to load tickets. Check the console.
+            </div>
+          )}
+ 
+          {!drillDown.loading && !drillDown.error && drillDown.tickets.length === 0 && (
+            <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.35)', padding: 48, fontSize: '0.875rem' }}>
+              No tickets match this selection.
+            </div>
+          )}
+ 
+          {!drillDown.loading && !drillDown.error && drillDown.tickets.length > 0 && (
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem' }}>
+              <thead>
+                <tr style={{ background: '#0c0c1f', borderBottom: '1px solid rgba(255,255,255,0.08)', position: 'sticky', top: 0 }}>
+                  {['Ticket', 'Priority', 'Status', 'Assignee', 'Team', 'Service', 'Submitted'].map(h => (
+                    <th key={h} style={{
+                      padding: '10px 14px', textAlign: 'left',
+                      fontSize: '0.5875rem', textTransform: 'uppercase',
+                      letterSpacing: '0.1em', color: '#A1CEBC',
+                      fontWeight: 600, whiteSpace: 'nowrap',
+                    }}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {drillDown.tickets.map(t => {
+                  const ps = priorityStyle(t.priority)
+                  return (
+                    <tr
+                      key={t.ticket_id}
+                      style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', transition: 'background 0.15s' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <td style={{ padding: '10px 14px', color: 'white', fontWeight: 600 }}>
+                        {t.ticket_number}
+                      </td>
+                      <td style={{ padding: '10px 14px' }}>
+                        <span style={{
+                          padding: '2px 8px', borderRadius: 4,
+                          fontSize: '0.6875rem', fontWeight: 700,
+                          background: ps.bg, color: ps.color,
+                        }}>
+                          {t.priority || '—'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '10px 14px', color: 'rgba(255,255,255,0.65)' }}>{t.status}</td>
+                      <td style={{ padding: '10px 14px', color: 'rgba(255,255,255,0.65)' }}>{t.assigned_person || '—'}</td>
+                      <td style={{ padding: '10px 14px', color: 'rgba(255,255,255,0.65)' }}>{t.team || '—'}</td>
+                      <td style={{ padding: '10px 14px', color: 'rgba(255,255,255,0.65)' }}>{t.service || '—'}</td>
+                      <td style={{ padding: '10px 14px', color: 'rgba(255,255,255,0.35)', fontFamily: 'monospace', fontSize: '0.725rem', whiteSpace: 'nowrap' }}>
+                        {t.submit_datetime ? new Date(t.submit_datetime).toLocaleDateString() : '—'}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+    </>
+  )
+}
+
+
 function Graphs() {
   const [filters, setFilters] = useState({
     startDate: '', endDate: '', priority: 'all', status: 'all', team: 'all',
@@ -94,6 +259,7 @@ function Graphs() {
   const [categoryData, setCategoryData] = useState(MOCK_CATEGORY)
   const [teamData, setTeamData]         = useState(MOCK_TEAM)
   const [timelineGroup, setTimelineGroup] = useState('weekly')
+  const [drillDown, setDrillDown] = useState(null)
 
   const priorityRef = useRef(null)
   const slaRef = useRef(null)
@@ -152,6 +318,79 @@ function Graphs() {
 
   function handleReset() {
     setFilters({ startDate: '', endDate: '', priority: 'all', status: 'all', team: 'all' })
+  }
+
+  async function fetchDrillDown(label, extraParams = {}) {
+    setDrillDown({ label, tickets: [], loading: true, error: false })
+ 
+    const params = new URLSearchParams()
+    if (filters.startDate) params.append('start_date', filters.startDate)
+    if (filters.endDate)   params.append('end_date',   filters.endDate)
+    if (filters.priority !== 'all') params.append('priority', filters.priority)
+    if (filters.status   !== 'all') params.append('status',   filters.status)
+    if (filters.team     !== 'all') params.append('team',     filters.team)
+ 
+    // drilldown-specific params override the current filters
+    Object.entries(extraParams).forEach(([k, v]) => params.set(k, v))
+ 
+    params.set('page', '1')
+    params.set('page_size', '500')
+ 
+    try {
+      const res = await fetch(`http://localhost:8000/api/tickets/?${params.toString()}`)
+      const data = await res.json()
+      setDrillDown({ label, tickets: data.items || [], loading: false, error: false })
+    } catch (e) {
+      console.error('DrillDown fetch failed:', e)
+      setDrillDown({ label, tickets: [], loading: false, error: true })
+    }
+  }
+ 
+  function exportDrillDownCSV() {
+    if (!drillDown?.tickets?.length) return
+ 
+    const cols = [
+      ['ticket_number',       'Ticket Number'],
+      ['status',              'Status'],
+      ['priority',            'Priority'],
+      ['team',                'Team'],
+      ['assigned_person',     'Assigned Person'],
+      ['service',             'Service'],
+      ['company',             'Company'],
+      ['project',             'Project'],
+      ['cat_t1',              'Category T1'],
+      ['cat_t2',              'Category T2'],
+      ['cat_t3',              'Category T3'],
+      ['description',         'Description'],
+      ['resolution',          'Resolution'],
+      ['resolution_category', 'Resolution Category'],
+      ['submit_datetime',     'Submit Date'],
+      ['estimated_resolution','Estimated Resolution'],
+      ['resolved_datetime',   'Resolved Date'],
+      ['closed_datetime',     'Closed Date'],
+      ['last_modified',       'Last Modified'],
+    ]
+ 
+    const dateKeys = ['submit_datetime', 'estimated_resolution', 'resolved_datetime', 'closed_datetime', 'last_modified']
+ 
+    const header = cols.map(([, label]) => `"${label}"`).join(',')
+    const rows = drillDown.tickets.map(t =>
+      cols.map(([key]) => {
+        const v = t[key]
+        if (!v) return '""'
+        const val = dateKeys.includes(key) ? new Date(v).toLocaleString() : v
+        return `"${String(val).replace(/"/g, '""')}"`
+      }).join(',')
+    )
+ 
+    const csv = [header, ...rows].join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `drilldown_${drillDown.label.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   return (
@@ -261,7 +500,8 @@ function Graphs() {
                   <XAxis dataKey="name" stroke="#ffffff30" tick={{ fill: '#ffffff60', fontSize: 12 }} axisLine={false} tickLine={false} />
                   <YAxis stroke="#ffffff30" tick={{ fill: '#ffffff40', fontSize: 11 }} axisLine={false} tickLine={false} />
                   <Tooltip content={<CustomTooltip />} cursor={{ fill: '#ffffff05' }} />
-                  <Bar dataKey="count" radius={[4,4,0,0]}>
+                  <Bar dataKey="count" radius={[4,4,0,0]}                     style={{ cursor: 'pointer' }}
+                    onClick={(data) => fetchDrillDown(`Priority: ${data.name}`, { priority: data.name })}>
                     {priorityData.map(entry => (
                       <Cell key={entry.name} fill={PRIORITY_COLORS[entry.name]} />
                     ))}
@@ -299,7 +539,7 @@ function Graphs() {
                 <ResponsiveContainer width="100%" height={200}>
                   <PieChart>
                     <Pie data={slaData} cx="50%" cy="50%" innerRadius={65} outerRadius={90}
-                      paddingAngle={3} dataKey="value">
+                      paddingAngle={3} dataKey="value" style={{ cursor: 'pointer' }} onClick={(data) => fetchDrillDown(data.name, { sla_status: data.name === 'SLA Met' ? 'met' : 'breached' })}>
                       {slaData.map((entry, i) => (
                         <Cell key={entry.name} fill={SLA_COLORS[i]} />
                       ))}
@@ -397,7 +637,7 @@ function Graphs() {
                   <XAxis dataKey="name" stroke="#ffffff30" tick={{ fill: '#ffffff60', fontSize: 12 }} axisLine={false} tickLine={false} />
                   <YAxis stroke="#ffffff30" tick={{ fill: '#ffffff40', fontSize: 11 }} axisLine={false} tickLine={false} />
                   <Tooltip content={<CustomTooltip />} cursor={{ fill: '#ffffff05' }} />
-                  <Bar dataKey="count" radius={[4,4,0,0]}>
+                  <Bar dataKey="count" radius={[4,4,0,0]} style={{ cursor: 'pointer' }} onClick={(data) => fetchDrillDown(`Status: ${data.name}`, { status: data.name })}>
                     {statusData.map(entry => (
                       <Cell key={entry.name} fill={STATUS_COLORS[entry.name]} />
                     ))}
@@ -406,7 +646,7 @@ function Graphs() {
               </ResponsiveContainer>
             </div>
           </div>
-          {/* 5. Bar – Category */}
+          {/* 5. Pie – Category */}
           <div className="chart-card" id="category" ref={categoryRef}>
             <div className="chart-card-header">
               <h2 className="chart-title">Tickets by Category</h2>
@@ -429,7 +669,7 @@ function Graphs() {
                   <Pie data={categoryData} cx="50%" cy="50%" innerRadius={65} outerRadius={90}
                     paddingAngle={3} dataKey="count" nameKey="name">
                     {categoryData.map((entry, i) => (
-                      <Cell key={entry.name} fill={CATEGORY_COLORS[i % CATEGORY_COLORS.length]} />
+                      <Cell key={entry.name} fill={CATEGORY_COLORS[i % CATEGORY_COLORS.length]} style={{ cursor: 'pointer' }} onClick={(data) => fetchDrillDown(`Category: ${data.name}`, { cat_t1: data.name })}/>
                     ))}
                   </Pie>
                   <Tooltip content={<CustomTooltip />} />
@@ -475,7 +715,7 @@ function Graphs() {
                   <XAxis dataKey="name" stroke="#ffffff30" tick={{ fill: '#ffffff60', fontSize: 12 }} axisLine={false} tickLine={false} />
                   <YAxis stroke="#ffffff30" tick={{ fill: '#ffffff40', fontSize: 11 }} axisLine={false} tickLine={false} />
                   <Tooltip content={<CustomTooltip />} cursor={{ fill: '#ffffff05' }} />
-                  <Bar dataKey="count" radius={[4,4,0,0]}>
+                  <Bar dataKey="count" radius={[4,4,0,0]} style={{ cursor: 'pointer' }} onClick={(data) => fetchDrillDown(`Team: ${data.name}`, { team: data.name })}>
                     {teamData.map((entry, i) => (
                       <Cell key={entry.name} fill={TEAM_COLORS[i % TEAM_COLORS.length]} />
                     ))}
@@ -486,6 +726,11 @@ function Graphs() {
           </div>
         </div>
       </main>
+      <DrillDownPanel
+        drillDown={drillDown}
+        onClose={() => setDrillDown(null)}
+        onExport={exportDrillDownCSV}
+      />
     </div>
   )
 }
