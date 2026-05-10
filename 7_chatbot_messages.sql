@@ -21,4 +21,5 @@ CREATE TABLE chat_messages (
 
 ALTER TABLE chat_messages ADD title NVARCHAR(255) NULL;
 ALTER TABLE chat_messages ADD export_file_path NVARCHAR(500) NULL;
+ALTER TABLE chat_messages ADD attached_file_name NVARCHAR(500) NULL;
 GO

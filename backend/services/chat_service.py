@@ -1,11 +1,10 @@
-import json
-
 from db import get_connection
 from routes.chat_history import generate_title
 import uuid
 
-def save_message(user_id, sender, message, query=None, tokens=None, status="pending", group_id=None, export_file_path=None, chart_spec=None, excel_spec=None):
+def save_message(user_id, sender, message, query=None, tokens=None, status="pending", group_id=None, export_file_path=None, chart_spec=None, excel_spec=None, attached_file_name=None):
     try:
+        import json
         conn = get_connection()
         cursor = conn.cursor()
 
@@ -17,7 +16,7 @@ def save_message(user_id, sender, message, query=None, tokens=None, status="pend
                 title = generate_title(message)
         cursor.execute("""
             INSERT INTO chat_messages 
-                (group_id, user_id, sender, message, query, request_tokens, response_status, title, export_file_path, json_chart, json_export)
+                (group_id, user_id, sender, message, query, request_tokens, response_status, title, export_file_path, json_chart, json_export, attached_file_name)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             str(group_id) if group_id else str(uuid.uuid4()),
@@ -31,6 +30,7 @@ def save_message(user_id, sender, message, query=None, tokens=None, status="pend
             export_file_path,
             json.dumps(chart_spec) if chart_spec else None,
             json.dumps(excel_spec) if excel_spec else None,
+            attached_file_name
         ))
         conn.commit()
         conn.close()

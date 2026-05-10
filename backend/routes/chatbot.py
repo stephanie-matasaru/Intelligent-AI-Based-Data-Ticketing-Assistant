@@ -115,7 +115,8 @@ async def ask_chatbot(
         sender="user",
         message=question,
         status="pending",
-        group_id=group_id
+        group_id=group_id,
+        attached_file_name=parsed_files[0]["filename"] if parsed_files else None
     )
 
     if is_new_group:

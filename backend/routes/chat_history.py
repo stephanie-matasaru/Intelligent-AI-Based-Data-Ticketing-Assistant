@@ -56,7 +56,7 @@ def get_messages(group_id: str):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT sender, message, date_added, json_chart, json_export, export_file_path
+        SELECT sender, message, date_added, json_chart, json_export, export_file_path, attached_file_name
         FROM chat_messages
         WHERE group_id = ?
         ORDER BY date_added ASC
@@ -71,6 +71,7 @@ def get_messages(group_id: str):
             "chart_spec": json.loads(row[3]) if row[3] else None,
             "excel_spec": json.loads(row[4]) if row[4] else None,
             "export_file_path": row[5] if row[5] else None,
+            "attached_file_name": row[6] if row[6] else None,
         }
         for row in rows
     ]
