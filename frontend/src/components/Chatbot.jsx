@@ -219,7 +219,8 @@ async function fetchMessages(groupId) {
       time: msg.date_added.slice(11, 16),
       export_file_path: msg.export_file_path || null,
       chart_spec: msg.chart_spec || null,
-      excel_spec: msg.excel_spec || null 
+      excel_spec: msg.excel_spec || null,
+      attached_file_name: msg.attached_file_name || null
     })))
     setShowHistory(false)
     setSelectedSession(groupId)
@@ -295,19 +296,16 @@ async function handleUpload() {
       if (parsedFile) parsedFiles = [parsedFile]
     }
 
-      const response = await fetch('http://localhost:8000/api/chatbot/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-          body: JSON.stringify({
-          question,
-          history: buildHistory(messages),
-          user_id: userId,
-          group_id: groupId,
-          files: parsedFiles
-        })
-      })
+      const formData = new FormData()
+      formData.append('question', question)
+      formData.append('history', JSON.stringify(buildHistory(messages)))
+      if (userId) formData.append('user_id', userId)
+      if (groupId) formData.append('group_id', groupId)
+
+    const response = await fetch('http://localhost:8000/api/chatbot/', {
+      method: 'POST',
+      body: formData
+})
 
       if (!response.ok) {
         let errorMessage = 'Something went wrong while contacting the assistant.'
@@ -427,6 +425,12 @@ async function handleUpload() {
                 <div key={msg.id} className="flex justify-end group">
                   <div className="max-w-[45%] bg-gradient-to-br from-[#000000] to-[#6B4D90]/80 p-4 rounded-2xl rounded-tr-none shadow-xl">
                     <p className="text-white leading-relaxed">{msg.text}</p>
+                    {msg.attached_file_name && (
+                    <p className="text-white/40 text-xs mt-1 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[12px]">attach_file</span>
+                      {msg.attached_file_name}
+                    </p>
+)}
                     <div className="mt-3 flex justify-end items-center gap-2 opacity-40 group-hover:opacity-100 transition-opacity">
                       <span className="font-label text-[0.625rem] text-white/50">{msg.time}</span>
                       <span className="material-symbols-outlined text-[14px]">done_all</span>
@@ -448,7 +452,7 @@ async function handleUpload() {
                       </p>
 
                       {/* Render the excel download button if the tag and data exist */}
-                      {msg.text && msg.text.includes("[ACTION: DOWNLOAD_EXCEL]") && (msg.excel_spec?.file_data_base64 || msg.export_file_path) && (
+                      {(msg.text?.includes("[ACTION: DOWNLOAD_EXCEL]") || msg.export_file_path) && (msg.excel_spec?.file_data_base64 || msg.export_file_path) && (
                         <div className="mt-4">
                           <button 
                             onClick={() => {
