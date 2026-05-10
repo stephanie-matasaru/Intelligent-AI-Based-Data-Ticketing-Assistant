@@ -18,7 +18,7 @@ def save_message(user_id, sender, message, query=None, tokens=None, status="pend
         cursor.execute("""
             INSERT INTO chat_messages 
                 (group_id, user_id, sender, message, query, request_tokens, response_status, title, export_file_path, json_chart, json_export, attached_file_name)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             str(group_id) if group_id else str(uuid.uuid4()),
             user_id,
