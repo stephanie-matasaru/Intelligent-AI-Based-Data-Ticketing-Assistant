@@ -7,14 +7,14 @@ def save_message(user_id, sender, message, query=None, tokens=None, status="pend
         import json
         conn = get_connection()
         cursor = conn.cursor()
-
         title = None
         if sender == "user":
             cursor.execute("SELECT COUNT(*) FROM chat_messages WHERE CAST(group_id AS NVARCHAR(50)) = ?", (str(group_id),))
             count = cursor.fetchone()[0]
             if count == 0:
+                print(f"DEBUG first_message for title: '{message}'")
                 title = generate_title(message)
-        print(f"DEBUG generate_title result: '{title}'")
+                print(f"DEBUG generate_title result: '{title}'")
         cursor.execute("""
             INSERT INTO chat_messages 
                 (group_id, user_id, sender, message, query, request_tokens, response_status, title, export_file_path, json_chart, json_export, attached_file_name)

@@ -110,6 +110,12 @@ async def ask_chatbot(
         parsed_history = []
 
     parsed_files = await parse_chat_files(files)
+
+    title_for_group = None
+    if is_new_group:
+        from routes.chat_history import generate_title
+        title_for_group = generate_title(question)
+
     save_message(
         user_id=user_id,
         sender="user",
@@ -118,6 +124,13 @@ async def ask_chatbot(
         group_id=group_id,
         attached_file_name=parsed_files[0]["filename"] if parsed_files else None
     )
+
+    if title_for_group:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("UPDATE chat_messages SET title = ? WHERE group_id = ?", title_for_group, group_id)
+        conn.commit()
+        conn.close()
 
     try:
         planning_question = question
