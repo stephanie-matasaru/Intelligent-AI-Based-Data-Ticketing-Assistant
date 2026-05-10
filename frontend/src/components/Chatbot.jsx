@@ -67,21 +67,6 @@ function renderChart(chartSpec) {
   )
 }
 
-async function saveToWorkspace(msg) {
-  const user = JSON.parse(localStorage.getItem('user') || '{}')
-  const userId = user?.user_id || 1
-  await fetch('http://localhost:8000/api/workspace/', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      user_id: userId,
-      type: msg.chart_spec ? 'chart' : 'excel',
-      label: msg.chart_spec?.title || msg.text?.slice(0, 60) || 'Saved insight',
-      chart_spec: msg.chart_spec || null,
-      excel_spec: msg.excel_spec || null,
-    })
-  })
-}
 
 function Chatbot() {
   const navigate = useNavigate()
@@ -112,16 +97,30 @@ function Chatbot() {
   const fileInputRef = useRef(null)
   const [savedIds, setSavedIds] = useState([])
   const chartRefs = useRef({})
-
   const user = JSON.parse(localStorage.getItem('user') || '{}')
-  const userId = user?.user_id || 1
+  const userId = user?.user_id
+
+    function saveToWorkspace(msg) {
+    const key = `workspace_items_${userId}`
+    const existing = JSON.parse(localStorage.getItem(key) || '[]')
+    const item = {
+      id: Date.now(),
+      savedAt: new Date().toISOString(),
+      text: msg.text,
+      chart_spec: msg.chart_spec || null,
+      excel_spec: msg.excel_spec || null,
+      label: msg.chart_spec?.title || msg.text?.slice(0, 60) || 'Saved insight',
+      type: msg.chart_spec ? 'chart' : msg.excel_spec ? 'excel' : 'text',
+    }
+    localStorage.setItem(key, JSON.stringify([item, ...existing]))
+  }
 
   useEffect(() => {
-    sessionStorage.setItem('chat_messages', JSON.stringify(messages))
+  sessionStorage.setItem('chat_messages', JSON.stringify(messages))
   }, [messages])
 
   useEffect(() => {
-    if (groupId) sessionStorage.setItem('chat_group_id', groupId)
+  if (groupId) sessionStorage.setItem('chat_group_id', groupId)
   }, [groupId])
 
   useEffect(() => {
@@ -129,23 +128,19 @@ function Chatbot() {
   }, [messages, isTyping])
 
   useEffect(() => {
-    sessionStorage.removeItem('chat_messages')
-    sessionStorage.removeItem('chat_group_id')
-    setGroupId(null)
-    setMessages([{
-      id: 1,
-      type: 'ai',
-      text: "Hello! I'm your AI Ticketing Assistant. Describe your issue and I'll help you resolve it.",
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    }])
-
     fetch('http://localhost:8000/api/auth/me', {
-      credentials: 'include'
+    credentials: 'include'
+  })
+    .then(res => {
+      if (!res.ok) { navigate('/'); return null }
+      return res.json()
     })
-      .then(res => {
-        if (!res.ok) navigate('/')
-      })
-      .catch(() => navigate('/'))
+    .then(data => {
+      if (data?.user_id) {
+        localStorage.setItem('user', JSON.stringify(data))
+      }
+    })
+    .catch(() => navigate('/'))
   }, [])
 
   function handleKeyDown(e) {
@@ -191,15 +186,15 @@ function Chatbot() {
     setSelectedSession(null)
 }
 
-function buildHistory(messages) {
-  return messages
-    .filter(msg => msg.type === 'user' || msg.type === 'ai')
-    .slice(-10)
-    .map(msg => ({
-      role: msg.type === 'user' ? 'user' : 'assistant',
-      content: msg.text.slice(0, 500)
-    }))
-}
+  function buildHistory(messages) {
+    return messages
+      .filter(msg => msg.type === 'user' || msg.type === 'ai')
+      .map(msg => ({
+        role: msg.type === 'user' ? 'user' : 'assistant',
+        content: msg.text
+      }))
+  }
+
   async function fetchSessions() {
   console.log('userId:', userId)
   const res = await fetch(`http://localhost:8000/api/chat/sessions/${userId}`)
@@ -216,15 +211,16 @@ async function fetchMessages(groupId) {
     const res = await fetch(`http://localhost:8000/api/chat/messages/${groupId}`)
     const data = await res.json()
     const loaded = Array.isArray(data) ? data : []
+    setGroupId(groupId)
     setMessages(loaded.map((msg, i) => ({
       id: i,
       type: msg.sender === 'user' ? 'user' : 'ai',
       text: msg.message,
       time: msg.date_added.slice(11, 16),
+      export_file_path: msg.export_file_path || null,
       chart_spec: msg.chart_spec || null,
-      excel_spec: msg.excel_spec || null
+      excel_spec: msg.excel_spec || null 
     })))
-    setGroupId(groupId)
     setShowHistory(false)
     setSelectedSession(groupId)
   } catch (error) {
@@ -292,24 +288,27 @@ async function handleUpload() {
     setIsTyping(true)
 
     try {
-    const formData = new FormData()
-
-    formData.append('question', question)
-    formData.append('history', JSON.stringify(buildHistory(messages)))
-    formData.append('user_id', String(userId))
-
-    if (groupId) {
-      formData.append('group_id', groupId)
-    }
+    let parsedFiles = []
 
     if (attachedFile) {
-      formData.append('files', attachedFile)
+      const parsedFile = await handleUpload()
+      if (parsedFile) parsedFiles = [parsedFile]
     }
 
-    const response = await fetch('http://localhost:8000/api/chatbot/', {
-      method: 'POST',
-      body: formData
-    })
+      const response = await fetch('http://localhost:8000/api/chatbot/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+          body: JSON.stringify({
+          question,
+          history: buildHistory(messages),
+          user_id: userId,
+          group_id: groupId,
+          files: parsedFiles
+        })
+      })
+
       if (!response.ok) {
         let errorMessage = 'Something went wrong while contacting the assistant.'
         try {
@@ -357,31 +356,14 @@ async function handleUpload() {
       setIsTyping(false)
     }
   }
-async function exportChart(ref, filename) {
-  const svg = ref.querySelector('svg')
-  if (!svg) return
-
-  const svgData = new XMLSerializer().serializeToString(svg)
-  const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' })
-  const url = URL.createObjectURL(svgBlob)
-
-  const img = new Image()
-  img.onload = () => {
-    const canvas = document.createElement('canvas')
-    canvas.width = svg.clientWidth || 500
-    canvas.height = svg.clientHeight || 300
-    const ctx = canvas.getContext('2d')
-    ctx.fillStyle = '#1a1a2e'
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
-    ctx.drawImage(img, 0, 0)
+  async function exportChart(ref, filename) {
+    const html2canvas = (await import('html2canvas')).default
+    const canvas = await html2canvas(ref, { backgroundColor: '#1a1a2e' })
     const link = document.createElement('a')
     link.download = filename
     link.href = canvas.toDataURL('image/png')
     link.click()
-    URL.revokeObjectURL(url)
   }
-  img.src = url
-}
 
   const handleDownloadExcel = (base64String, filename) => {
     try {
@@ -466,10 +448,16 @@ async function exportChart(ref, filename) {
                       </p>
 
                       {/* Render the excel download button if the tag and data exist */}
-                      {msg.text && msg.text.includes("[ACTION: DOWNLOAD_EXCEL]") && msg.excel_spec && msg.excel_spec.file_data_base64 && (
+                      {msg.text && msg.text.includes("[ACTION: DOWNLOAD_EXCEL]") && (msg.excel_spec?.file_data_base64 || msg.export_file_path) && (
                         <div className="mt-4">
                           <button 
-                            onClick={() => handleDownloadExcel(msg.excel_spec.file_data_base64, msg.excel_spec.filename)}
+                            onClick={() => {
+                              if (msg.excel_spec?.file_data_base64) {
+                                handleDownloadExcel(msg.excel_spec.file_data_base64, msg.excel_spec.filename)
+                              } else if (msg.export_file_path) {
+                                window.open(`http://localhost:8000${msg.export_file_path}`, '_blank')
+                              }
+                            }}
                             className="bg-[#4fc093] hover:bg-[#A1CEBC] text-[#0f0f1e] font-bold text-sm px-4 py-2.5 rounded-lg flex items-center gap-2 w-fit transition-colors shadow-lg"
                           >
                             <span className="material-symbols-outlined text-[18px]">download</span>
