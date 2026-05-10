@@ -13,7 +13,7 @@ def generate_title(first_message: str) -> str:
             messages=[
                 {
                     "role": "user",
-                    "content": f""content": f"Generate a very short title (max 5 words) for a technical support chatbot conversation that started with this message. The title must describe the specific topic, not be generic like 'Support Request'. Return ONLY the title. Message: {first_message}""
+                    "content": f"Generate a very short title (max 5 words) for a technical support chatbot conversation that started with this message. The title must describe the specific topic, not be generic like 'Support Request'. Return ONLY the title. Message: {first_message}"
                 },
             ],
             max_completion_tokens=500
