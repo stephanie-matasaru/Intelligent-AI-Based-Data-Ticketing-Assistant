@@ -322,6 +322,10 @@ async function handleUpload() {
 
       if (data.group_id) {
         setGroupId(data.group_id)
+        if (!groupId) {
+          await fetchSessions()
+          setShowHistory(false) 
+        }
       }
 
       const aiMsg = {
