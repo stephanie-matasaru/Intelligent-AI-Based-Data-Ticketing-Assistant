@@ -119,17 +119,6 @@ async def ask_chatbot(
         attached_file_name=parsed_files[0]["filename"] if parsed_files else None
     )
 
-    if is_new_group:
-        from routes.chat_history import generate_title
-        title = generate_title(question)
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("""
-            UPDATE chat_messages SET title = ? WHERE group_id = ?
-        """, title, group_id)
-        conn.commit()
-        conn.close()
-
     try:
         planning_question = question
 
@@ -362,6 +351,7 @@ Uploaded file context (JSON):
 
     is_single_value = bool(results) and len(results) == 1 and len(results[0]) == 1
 
+    excel_spec_to_save = {k: v for k, v in excel_spec.items() if k != "file_data_base64"} if excel_spec else None
     save_message(
         user_id=user_id,
         sender="agent",
