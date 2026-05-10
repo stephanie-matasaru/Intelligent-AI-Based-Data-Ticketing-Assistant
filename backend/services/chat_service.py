@@ -10,10 +10,11 @@ def save_message(user_id, sender, message, query=None, tokens=None, status="pend
 
         title = None
         if sender == "user":
-            cursor.execute("SELECT COUNT(*) FROM chat_messages WHERE group_id = ?", (str(group_id),))
+            cursor.execute("SELECT COUNT(*) FROM chat_messages WHERE CAST(group_id AS NVARCHAR(50)) = ?", (str(group_id),))
             count = cursor.fetchone()[0]
             if count == 0:
                 title = generate_title(message)
+        print(f"DEBUG saving message: sender={sender}, title={title}, group_id={group_id}")
         cursor.execute("""
             INSERT INTO chat_messages 
                 (group_id, user_id, sender, message, query, request_tokens, response_status, title, export_file_path, json_chart, json_export, attached_file_name)
