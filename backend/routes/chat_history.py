@@ -22,7 +22,11 @@ def generate_title(first_message: str) -> str:
             ],
             max_completion_tokens=20
         )
-        return response.choices[0].message.content.strip()
+        title = response.choices[0].message.content.strip()
+        print(f"DEBUG generate_title result: '{title}'")
+        if not title or title.lower() == 'none':
+            return first_message[:50]
+        return title
     except Exception as e:
         print(f"Title generation error: {e}")
         return first_message[:50]
