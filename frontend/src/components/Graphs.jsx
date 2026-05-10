@@ -669,7 +669,10 @@ function Graphs() {
                   <Pie data={categoryData} cx="50%" cy="50%" innerRadius={65} outerRadius={90}
                     paddingAngle={3} dataKey="count" nameKey="name">
                     {categoryData.map((entry, i) => (
-                      <Cell key={entry.name} fill={CATEGORY_COLORS[i % CATEGORY_COLORS.length]} style={{ cursor: 'pointer' }} onClick={(data) => fetchDrillDown(`Category: ${data.payload?.name}`, { cat_t1: data.payload?.name })}/>
+                      <Cell key={entry.name} fill={CATEGORY_COLORS[i % CATEGORY_COLORS.length]} style={{ cursor: 'pointer' }} onClick={(data) => {
+                        console.log('category click data:', data)
+                        fetchDrillDown(`Category: ${data.payload?.name}`, { cat_t1: data.payload?.name })
+                      }}/>
                     ))}
                   </Pie>
                   <Tooltip content={<CustomTooltip />} />
