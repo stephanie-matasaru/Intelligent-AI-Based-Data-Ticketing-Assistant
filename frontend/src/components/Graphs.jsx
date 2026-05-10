@@ -6,6 +6,7 @@ import {
 } from 'recharts'
 import './Graphs.css'
 import Navbar from './Navbar'
+import * as XLSX from 'xlsx'
 
 const MOCK_PRIORITY = [
   { name: 'Critical', count: 72 },
@@ -129,7 +130,7 @@ function DrillDownPanel({ drillDown, onClose, onExport }) {
         }}>
           <div>
             <p style={{ fontSize: '0.625rem', textTransform: 'uppercase', letterSpacing: '0.12em', color: '#A1CEBC', marginBottom: 6, margin: 0 }}>
-              Drill-down
+              Tickets in Selection
             </p>
             <h2 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'white', margin: '4px 0 0 0' }}>
               {drillDown.label}
@@ -143,21 +144,16 @@ function DrillDownPanel({ drillDown, onClose, onExport }) {
  
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             {!drillDown.loading && !drillDown.error && drillDown.tickets.length > 0 && (
-              <button
-                onClick={onExport}
-                style={{
-                  background: '#4fc093', color: '#0f0f1e',
-                  border: 'none', borderRadius: 8,
-                  padding: '8px 16px',
-                  fontSize: '0.6875rem', fontWeight: 700,
-                  cursor: 'pointer',
-                  textTransform: 'uppercase', letterSpacing: '0.08em',
-                  display: 'flex', alignItems: 'center', gap: 6,
-                }}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: 15 }}>download</span>
-                Export CSV
-              </button>
+              <>
+                <button onClick={onExportCSV} style={{ background: '#4fc093', color: '#0f0f1e', border: 'none', borderRadius: 8, padding: '8px 14px', fontSize: '0.6875rem', fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 15 }}>download</span>
+                  CSV
+                </button>
+                <button onClick={onExportExcel} style={{ background: '#4a9edd', color: '#0f0f1e', border: 'none', borderRadius: 8, padding: '8px 14px', fontSize: '0.6875rem', fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 15 }}>table_view</span>
+                  Excel
+                </button>
+              </>
             )}
             <button
               onClick={onClose}
@@ -346,6 +342,37 @@ function Graphs() {
     }
   }
  
+  function exportDrillDownExcel() {
+    if (!drillDown?.tickets?.length) return
+
+    const rows = drillDown.tickets.map(t => ({
+      'Ticket Number':        t.ticket_number,
+      'Status':               t.status,
+      'Priority':             t.priority,
+      'Team':                 t.team,
+      'Assigned Person':      t.assigned_person,
+      'Service':              t.service,
+      'Company':              t.company,
+      'Project':              t.project,
+      'Category T1':          t.cat_t1,
+      'Category T2':          t.cat_t2,
+      'Category T3':          t.cat_t3,
+      'Description':          t.description,
+      'Resolution':           t.resolution,
+      'Resolution Category':  t.resolution_category,
+      'Submit Date':          t.submit_datetime ? new Date(t.submit_datetime).toLocaleString() : '',
+      'Estimated Resolution': t.estimated_resolution ? new Date(t.estimated_resolution).toLocaleString() : '',
+      'Resolved Date':        t.resolved_datetime ? new Date(t.resolved_datetime).toLocaleString() : '',
+      'Closed Date':          t.closed_datetime ? new Date(t.closed_datetime).toLocaleString() : '',
+      'Last Modified':        t.last_modified ? new Date(t.last_modified).toLocaleString() : '',
+    }))
+
+    const ws = XLSX.utils.json_to_sheet(rows)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Tickets')
+    XLSX.writeFile(wb, `${drillDown.label.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.xlsx`)
+  }
+
   function exportDrillDownCSV() {
     if (!drillDown?.tickets?.length) return
  
@@ -740,7 +767,8 @@ function Graphs() {
       <DrillDownPanel
         drillDown={drillDown}
         onClose={() => setDrillDown(null)}
-        onExport={exportDrillDownCSV}
+        onExportCSV={exportDrillDownCSV}
+        onExportExcel={exportDrillDownExcel}
       />
     </div>
   )
