@@ -539,7 +539,7 @@ function Graphs() {
                 <ResponsiveContainer width="100%" height={200}>
                   <PieChart>
                     <Pie data={slaData} cx="50%" cy="50%" innerRadius={65} outerRadius={90}
-                      paddingAngle={3} dataKey="value" style={{ cursor: 'pointer' }} onClick={(data) => fetchDrillDown(data.name, { sla_status: data.name === 'SLA Met' ? 'met' : 'breached' })}>
+                      paddingAngle={3} dataKey="value" style={{ cursor: 'pointer' }} onClick={(data) => fetchDrillDown(data.payload?.name, { sla_status: data.payload?.name === 'SLA Met' ? 'met' : 'breached' })}>
                       {slaData.map((entry, i) => (
                         <Cell key={entry.name} fill={SLA_COLORS[i]} />
                       ))}
@@ -669,7 +669,7 @@ function Graphs() {
                   <Pie data={categoryData} cx="50%" cy="50%" innerRadius={65} outerRadius={90}
                     paddingAngle={3} dataKey="count" nameKey="name">
                     {categoryData.map((entry, i) => (
-                      <Cell key={entry.name} fill={CATEGORY_COLORS[i % CATEGORY_COLORS.length]} style={{ cursor: 'pointer' }} onClick={(data) => fetchDrillDown(`Category: ${data.name}`, { cat_t1: data.name })}/>
+                      <Cell key={entry.name} fill={CATEGORY_COLORS[i % CATEGORY_COLORS.length]} style={{ cursor: 'pointer' }} onClick={(data) => fetchDrillDown(`Category: ${data.payload?.name}`, { cat_t1: data.payload?.name })}/>
                     ))}
                   </Pie>
                   <Tooltip content={<CustomTooltip />} />
