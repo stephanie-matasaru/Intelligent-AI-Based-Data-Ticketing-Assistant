@@ -12,16 +12,15 @@ def generate_title(first_message: str) -> str:
             model=os.getenv("AZURE_OPENAI_MODEL"),
             messages=[
                 {
-                    "role": "system",
-                    "content": "Generate a very short title (max 5 words) for a support chat that started with this message. Return ONLY the title, nothing else. Message: {first_message}"
+                    "role": "user",
+                    "content": f""content": f"Generate a very short title (max 5 words) for a technical support chatbot conversation that started with this message. The title must describe the specific topic, not be generic like 'Support Request'. Return ONLY the title. Message: {first_message}""
                 },
             ],
             max_completion_tokens=500
         )
         title = response.choices[0].message.content.strip()
         print(f"DEBUG generate_title result: '{title}'")
-        if not title or title.lower() in ('none', 'first message placeholder', ''):
-            cleaned = first_message.strip().rstrip('?').strip()
+        if not title or title.lower() == 'none':
             return first_message[:50]
         return title
     except Exception as e:
