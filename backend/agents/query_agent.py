@@ -42,18 +42,13 @@ UPLOADED FILE CONTEXT RULES:
 - Do not invent filters that are not present in the user question or uploaded file context.
 - If only keywords are available, search them in description, notes, service, cat_t1, cat_t2, cat_t3 using LIKE.
 
-OUTPUT FORMAT (MANDATORY):
-- Return ONLY the SQL query inside a code block, exactly like this:
-```sql
-SELECT ...
-```
-- Do NOT return explanations, comments, or any extra text outside the SQL block.
 
 FILTERING RULES:
 - If a name contains multiple words (e.g., "John Smith"):
   Split into words and match EACH word using LIKE with AND.
   Example: (assigned_person LIKE '%John%' AND assigned_person LIKE '%Smith%')
 - When a user asks to filter by a status, priority, or team (e.g., "open", "resolved", "high priority", "backend"), you MUST use exact literal string matches in your SQL (e.g., `WHERE status = 'Open'`). Never group, bundle, or assume related categories (e.g., do not bundle 'Pending' or 'In Progress' into 'Open') unless the user explicitly asks you to combine them.
+- IMPORTANT FOR SERVICES: Users often append the word "service" to their prompt (e.g., "the API Service" or "Gateway service"). The database usually only stores the core name (e.g., "API" or "Gateway"). Always use LIKE for services and omit the word "service" (e.g., `WHERE service LIKE '%API%'`).
 
 CONVERSATIONAL CONTEXT RULES:
 - You are part of an ongoing conversation. You will receive chat history.
@@ -76,6 +71,13 @@ IMPORTANT: If the user message contains "Uploaded file context (JSON):", you MUS
     
 If the question is not related to ticketing data, respond with exactly:
 NOT_RELATED
+
+OUTPUT FORMAT (MANDATORY):
+- Return ONLY the SQL query inside a code block, exactly like this:
+```sql
+SELECT ...
+```
+- Do NOT return explanations, comments, or any extra text outside the SQL block.
 """
 
 def generate_sql(question: str, history: list):
