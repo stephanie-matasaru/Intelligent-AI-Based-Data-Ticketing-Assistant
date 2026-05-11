@@ -112,7 +112,7 @@ def generate_dual_sql(question: str, history: list):
     *** OVERRIDE OUTPUT FORMAT ***
     Ignore the previous output format rule. You must ALWAYS return a valid JSON object inside a ```json code block containing exactly two keys:
     1. "primary_query": The SQL query that perfectly answers the user's request.
-    2. "raw_data_query": A 'SELECT TOP 100 *' query using the EXACT same WHERE clauses from the primary query.
+    2. "raw_data_query": A 'SELECT TOP 100 tickets.*, priorities.priority_name FROM tickets LEFT JOIN priorities ON tickets.priority_id = priorities.priority_id' query using the EXACT same WHERE clauses from the primary query.
     """
 
     messages = [
