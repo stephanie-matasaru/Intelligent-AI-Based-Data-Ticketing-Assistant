@@ -99,6 +99,8 @@ function Chatbot() {
   const chartRefs = useRef({})
   const user = JSON.parse(localStorage.getItem('user') || '{}')
   const userId = user?.user_id
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [modalData, setModalData] = useState([])
 
     function saveToWorkspace(msg) {
     const key = `workspace_items_${userId}`
@@ -334,7 +336,8 @@ async function handleUpload() {
         text: data.explanation || 'No response received.',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         chart_spec: data.chart_spec || null,
-        excel_spec: data.excel_spec || null
+        excel_spec: data.excel_spec || null,
+        raw_data: data.results || []
       }
 
       setMessages(prev => [...prev, aiMsg])
@@ -478,8 +481,20 @@ async function handleUpload() {
                           {renderChart(msg.chart_spec)}
                         </div>
                       )}
-                      {(msg.chart_spec || msg.excel_spec) && (
+                      {(msg.chart_spec || msg.excel_spec || (msg.raw_data && msg.raw_data.length > 0)) && (
                         <div className="mt-2 flex items-center gap-3">
+                          {msg.raw_data && msg.raw_data.length > 0 && (
+                            <button
+                              onClick={() => {
+                                setModalData(msg.raw_data)
+                                setIsModalOpen(true)
+                              }}
+                              className="flex items-center gap-1 text-[0.625rem] uppercase tracking-widest transition-colors text-white/50 hover:text-[#A1CEBC]"
+                            >
+                              <span className="material-symbols-outlined text-[14px]">visibility</span>
+                              View {msg.raw_data.length} Tickets
+                            </button>
+                          )}
                           <button
                             onClick={() => {
                               saveToWorkspace(msg)
@@ -714,6 +729,49 @@ async function handleUpload() {
             </div>
           </nav>
         </aside>
+        {/* details*/}
+        {isModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <div className="bg-[#13132a] border border-white/10 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+              
+              <div className="flex items-center justify-between p-6 border-b border-white/5">
+                <h3 className="text-xl font-headline font-bold text-white tracking-tight">
+                  Ticket Overview
+                </h3>
+                <button 
+                  onClick={() => setIsModalOpen(false)}
+                  className="text-white/40 hover:text-white transition-colors"
+                >
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+
+              <div className="p-6 overflow-auto">
+                <table className="w-full text-left border-collapse whitespace-nowrap">
+                  <thead className="sticky top-0 bg-[#13132a]">
+                    <tr className="text-[0.6875rem] uppercase tracking-widest text-[#A1CEBC] font-label border-b border-white/10">
+                      <th className="pb-3 font-semibold">Ticket #</th>
+                      <th className="pb-3 font-semibold">Status</th>
+                      <th className="pb-3 font-semibold">Priority</th>
+                      <th className="pb-3 font-semibold">Assignee</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-sm text-white/80">
+                    {modalData.map((ticket, i) => (
+                      <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                        <td className="py-3 pr-4 text-white font-mono">{ticket.ticket_number || ticket.ticket_id}</td>
+                        <td className="py-3 pr-4">{ticket.status}</td>
+                        <td className="py-3 pr-4">{ticket.priority || ticket.priority_name || 'N/A'}</td>
+                        <td className="py-3 pr-4">{ticket.assigned_person || 'Unassigned'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+            </div>
+          </div>
+        )}
       </main>
     </div>
   )
