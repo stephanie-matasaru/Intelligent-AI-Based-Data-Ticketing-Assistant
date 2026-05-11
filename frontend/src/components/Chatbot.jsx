@@ -492,7 +492,7 @@ async function handleUpload() {
                               className="flex items-center gap-1 text-[0.625rem] uppercase tracking-widest transition-colors text-white/50 hover:text-[#A1CEBC]"
                             >
                               <span className="material-symbols-outlined text-[14px]">visibility</span>
-                              View {msg.raw_data.length} Tickets
+                              View Tickets
                             </button>
                           )}
                           <button
