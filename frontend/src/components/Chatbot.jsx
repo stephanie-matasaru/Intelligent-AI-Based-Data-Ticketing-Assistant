@@ -380,7 +380,7 @@ async function handleUpload() {
     container.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
         <div>
-          <p style="margin:0 0 3px;font-size:9px;text-transform:uppercase;letter-spacing:0.14em;color:#A1CEBC">Nokia · AI Chatbot Export</p>
+          <p style="margin:0 0 3px;font-size:9px;text-transform:uppercase;letter-spacing:0.14em;color:#A1CEBC">AI Chatbot Export</p>
           <h2 style="margin:0;font-size:18px;font-weight:700;color:#fff;letter-spacing:-0.02em">${chartSpec?.title || 'Chart'}</h2>
         </div>
         <span style="font-family:monospace;font-size:10px;color:rgba(255,255,255,0.25)">${today}</span>
