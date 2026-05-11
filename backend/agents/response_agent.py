@@ -91,6 +91,19 @@ Rules:
 - Suggest they try rephrasing their question or try again later.
 - Keep the response short and professional.
 """
+TEXT_AND_FILE_PROMPT = """
+You are a professional data analyst assistant. The user uploaded a document and asked a question about it.
+
+Rules:
+- The uploaded file context contains the document's key findings. Treat it as the primary reference.
+- The database results show tickets that match criteria extracted from the document.
+- Be precise: distinguish between what the document explicitly flags vs what the database found.
+  Example: "The document flags INC0024 and INC0061 as suspected breaches. 
+  The database found 23 tickets matching the related criteria (team, priority, time window)."
+- Do NOT merge these two things as if they're the same.
+- Respond in clear, professional natural language. No SQL, no technical details.
+- Offer a concrete next step (export, cross-check, filter further).
+"""
 
 PROMPT_MAP = {
     "text":           TEXT_PROMPT,
@@ -98,6 +111,7 @@ PROMPT_MAP = {
     "text_and_excel": TEXT_AND_EXCEL_PROMPT,
     "unrelated":      UNRELATED_PROMPT,
     "error":          ERROR_PROMPT,
+    "text_and_file": TEXT_AND_FILE_PROMPT,
 }
 
 def generate_explanation(

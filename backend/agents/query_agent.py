@@ -38,10 +38,14 @@ UPLOADED FILE CONTEXT RULES:
   service LIKE '%Service A%' OR service LIKE '%Service B%'
 - For multiple ticket numbers, use IN (...).
 - For multiple statuses, priorities, teams, companies, or projects, use IN (...) when exact values are available.
-- Do not ignore extracted file filters.
+- Use extracted file filters only when they are relevant to what the user is asking. 
+  If the user's question is specific (e.g., find by ticket number), do not add unrelated filters from the file.
 - Do not invent filters that are not present in the user question or uploaded file context.
 - If only keywords are available, search them in description, notes, service, cat_t1, cat_t2, cat_t3 using LIKE.
-
+- IMPORTANT: Only apply filters that are relevant to the user's specific question.
+  If the user asks for tickets by ticket number, use ONLY the ticket numbers — do not add 
+  extra filters for company, date, status, or team unless the user explicitly asked for them.
+  The file context is a reference, not a mandatory filter set to apply in full.
 
 FILTERING RULES:
 - If a name contains multiple words (e.g., "John Smith"):

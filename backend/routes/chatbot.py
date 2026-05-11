@@ -311,6 +311,9 @@ Uploaded file context (JSON):
                 if plan.get("final_output") == "text_and_excel":
                     plan["final_output"] = "text"
 
+            if context.get("document_context") and plan.get("final_output") == "text":
+              plan["final_output"] = "text_and_file"
+
             if context["explanation"] is None:
                 explanation, used_tokens = generate_explanation(
                     question=context["question"],
