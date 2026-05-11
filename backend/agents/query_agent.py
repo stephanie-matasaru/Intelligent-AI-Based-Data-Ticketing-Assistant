@@ -1,6 +1,7 @@
 import os
 from ai_client import get_ai_client
 from utils.sql_utils import clean_sql
+import json
 
 INPUT_PROMPT = """
 You are a SQL assistant for a ticketing system using Microsoft SQL Server.
@@ -97,3 +98,50 @@ def generate_sql(question: str, history: list):
     tokens_used = response.usage.total_tokens
 
     return sql_query, tokens_used
+
+
+def generate_dual_sql(question: str, history: list):
+    """
+    A dedicated function for the Chatbot that returns both an aggregate query 
+    and a raw data query in JSON format.
+    """
+    client = get_ai_client()
+
+    override_prompt = INPUT_PROMPT + """
+    
+    *** OVERRIDE OUTPUT FORMAT ***
+    Ignore the previous output format rule. You must ALWAYS return a valid JSON object inside a ```json code block containing exactly two keys:
+    1. "primary_query": The SQL query that perfectly answers the user's request.
+    2. "raw_data_query": A 'SELECT TOP 100 *' query using the EXACT same WHERE clauses from the primary query.
+    """
+
+    messages = [
+        {"role": "system", "content": override_prompt},
+        *history,
+        {"role": "user", "content": question}
+    ]
+
+    response = client.chat.completions.create(
+        model=os.getenv("AZURE_OPENAI_MODEL"),
+        messages=messages,
+        max_completion_tokens=5000
+    )
+
+    raw_content = response.choices[0].message.content
+    
+    if "NOT_RELATED" in raw_content:
+        return "NOT_RELATED", "NOT_RELATED", response.usage.total_tokens
+
+    try:
+        cleaned_response = raw_content.replace("```json", "").replace("```", "").strip()
+        sql_dict = json.loads(cleaned_response)
+        
+        primary_query = clean_sql(sql_dict.get("primary_query", ""))
+        raw_data_query = clean_sql(sql_dict.get("raw_data_query", ""))
+    except Exception as e:
+        print(f"DEBUG JSON Parse Error: {e}")
+        primary_query = clean_sql(raw_content)
+        raw_data_query = primary_query
+
+    tokens_used = response.usage.total_tokens
+    return primary_query, raw_data_query, tokens_used

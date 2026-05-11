@@ -2,7 +2,7 @@ from multiprocessing import context
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from agents.orchestrator_agent import generate_plan
-from agents.query_agent import generate_sql
+from agents.query_agent import generate_sql, generate_dual_sql
 from agents.response_agent import generate_explanation
 from utils.sql_utils import is_safe_sql
 from services.chat_service import save_message, get_chat_history_by_user
@@ -157,7 +157,9 @@ async def ask_chatbot(
         "question": question,
         "history": parsed_history,
         "sql_query": None,
+        "raw_data_query": None,
         "results": None,
+        "raw_data_results": None,
         "explanation": None,
         "chart_spec": None,
         "excel_spec": None,
@@ -210,12 +212,13 @@ Uploaded file context (JSON):
 {slim_context_str}"""
             print("DEBUG question_for_sql length:", len(question_for_sql))
             print("DEBUG question_for_sql preview:", question_for_sql[:300])
-            sql_query, used_tokens = generate_sql(
+            sql_query, raw_sql, used_tokens = generate_dual_sql(
                 question_for_sql,
                 []
-            )            
+            )
 
             context["sql_query"] = sql_query
+            context["raw_data_query"] = raw_sql
             total_tokens += used_tokens
 
             if sql_query.strip() == "NOT_RELATED":
@@ -251,6 +254,13 @@ Uploaded file context (JSON):
         elif step_type == "service" and step_name == "sql_service":
             try:
                 context["results"] = execute_query(context["sql_query"])
+
+                # Execute raw data query for the View Tickets button 
+                if context["raw_data_query"] and context["raw_data_query"] != context["sql_query"]:
+                    context["raw_data_results"] = execute_query(context["raw_data_query"])
+                else:
+                    context["raw_data_results"] = context["results"]
+
             except Exception as e:
                 save_message(
                     user_id=user_id,
@@ -381,7 +391,7 @@ Uploaded file context (JSON):
     return {
         "question": question,
         "sql": sql_query,
-        "results": results,
+        "results": context.get("raw_data_results") or results,
         "explanation": explanation,
         "is_single_value": is_single_value,
         "chart_spec": chart_spec,
