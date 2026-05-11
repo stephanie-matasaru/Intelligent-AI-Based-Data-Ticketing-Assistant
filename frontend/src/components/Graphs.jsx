@@ -281,7 +281,7 @@ async function exportChart(ref, filename, chartTitle, chartData, filters) {
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">
       <div>
         <p style="margin:0 0 4px;font-size:9px;text-transform:uppercase;letter-spacing:0.14em;color:#A1CEBC">
-          Nokia · Intelligent Ticketing Analytics
+          Intelligent Ticketing Analytics
         </p>
         <h2 style="margin:0;font-size:20px;font-weight:700;color:#fff;letter-spacing:-0.02em">
           ${chartTitle}
@@ -294,20 +294,54 @@ async function exportChart(ref, filename, chartTitle, chartData, filters) {
   const activeFilters = Object.entries(filters || {}).filter(([, v]) => v && v !== 'all' && v !== '')
   if (activeFilters.length > 0) {
     const filterRow = document.createElement('div')
-    filterRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;align-items:center'
-    const label = document.createElement('span')
-    label.style.cssText = 'font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.3);margin-right:4px'
+    filterRow.style.cssText = [
+      'display:flex',
+      'flex-wrap:wrap',
+      'gap:8px',
+      'margin-bottom:16px',
+      'align-items:center',
+    ].join(';')    
+    const label = document.createElement('div')
+    label.style.cssText = [
+      'display:flex',
+      'align-items:center',
+      'height:22px',
+      'font-size:9px',
+      'text-transform:uppercase',
+      'letter-spacing:0.12em',
+      'color:rgba(255,255,255,0.3)',
+    ].join(';')  
     label.textContent = 'Filters:'
     filterRow.appendChild(label)
     const filterLabels = { startDate: 'From', endDate: 'To', priority: 'Priority', status: 'Status', team: 'Team' }
     activeFilters.forEach(([key, val]) => {
-      const chip = document.createElement('span')
+      const chip = document.createElement('div')
       chip.style.cssText = [
-        'display:inline-flex', 'align-items:center', 'line-height:1',
-        'padding:3px 10px', 'border-radius:20px', 'font-size:10px', 'font-weight:600',
-        'background:rgba(161,206,188,0.12)', 'color:#A1CEBC',
-        'border:1px solid rgba(161,206,188,0.25)', 'letter-spacing:0.04em',
+        'display:inline-flex',
+        'align-items:center',
+        'justify-content:center',
+
+        'height:22px',
+        'padding:0 12px',
+
+        'border-radius:999px',
+
+        'font-size:10px',
+        'font-weight:600',
+        'line-height:10px',
+
+        'background:rgba(161,206,188,0.12)',
+        'color:#A1CEBC',
+        'border:1px solid rgba(161,206,188,0.25)',
+
+        'letter-spacing:0.04em',
+
+        'box-sizing:border-box',
+        'vertical-align:middle',
+
+        'transform:translateY(-0.5px)',
       ].join(';')
+
       chip.textContent = `${filterLabels[key] || key}: ${val}`
       filterRow.appendChild(chip)
     })
@@ -316,10 +350,8 @@ async function exportChart(ref, filename, chartTitle, chartData, filters) {
 
   const clone = ref.current.cloneNode(true)
 
-  // asta lipsea — scoate header-ul duplicat, tabelul sr-only si butoane
   clone.querySelectorAll('.chart-card-header, .sr-only, button, .export-btn').forEach(el => el.remove())
 
-  // fix donut center pentru html2canvas
   clone.querySelectorAll('.donut-wrapper').forEach(el => { el.style.position = 'relative' })
   clone.querySelectorAll('.donut-center').forEach(el => {
     el.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none'
