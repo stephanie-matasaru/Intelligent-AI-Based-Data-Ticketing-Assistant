@@ -99,7 +99,8 @@ async def ask_chatbot(
     history: str = Form("[]"),
     user_id: Optional[int] = Form(None),
     group_id: Optional[str] = Form(None),
-    files: Optional[List[UploadFile]] = File(None)
+    files: Optional[List[UploadFile]] = File(None),
+    parsed_file_context: Optional[str] = Form(None)
 ):
     is_new_group = not group_id
     group_id = group_id or str(uuid.uuid4())
@@ -110,6 +111,12 @@ async def ask_chatbot(
         parsed_history = []
 
     parsed_files = await parse_chat_files(files)
+    if not parsed_files and parsed_file_context:
+        try:
+            ctx = json.loads(parsed_file_context)
+            parsed_files = [ctx]
+        except Exception:
+            pass
 
     title_for_group = None
     if is_new_group:
