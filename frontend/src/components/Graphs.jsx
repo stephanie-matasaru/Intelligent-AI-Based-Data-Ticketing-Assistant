@@ -293,59 +293,20 @@ async function exportChart(ref, filename, chartTitle, chartData, filters) {
 
   const activeFilters = Object.entries(filters || {}).filter(([, v]) => v && v !== 'all' && v !== '')
   if (activeFilters.length > 0) {
-    const filterRow = document.createElement('div')
-    filterRow.style.cssText = [
-      'display:flex',
-      'flex-wrap:wrap',
-      'gap:8px',
-      'margin-bottom:16px',
-      'align-items:center',
-    ].join(';')    
-    const label = document.createElement('div')
-    label.style.cssText = [
-      'display:flex',
-      'align-items:center',
-      'height:22px',
-      'font-size:9px',
-      'text-transform:uppercase',
-      'letter-spacing:0.12em',
-      'color:rgba(255,255,255,0.3)',
-    ].join(';')  
-    label.textContent = 'Filters:'
-    filterRow.appendChild(label)
     const filterLabels = { startDate: 'From', endDate: 'To', priority: 'Priority', status: 'Status', team: 'Team' }
-    activeFilters.forEach(([key, val]) => {
-      const chip = document.createElement('div')
-      chip.style.cssText = [
-        'display:inline-flex',
-        'align-items:center',
-        'justify-content:center',
-
-        'height:22px',
-        'padding:0 12px',
-
-        'border-radius:999px',
-
-        'font-size:10px',
-        'font-weight:600',
-        'line-height:10px',
-
-        'background:rgba(161,206,188,0.12)',
-        'color:#A1CEBC',
-        'border:1px solid rgba(161,206,188,0.25)',
-
-        'letter-spacing:0.04em',
-
-        'box-sizing:border-box',
-        'vertical-align:middle',
-
-        'transform:translateY(-0.5px)',
-      ].join(';')
-
-      chip.textContent = `${filterLabels[key] || key}: ${val}`
-      filterRow.appendChild(chip)
-    })
-    container.appendChild(filterRow)
+    const filterDiv = document.createElement('div')
+    filterDiv.style.cssText = 'margin-bottom:16px'
+    filterDiv.innerHTML = `
+      <table style="border-collapse:collapse">
+        <tr>
+          <td style="vertical-align:middle;padding-right:10px;font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.3);white-space:nowrap">Filters:</td>
+          <td style="vertical-align:middle">
+            ${activeFilters.map(([key, val]) => `<span style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(161,206,188,0.12);color:#A1CEBC;border:1px solid rgba(161,206,188,0.25)">${filterLabels[key] || key}: ${val}</span>`).join('')}
+          </td>
+        </tr>
+      </table>
+    `
+    container.appendChild(filterDiv)
   }
 
   const clone = ref.current.cloneNode(true)

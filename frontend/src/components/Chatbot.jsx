@@ -361,9 +361,74 @@ async function handleUpload() {
       setIsTyping(false)
     }
   }
-  async function exportChart(ref, filename) {
+  async function exportChart(ref, chartSpec) {
+    if (!ref) return
     const html2canvas = (await import('html2canvas')).default
-    const canvas = await html2canvas(ref, { backgroundColor: '#1a1a2e' })
+    const today = new Date().toISOString().slice(0, 10)
+    const slug = (chartSpec?.title || 'chart').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '')
+    const filename = `${slug}_${today}.png`
+
+    const container = document.createElement('div')
+    container.style.cssText = [
+      'position:fixed', 'left:-9999px', 'top:0',
+      'background:#0f0f1e', 'padding:28px',
+      `width:${Math.max(ref.offsetWidth + 56, 520)}px`,
+      'font-family:system-ui,-apple-system,sans-serif',
+      'box-sizing:border-box',
+    ].join(';')
+
+    container.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+        <div>
+          <p style="margin:0 0 3px;font-size:9px;text-transform:uppercase;letter-spacing:0.14em;color:#A1CEBC">Nokia · AI Chatbot Export</p>
+          <h2 style="margin:0;font-size:18px;font-weight:700;color:#fff;letter-spacing:-0.02em">${chartSpec?.title || 'Chart'}</h2>
+        </div>
+        <span style="font-family:monospace;font-size:10px;color:rgba(255,255,255,0.25)">${today}</span>
+      </div>
+    `
+
+    const clone = ref.cloneNode(true)
+    clone.style.background = 'transparent'
+    container.appendChild(clone)
+
+    const { data, x_key, y_key } = chartSpec || {}
+    if (data?.length && x_key && y_key) {
+      const table = document.createElement('table')
+      table.style.cssText = 'width:100%;border-collapse:collapse;margin-top:20px;font-size:12px'
+      table.innerHTML = `
+        <thead>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.1)">
+            <th style="text-align:left;padding:8px 12px;color:#A1CEBC;font-size:9px;text-transform:uppercase;letter-spacing:0.1em;font-weight:600">${x_key}</th>
+            <th style="text-align:right;padding:8px 12px;color:#A1CEBC;font-size:9px;text-transform:uppercase;letter-spacing:0.1em;font-weight:600">${y_key}</th>
+          </tr>
+        </thead>
+      `
+      const tbody = document.createElement('tbody')
+      data.forEach((row, i) => {
+        const tr = document.createElement('tr')
+        tr.style.cssText = `border-bottom:1px solid rgba(255,255,255,0.04);background:${i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent'}`
+        tr.innerHTML = `
+          <td style="padding:8px 12px;color:rgba(255,255,255,0.8)">${row[x_key]}</td>
+          <td style="padding:8px 12px;color:#A1CEBC;font-family:monospace;font-weight:600;text-align:right">${row[y_key]}</td>
+        `
+        tbody.appendChild(tr)
+      })
+      table.appendChild(tbody)
+      container.appendChild(table)
+    }
+
+    const footer = document.createElement('div')
+    footer.style.cssText = 'margin-top:16px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.05);display:flex;justify-content:space-between'
+    footer.innerHTML = `
+      <span style="font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.18)">AI Analyst · Ticketing System</span>
+      <span style="font-size:9px;font-family:monospace;color:rgba(255,255,255,0.18)">${today}</span>
+    `
+    container.appendChild(footer)
+
+    document.body.appendChild(container)
+    const canvas = await html2canvas(container, { backgroundColor: '#0f0f1e', scale: 2, logging: false, useCORS: true })
+    document.body.removeChild(container)
+
     const link = document.createElement('a')
     link.download = filename
     link.href = canvas.toDataURL('image/png')
@@ -512,7 +577,7 @@ async function handleUpload() {
 
                           {msg.chart_spec && (
                             <button
-                              onClick={() => exportChart(chartRefs.current[msg.id], `chart-${msg.id}.png`)}
+                              onClick={() => exportChart(chartRefs.current[msg.id], msg.chart_spec)}
                               className="flex items-center gap-1 text-[0.625rem] uppercase tracking-widest transition-colors"
                               style={{ color: 'rgba(255,255,255,0.3)' }}
                             >
