@@ -295,56 +295,36 @@ async function exportChart(ref, filename, chartTitle, chartData, filters) {
   if (activeFilters.length > 0) {
     const filterRow = document.createElement('div')
     filterRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;align-items:center'
-
     const label = document.createElement('span')
     label.style.cssText = 'font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.3);margin-right:4px'
     label.textContent = 'Filters:'
     filterRow.appendChild(label)
-
-    const filterLabels = {
-      startDate: 'From',
-      endDate: 'To',
-      priority: 'Priority',
-      status: 'Status',
-      team: 'Team',
-    }
-
+    const filterLabels = { startDate: 'From', endDate: 'To', priority: 'Priority', status: 'Status', team: 'Team' }
     activeFilters.forEach(([key, val]) => {
       const chip = document.createElement('span')
       chip.style.cssText = [
-        'display:inline-flex',
-        'align-items:center',
-        'line-height:1',
-        'padding:3px 10px',
-        'border-radius:20px',
-        'font-size:10px',
-        'font-weight:600',
-        'background:rgba(161,206,188,0.12)',
-        'color:#A1CEBC',
-        'border:1px solid rgba(161,206,188,0.25)',
-        'letter-spacing:0.04em',
+        'display:inline-flex', 'align-items:center', 'line-height:1',
+        'padding:3px 10px', 'border-radius:20px', 'font-size:10px', 'font-weight:600',
+        'background:rgba(161,206,188,0.12)', 'color:#A1CEBC',
+        'border:1px solid rgba(161,206,188,0.25)', 'letter-spacing:0.04em',
       ].join(';')
       chip.textContent = `${filterLabels[key] || key}: ${val}`
       filterRow.appendChild(chip)
     })
-
     container.appendChild(filterRow)
   }
 
   const clone = ref.current.cloneNode(true)
-  clone.querySelectorAll('.donut-wrapper').forEach(wrapper => {
-    wrapper.style.position = 'relative'
-  })
+
+  // asta lipsea — scoate header-ul duplicat, tabelul sr-only si butoane
+  clone.querySelectorAll('.chart-card-header, .sr-only, button, .export-btn').forEach(el => el.remove())
+
+  // fix donut center pentru html2canvas
+  clone.querySelectorAll('.donut-wrapper').forEach(el => { el.style.position = 'relative' })
   clone.querySelectorAll('.donut-center').forEach(el => {
-    el.style.cssText = [
-      'position:absolute',
-      'top:50%',
-      'left:50%',
-      'transform:translate(-50%, -50%)',
-      'text-align:center',
-      'pointer-events:none',
-    ].join(';')
+    el.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none'
   })
+
   clone.style.cssText = 'background:transparent;padding:0;border:none;box-shadow:none;border-radius:0'
   container.appendChild(clone)
 
@@ -383,12 +363,7 @@ async function exportChart(ref, filename, chartTitle, chartData, filters) {
   container.appendChild(footer)
 
   document.body.appendChild(container)
-  const canvas = await html2canvas(container, {
-    backgroundColor: '#0f0f1e',
-    scale: 2,
-    logging: false,
-    useCORS: true,
-  })
+  const canvas = await html2canvas(container, { backgroundColor: '#0f0f1e', scale: 2, logging: false, useCORS: true })
   document.body.removeChild(container)
 
   const link = document.createElement('a')
