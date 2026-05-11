@@ -312,6 +312,9 @@ async function exportChart(ref, filename, chartTitle, chartData, filters) {
     activeFilters.forEach(([key, val]) => {
       const chip = document.createElement('span')
       chip.style.cssText = [
+        'display:inline-flex',
+        'align-items:center',
+        'line-height:1',
         'padding:3px 10px',
         'border-radius:20px',
         'font-size:10px',
@@ -329,7 +332,19 @@ async function exportChart(ref, filename, chartTitle, chartData, filters) {
   }
 
   const clone = ref.current.cloneNode(true)
-  clone.querySelectorAll('.chart-card-header, .sr-only, button, .export-btn').forEach(el => el.remove())
+  clone.querySelectorAll('.donut-wrapper').forEach(wrapper => {
+    wrapper.style.position = 'relative'
+  })
+  clone.querySelectorAll('.donut-center').forEach(el => {
+    el.style.cssText = [
+      'position:absolute',
+      'top:50%',
+      'left:50%',
+      'transform:translate(-50%, -50%)',
+      'text-align:center',
+      'pointer-events:none',
+    ].join(';')
+  })
   clone.style.cssText = 'background:transparent;padding:0;border:none;box-shadow:none;border-radius:0'
   container.appendChild(clone)
 
