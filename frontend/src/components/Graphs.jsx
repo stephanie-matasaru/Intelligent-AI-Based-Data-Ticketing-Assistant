@@ -264,14 +264,86 @@ function Graphs() {
   const categoryRef = useRef(null)
   const teamRef     = useRef(null)
 
-  async function exportChart(ref, filename) {
-    const html2canvas = (await import('html2canvas')).default
-    const canvas = await html2canvas(ref.current, { backgroundColor: '#1a1a2e' })
-    const link = document.createElement('a')
-    link.download = filename
-    link.href = canvas.toDataURL('image/png')
-    link.click()
+async function exportChart(ref, filename, chartTitle, chartData) {
+  const html2canvas = (await import('html2canvas')).default
+  const today = new Date().toISOString().slice(0, 10)
+
+  const container = document.createElement('div')
+  container.style.cssText = [
+    'position:fixed', 'left:-9999px', 'top:0',
+    'background:#0f0f1e', 'padding:32px',
+    `width:${Math.max(ref.current.offsetWidth, 560)}px`,
+    'font-family:system-ui,-apple-system,sans-serif',
+    'box-sizing:border-box',
+  ].join(';')
+
+  container.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">
+      <div>
+        <p style="margin:0 0 4px;font-size:9px;text-transform:uppercase;letter-spacing:0.14em;color:#A1CEBC">
+          Nokia · Intelligent Ticketing Analytics
+        </p>
+        <h2 style="margin:0;font-size:20px;font-weight:700;color:#fff;letter-spacing:-0.02em">
+          ${chartTitle}
+        </h2>
+      </div>
+      <span style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.25);padding-top:2px">${today}</span>
+    </div>
+  `
+
+  const clone = ref.current.cloneNode(true)
+  clone.querySelectorAll('.chart-card-header, .sr-only, button, .export-btn').forEach(el => el.remove())
+  clone.style.cssText = 'background:transparent;padding:0;border:none;box-shadow:none;border-radius:0'
+  container.appendChild(clone)
+
+  if (chartData?.length) {
+    const keys = Object.keys(chartData[0])
+    const table = document.createElement('table')
+    table.style.cssText = 'width:100%;border-collapse:collapse;margin-top:24px;font-size:12px'
+    table.innerHTML = `
+      <thead>
+        <tr style="border-bottom:1px solid rgba(255,255,255,0.1)">
+          ${keys.map(k => `<th style="text-align:left;padding:9px 14px;color:#A1CEBC;font-size:9px;text-transform:uppercase;letter-spacing:0.1em;font-weight:600">${k.charAt(0).toUpperCase() + k.slice(1)}</th>`).join('')}
+        </tr>
+      </thead>
+    `
+    const tbody = document.createElement('tbody')
+    chartData.forEach((row, i) => {
+      const tr = document.createElement('tr')
+      tr.style.cssText = `border-bottom:1px solid rgba(255,255,255,0.04);background:${i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent'}`
+      tr.innerHTML = keys.map((k, ki) => `
+        <td style="padding:9px 14px;color:${ki === 0 ? '#fff' : 'rgba(255,255,255,0.65)'};${ki === keys.length - 1 ? 'font-family:monospace;font-weight:600;color:#A1CEBC' : ''}">
+          ${row[k]}
+        </td>
+      `).join('')
+      tbody.appendChild(tr)
+    })
+    table.appendChild(tbody)
+    container.appendChild(table)
   }
+
+  const footer = document.createElement('div')
+  footer.style.cssText = 'margin-top:20px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.05);display:flex;justify-content:space-between;align-items:center'
+  footer.innerHTML = `
+    <span style="font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.18)">KPI Dashboard Export</span>
+    <span style="font-size:9px;font-family:monospace;color:rgba(255,255,255,0.18)">${today}</span>
+  `
+  container.appendChild(footer)
+
+  document.body.appendChild(container)
+  const canvas = await html2canvas(container, {
+    backgroundColor: '#0f0f1e',
+    scale: 2,
+    logging: false,
+    useCORS: true,
+  })
+  document.body.removeChild(container)
+
+  const link = document.createElement('a')
+  link.download = filename
+  link.href = canvas.toDataURL('image/png')
+  link.click()
+}
 
   const { hash } = useLocation()
 
@@ -326,7 +398,6 @@ function Graphs() {
     if (filters.status   !== 'all') params.append('status',   filters.status)
     if (filters.team     !== 'all') params.append('team',     filters.team)
  
-    // drilldown-specific params override the current filters
     Object.entries(extraParams).forEach(([k, v]) => params.set(k, v))
  
     params.set('page', '1')
@@ -504,7 +575,7 @@ function Graphs() {
               <h2 className="chart-title">Tickets by Priority</h2> 
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span className="chart-badge">{priorityData.reduce((s,d) => s+d.count, 0)} total</span>
-                <button className="export-btn" onClick={() => exportChart(priorityRef, 'priority.png')}
+                <button className="export-btn" onClick={() => exportChart(priorityRef, `tickets_by_priority_${new Date().toISOString().slice(0,10)}.png`, 'Tickets by Priority', priorityData)}
                   aria-label="Export priority chart as PNG">
                   <span className="material-symbols-outlined" style={{ fontSize: 16 }}>download</span>
                 </button>
@@ -546,7 +617,7 @@ function Graphs() {
               <span className="chart-badge">
                 {Math.round(slaData[0].value / (slaData[0].value + slaData[1].value) * 100)}% met
               </span>
-                <button className="export-btn" onClick={() => exportChart(slaRef, 'sla.png')}
+                <button className="export-btn" onClick={() => exportChart(slaRef, `sla_compliance_${new Date().toISOString().slice(0,10)}.png`, 'SLA Compliance', slaData)}
                   aria-label="Export SLA chart as PNG">
                   <span className="material-symbols-outlined" style={{ fontSize: 16 }}>download</span>
                 </button>
@@ -606,7 +677,7 @@ function Graphs() {
                       </button>
                     ))}
                   </div>
-                <button className="export-btn" onClick={() => exportChart(timelineRef, 'timeline.png')}
+                <button className="export-btn" onClick={() => exportChart(timelineRef, `tickets_timeline_${timelineGroup}_${new Date().toISOString().slice(0,10)}.png`, 'Tickets Created Over Time', timelineData)}
                   aria-label="Export timeline chart as PNG">
                   <span className="material-symbols-outlined" style={{ fontSize: 16 }}>download</span>
                 </button>
@@ -642,7 +713,7 @@ function Graphs() {
               <h2 className="chart-title">Tickets by Status</h2>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span className="chart-badge">{statusData.reduce((s,d) => s+d.count, 0)} total</span>
-                <button className="export-btn" onClick={() => exportChart(statusRef, 'status.png')}
+                <button className="export-btn" onClick={() => exportChart(statusRef, `tickets_by_status_${new Date().toISOString().slice(0,10)}.png`, 'Tickets by Status', statusData)}
                   aria-label="Export status chart as PNG">
                   <span className="material-symbols-outlined" style={{ fontSize: 16 }}>download</span>
                 </button>
@@ -679,7 +750,7 @@ function Graphs() {
               <h2 className="chart-title">Tickets by Category</h2>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span className="chart-badge">{categoryData.reduce((s,d) => s+d.count, 0)} total</span>
-                <button className="export-btn" onClick={() => exportChart(categoryRef, 'category.png')}
+                <button className="export-btn" onClick={() => exportChart(categoryRef, `tickets_by_category_${new Date().toISOString().slice(0,10)}.png`, 'Tickets by Category', categoryData)}
                   aria-label="Export category chart as PNG">
                   <span className="material-symbols-outlined" style={{ fontSize: 16 }}>download</span>
                 </button>
@@ -736,7 +807,7 @@ function Graphs() {
               <h2 className="chart-title">Tickets by Team</h2>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span className="chart-badge">{teamData.reduce((s,d) => s+d.count, 0)} total</span>
-                <button className="export-btn" onClick={() => exportChart(teamRef, 'team.png')}
+                <button className="export-btn" onClick={() => exportChart(teamRef, `tickets_by_team_${new Date().toISOString().slice(0,10)}.png`, 'Tickets by Team', teamData)}
                   aria-label="Export team chart as PNG">
                   <span className="material-symbols-outlined" style={{ fontSize: 16 }}>download</span>
                 </button>
