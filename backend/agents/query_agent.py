@@ -2,6 +2,7 @@ import os
 from ai_client import get_ai_client
 from utils.sql_utils import clean_sql
 import json
+import re
 
 INPUT_PROMPT = """
 You are a SQL assistant for a ticketing system using Microsoft SQL Server.
@@ -107,12 +108,17 @@ def generate_dual_sql(question: str, history: list):
     """
     client = get_ai_client()
 
-    override_prompt = INPUT_PROMPT + """
+    base_prompt_without_sql_rule = INPUT_PROMPT.split("OUTPUT FORMAT (MANDATORY):")[0]
+
+    override_prompt = base_prompt_without_sql_rule + """
+    OUTPUT FORMAT (MANDATORY):
+    You MUST output ONLY a valid JSON object. Do not include any conversational text or ```sql blocks.
     
-    *** OVERRIDE OUTPUT FORMAT ***
-    Ignore the previous output format rule. You must ALWAYS return a valid JSON object inside a ```json code block containing exactly two keys:
-    1. "primary_query": The SQL query that perfectly answers the user's request.
-    2. "raw_data_query": A 'SELECT TOP 100 tickets.*, priorities.priority_name FROM tickets LEFT JOIN priorities ON tickets.priority_id = priorities.priority_id' query using the EXACT same WHERE clauses from the primary query.
+    Format:
+    {
+      "primary_query": "The SQL query that perfectly answers the user's request (e.g., COUNT, SUM, etc).",
+      "raw_data_query": "SELECT TOP 100 tickets.*, priorities.priority_name FROM tickets LEFT JOIN priorities ON tickets.priority_id = priorities.priority_id WHERE [insert exact same WHERE clause from primary_query here]"
+    }
     """
 
     messages = [
@@ -133,8 +139,12 @@ def generate_dual_sql(question: str, history: list):
         return "NOT_RELATED", "NOT_RELATED", response.usage.total_tokens
 
     try:
-        cleaned_response = raw_content.replace("```json", "").replace("```", "").strip()
-        sql_dict = json.loads(cleaned_response)
+        match = re.search(r'\{.*\}', raw_content, re.DOTALL)
+        if match:
+            json_str = match.group(0)
+        else:
+            json_str = raw_content.replace("```json", "").replace("```", "").strip()
+        sql_dict = json.loads(json_str)
         
         primary_query = clean_sql(sql_dict.get("primary_query", ""))
         raw_data_query = clean_sql(sql_dict.get("raw_data_query", ""))
