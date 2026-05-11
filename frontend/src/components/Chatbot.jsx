@@ -102,19 +102,26 @@ function Chatbot() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalData, setModalData] = useState([])
 
-    function saveToWorkspace(msg) {
-    const key = `workspace_items_${userId}`
-    const existing = JSON.parse(localStorage.getItem(key) || '[]')
+    async function saveToWorkspace(msg) {
+    if (!userId) return
     const item = {
-      id: Date.now(),
-      savedAt: new Date().toISOString(),
-      text: msg.text,
-      chart_spec: msg.chart_spec || null,
-      excel_spec: msg.excel_spec || null,
+      user_id: userId,
       label: msg.chart_spec?.title || msg.text?.slice(0, 60) || 'Saved insight',
       type: msg.chart_spec ? 'chart' : msg.excel_spec ? 'excel' : 'text',
+      chart_spec: msg.chart_spec || null,
+      excel_spec: msg.excel_spec || null,
     }
-    localStorage.setItem(key, JSON.stringify([item, ...existing]))
+    try {
+      const res = await fetch('http://localhost:8000/api/workspace', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(item)
+      })
+      if (!res.ok) throw new Error('Save failed')
+      setSavedIds(prev => [...prev, msg.id])
+    } catch (err) {
+      console.error('Failed to save to workspace:', err)
+    }
   }
 
   useEffect(() => {
@@ -561,10 +568,7 @@ async function handleUpload() {
                             </button>
                           )}
                           <button
-                            onClick={() => {
-                              saveToWorkspace(msg)
-                              setSavedIds(prev => [...prev, msg.id])
-                            }}
+                            onClick={() => saveToWorkspace(msg)}
                             disabled={savedIds.includes(msg.id)}
                             className="flex items-center gap-1 text-[0.625rem] uppercase tracking-widest transition-colors"
                             style={{ color: savedIds.includes(msg.id) ? '#4fc093' : 'rgba(255,255,255,0.3)' }}
