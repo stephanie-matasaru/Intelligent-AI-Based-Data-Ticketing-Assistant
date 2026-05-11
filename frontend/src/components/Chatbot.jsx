@@ -310,7 +310,8 @@ async function handleUpload() {
       formData.append('history', JSON.stringify(buildHistory(messages)))
       if (userId) formData.append('user_id', userId)
       if (groupId) formData.append('group_id', groupId)
-
+      if (parsedFiles.length > 0) formData.append('parsed_file_context', JSON.stringify(parsedFiles[0]))
+        
     const response = await fetch('http://localhost:8000/api/chatbot/', {
       method: 'POST',
       body: formData
