@@ -264,7 +264,7 @@ function Graphs() {
   const categoryRef = useRef(null)
   const teamRef     = useRef(null)
 
-async function exportChart(ref, filename, chartTitle, chartData) {
+async function exportChart(ref, filename, chartTitle, chartData, filters) {
   const html2canvas = (await import('html2canvas')).default
   const today = new Date().toISOString().slice(0, 10)
 
@@ -290,6 +290,43 @@ async function exportChart(ref, filename, chartTitle, chartData) {
       <span style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.25);padding-top:2px">${today}</span>
     </div>
   `
+
+  const activeFilters = Object.entries(filters || {}).filter(([, v]) => v && v !== 'all' && v !== '')
+  if (activeFilters.length > 0) {
+    const filterRow = document.createElement('div')
+    filterRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;align-items:center'
+
+    const label = document.createElement('span')
+    label.style.cssText = 'font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.3);margin-right:4px'
+    label.textContent = 'Filters:'
+    filterRow.appendChild(label)
+
+    const filterLabels = {
+      startDate: 'From',
+      endDate: 'To',
+      priority: 'Priority',
+      status: 'Status',
+      team: 'Team',
+    }
+
+    activeFilters.forEach(([key, val]) => {
+      const chip = document.createElement('span')
+      chip.style.cssText = [
+        'padding:3px 10px',
+        'border-radius:20px',
+        'font-size:10px',
+        'font-weight:600',
+        'background:rgba(161,206,188,0.12)',
+        'color:#A1CEBC',
+        'border:1px solid rgba(161,206,188,0.25)',
+        'letter-spacing:0.04em',
+      ].join(';')
+      chip.textContent = `${filterLabels[key] || key}: ${val}`
+      filterRow.appendChild(chip)
+    })
+
+    container.appendChild(filterRow)
+  }
 
   const clone = ref.current.cloneNode(true)
   clone.querySelectorAll('.chart-card-header, .sr-only, button, .export-btn').forEach(el => el.remove())
@@ -575,7 +612,7 @@ async function exportChart(ref, filename, chartTitle, chartData) {
               <h2 className="chart-title">Tickets by Priority</h2> 
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span className="chart-badge">{priorityData.reduce((s,d) => s+d.count, 0)} total</span>
-                <button className="export-btn" onClick={() => exportChart(priorityRef, `tickets_by_priority_${new Date().toISOString().slice(0,10)}.png`, 'Tickets by Priority', priorityData)}
+                <button className="export-btn" onClick={() => exportChart(priorityRef,  `tickets_by_priority_${new Date().toISOString().slice(0,10)}.png`,  'Tickets by Priority', priorityData, filters)}
                   aria-label="Export priority chart as PNG">
                   <span className="material-symbols-outlined" style={{ fontSize: 16 }}>download</span>
                 </button>
@@ -617,7 +654,7 @@ async function exportChart(ref, filename, chartTitle, chartData) {
               <span className="chart-badge">
                 {Math.round(slaData[0].value / (slaData[0].value + slaData[1].value) * 100)}% met
               </span>
-                <button className="export-btn" onClick={() => exportChart(slaRef, `sla_compliance_${new Date().toISOString().slice(0,10)}.png`, 'SLA Compliance', slaData)}
+                <button className="export-btn" onClick={() => exportChart(slaRef, `sla_compliance_${new Date().toISOString().slice(0,10)}.png`, 'SLA Compliance', slaData, filters)}
                   aria-label="Export SLA chart as PNG">
                   <span className="material-symbols-outlined" style={{ fontSize: 16 }}>download</span>
                 </button>
@@ -677,7 +714,7 @@ async function exportChart(ref, filename, chartTitle, chartData) {
                       </button>
                     ))}
                   </div>
-                <button className="export-btn" onClick={() => exportChart(timelineRef, `tickets_timeline_${timelineGroup}_${new Date().toISOString().slice(0,10)}.png`, 'Tickets Created Over Time', timelineData)}
+                <button className="export-btn" onClick={() => exportChart(timelineRef, `tickets_timeline_${timelineGroup}_${new Date().toISOString().slice(0,10)}.png`, 'Tickets Created Over Time', timelineData, filters)}
                   aria-label="Export timeline chart as PNG">
                   <span className="material-symbols-outlined" style={{ fontSize: 16 }}>download</span>
                 </button>
@@ -713,7 +750,7 @@ async function exportChart(ref, filename, chartTitle, chartData) {
               <h2 className="chart-title">Tickets by Status</h2>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span className="chart-badge">{statusData.reduce((s,d) => s+d.count, 0)} total</span>
-                <button className="export-btn" onClick={() => exportChart(statusRef, `tickets_by_status_${new Date().toISOString().slice(0,10)}.png`, 'Tickets by Status', statusData)}
+                <button className="export-btn" onClick={() => exportChart(statusRef, `tickets_by_status_${new Date().toISOString().slice(0,10)}.png`, 'Tickets by Status', statusData, filters)}
                   aria-label="Export status chart as PNG">
                   <span className="material-symbols-outlined" style={{ fontSize: 16 }}>download</span>
                 </button>
@@ -750,7 +787,7 @@ async function exportChart(ref, filename, chartTitle, chartData) {
               <h2 className="chart-title">Tickets by Category</h2>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span className="chart-badge">{categoryData.reduce((s,d) => s+d.count, 0)} total</span>
-                <button className="export-btn" onClick={() => exportChart(categoryRef, `tickets_by_category_${new Date().toISOString().slice(0,10)}.png`, 'Tickets by Category', categoryData)}
+                <button className="export-btn" onClick={() => exportChart(categoryRef, `tickets_by_category_${new Date().toISOString().slice(0,10)}.png`, 'Tickets by Category', categoryData, filters)}
                   aria-label="Export category chart as PNG">
                   <span className="material-symbols-outlined" style={{ fontSize: 16 }}>download</span>
                 </button>
@@ -807,7 +844,7 @@ async function exportChart(ref, filename, chartTitle, chartData) {
               <h2 className="chart-title">Tickets by Team</h2>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span className="chart-badge">{teamData.reduce((s,d) => s+d.count, 0)} total</span>
-                <button className="export-btn" onClick={() => exportChart(teamRef, `tickets_by_team_${new Date().toISOString().slice(0,10)}.png`, 'Tickets by Team', teamData)}
+                <button className="export-btn" onClick={() => exportChart(teamRef, `tickets_by_team_${new Date().toISOString().slice(0,10)}.png`, 'Tickets by Team', teamData, filters)}
                   aria-label="Export team chart as PNG">
                   <span className="material-symbols-outlined" style={{ fontSize: 16 }}>download</span>
                 </button>
