@@ -395,7 +395,8 @@ Uploaded file context (JSON):
         group_id=group_id,
         export_file_path=excel_spec.get("file_path") if excel_spec else None,
         chart_spec=chart_spec,
-        excel_spec=excel_spec
+        excel_spec=excel_spec,
+        ticket_records=context.get("raw_data_results")
     )
 
     return {

@@ -1,10 +1,10 @@
 from db import get_connection
 from routes.chat_history import generate_title
 import uuid
+import json
 
-def save_message(user_id, sender, message, query=None, tokens=None, status="pending", group_id=None, export_file_path=None, chart_spec=None, excel_spec=None, attached_file_name=None):
+def save_message(user_id, sender, message, query=None, tokens=None, status="pending", group_id=None, export_file_path=None, chart_spec=None, excel_spec=None, attached_file_name=None, ticket_records=None):
     try:
-        import json
         conn = get_connection()
         cursor = conn.cursor()
         title = None
@@ -17,8 +17,8 @@ def save_message(user_id, sender, message, query=None, tokens=None, status="pend
                 print(f"DEBUG generate_title result: '{title}'")
         cursor.execute("""
             INSERT INTO chat_messages 
-                (group_id, user_id, sender, message, query, request_tokens, response_status, title, export_file_path, json_chart, json_export, attached_file_name)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (group_id, user_id, sender, message, query, request_tokens, response_status, title, export_file_path, json_chart, json_export, attached_file_name, ticket_records)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             str(group_id) if group_id else str(uuid.uuid4()),
             user_id,
@@ -31,7 +31,8 @@ def save_message(user_id, sender, message, query=None, tokens=None, status="pend
             export_file_path,
             json.dumps(chart_spec) if chart_spec else None,
             json.dumps(excel_spec) if excel_spec else None,
-            attached_file_name
+            attached_file_name,
+            json.dumps(ticket_records) if ticket_records else None
         ))
         conn.commit()
         conn.close()
@@ -43,13 +44,25 @@ def get_chat_history_by_user(user_id: int):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT group_id, sender, message, query, response_status, date_added, export_file_path
+        SELECT group_id, sender, message, query, response_status, date_added, export_file_path, ticket_records
         FROM chat_messages
         WHERE user_id = ? AND delete_flag = 0
         ORDER BY date_added ASC
     """, (user_id,))
     rows = cursor.fetchall()
     columns = [col[0] for col in cursor.description]
-    history = [dict(zip(columns, row)) for row in rows]
+
+    history = []
+    for row in rows:
+        row_dict = dict(zip(columns, row))
+        #parse the JSON string back into python list for the frontend
+        if row_dict.get("ticket_records"):
+            try:
+                row_dict["ticket_records"] = json.loads(row_dict["ticket_records"])
+            except Exception:
+                row_dict["ticket_records"] = None
+                
+        history.append(row_dict)
+
     conn.close()
     return history
