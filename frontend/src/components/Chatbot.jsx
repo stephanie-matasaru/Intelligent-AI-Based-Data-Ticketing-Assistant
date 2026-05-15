@@ -238,6 +238,22 @@ async function fetchMessages(groupId) {
   }
 }
 
+async function handleDeleteSession(groupIdToDelete) {
+  if (!confirm("Delete this chat?")) return
+  try {
+    await fetch(`http://localhost:8000/api/chatbot/session/${groupIdToDelete}`, {
+      method: "DELETE"
+    })
+    setSessions(prev => prev.filter(s => s.group_id !== groupIdToDelete))
+    if (selectedSession === groupIdToDelete) {
+      setSelectedSession(null)
+      setSessionMessages([])
+    }
+  } catch (err) {
+    console.error("Failed to delete session:", err)
+  }
+}
+
   function handleDownload(sqlScript, filename) {
     const blob = new Blob([sqlScript], { type: 'text/plain' })
     const url = window.URL.createObjectURL(blob)
@@ -756,11 +772,27 @@ async function handleUpload() {
                 {sessions.map((s) => (
                   <div
                     key={s.group_id}
-                    onClick={() => fetchMessages(s.group_id)}
-                    className="p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-all"
+                    className="group flex items-center gap-1 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-all"
                   >
-                    <p className="text-white/70 text-xs truncate">{s.title}</p>
-                    <p className="text-white/30 text-[0.6rem] mt-1">{s.started_at.slice(0, 16)} • {s.message_count} messages</p>
+                    <div
+                      className="flex-1 min-w-0"
+                      onClick={() => fetchMessages(s.group_id)}
+                    >
+                      <p className="text-white/70 text-xs truncate">{s.title}</p>
+                      <p className="text-white/30 text-[0.6rem] mt-1">
+                        {s.started_at.slice(0, 16)} • {s.message_count} messages
+                      </p>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDeleteSession(s.group_id)
+                      }}
+                      className="opacity-0 group-hover:opacity-100 text-white/30 hover:text-red-400 transition-all flex-shrink-0 p-1"
+                      title="Delete chat"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">delete</span>
+                    </button>
                   </div>
                 ))}
               </div>
