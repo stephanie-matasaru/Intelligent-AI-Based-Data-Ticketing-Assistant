@@ -32,7 +32,7 @@ def save_message(user_id, sender, message, query=None, tokens=None, status="pend
             json.dumps(chart_spec) if chart_spec else None,
             json.dumps(excel_spec) if excel_spec else None,
             attached_file_name,
-            json.dumps(ticket_records) if ticket_records else None
+            json.dumps(ticket_records, default=str) if ticket_records else None
         ))
         conn.commit()
         conn.close()
