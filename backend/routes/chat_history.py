@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from db import get_connection
 from ai_client import get_ai_client
 import os
+import json
 
 router = APIRouter()
 
@@ -52,11 +53,10 @@ def get_sessions(user_id: int):
 
 @router.get("/messages/{group_id}")
 def get_messages(group_id: str):
-    import json
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT sender, message, date_added, json_chart, json_export, export_file_path, attached_file_name
+        SELECT sender, message, date_added, json_chart, json_export, export_file_path, attached_file_name, ticket_records
         FROM chat_messages
         WHERE group_id = ?
         ORDER BY date_added ASC
@@ -72,6 +72,7 @@ def get_messages(group_id: str):
             "excel_spec": json.loads(row[4]) if row[4] else None,
             "export_file_path": row[5] if row[5] else None,
             "attached_file_name": row[6] if row[6] else None,
+            "ticket_records": json.loads(row[7]) if row[7] else None,
         }
         for row in rows
     ]
