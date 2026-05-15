@@ -229,7 +229,8 @@ async function fetchMessages(groupId) {
       export_file_path: msg.export_file_path || null,
       chart_spec: msg.chart_spec || null,
       excel_spec: msg.excel_spec || null,
-      attached_file_name: msg.attached_file_name || null
+      attached_file_name: msg.attached_file_name || null,
+      ticket_records: msg.ticket_records || null
     })))
     setShowHistory(false)
     setSelectedSession(groupId)
@@ -361,7 +362,7 @@ async function handleUpload() {
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         chart_spec: data.chart_spec || null,
         excel_spec: data.excel_spec || null,
-        raw_data: data.results || []
+        ticket_records: data.results || []
       }
 
       setMessages(prev => [...prev, aiMsg])
@@ -570,12 +571,12 @@ async function handleUpload() {
                           {renderChart(msg.chart_spec)}
                         </div>
                       )}
-                      {(msg.chart_spec || msg.excel_spec || (msg.raw_data && msg.raw_data.length > 0)) && (
+                      {(msg.chart_spec || msg.excel_spec || (msg.ticket_records && msg.ticket_records.length > 0)) && (
                         <div className="mt-2 flex items-center gap-3">
-                          {msg.raw_data && msg.raw_data.length > 0 && (
+                          {msg.ticket_records && msg.ticket_records.length > 0 && (
                             <button
                               onClick={() => {
-                                setModalData(msg.raw_data)
+                                setModalData(msg.ticket_records)
                                 setIsModalOpen(true)
                               }}
                               className="flex items-center gap-1 text-[0.625rem] uppercase tracking-widest transition-colors text-white/50 hover:text-[#A1CEBC]"
