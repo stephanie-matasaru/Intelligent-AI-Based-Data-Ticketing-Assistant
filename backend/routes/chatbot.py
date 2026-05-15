@@ -426,3 +426,15 @@ def chatbot_health():
         return {"status": "ok", "message": "Service running"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+    
+@router.delete("/session/{group_id}")
+def delete_session(group_id: str):
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM chat_messages WHERE group_id = ?", (group_id,))
+        conn.commit()
+        conn.close()
+        return {"message": "Session deleted"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"DB error: {str(e)}")
