@@ -15,11 +15,6 @@ function renderChart(chartSpec, onTicketClick) {
 
   return (
     <div style={{ marginTop: '12px' }}>
-      {title && (
-        <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-          {title}
-        </p>
-      )}
       <ResponsiveContainer width="100%" height={200}>
         {chart_type === 'bar' ? (
           <BarChart data={data} barSize={28}>
@@ -53,7 +48,7 @@ function renderChart(chartSpec, onTicketClick) {
         ) : chart_type === 'pie' ? (
           <PieChart>
             <Pie data={data} cx="50%" cy="50%" outerRadius={80} dataKey={y_key} nameKey={x_key} paddingAngle={3}>
-              {data.map((_, i) => (
+              {data.map((entry, i) => (
                 <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} 
                   style={{ cursor: onTicketClick ? 'pointer' : 'default' }}
                   onClick={onTicketClick ? () => onTicketClick(entry) : undefined} />
@@ -297,11 +292,6 @@ function MyWorkspace() {
                 {/* Chart if present */}
                 {item.chart_spec && !item.chart_spec.error && (
                   <div className="mt-1">
-                    {item.chart_spec.title && (
-                      <p className="text-[0.7rem] text-white/30 uppercase tracking-widest mb-2">
-                        {item.chart_spec.title}
-                      </p>
-                    )}
                     <div ref={el => { if (el) chartRefs.current[item.id] = el }}>
                       {renderChart(item.chart_spec, item.ticket_records?.length ? () => {
                         setModalData(item.ticket_records)

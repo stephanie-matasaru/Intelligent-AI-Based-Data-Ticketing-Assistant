@@ -54,7 +54,7 @@ function renderChart(chartSpec, onTicketClick) {
         ) : chart_type === 'pie' ? (
           <PieChart>
             <Pie data={data} cx="50%" cy="50%" outerRadius={80} dataKey={y_key} nameKey={x_key} paddingAngle={3}>
-              {data.map((_, i) => (
+              {data.map((entry, i) => (
                 <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} 
                   style={{ cursor: onTicketClick ? 'pointer' : 'default' }}
                   onClick={onTicketClick ? () => onTicketClick(entry) : undefined} />
