@@ -9,7 +9,7 @@ import {
 
 const CHART_COLORS = ['#A1CEBC', '#7b6cf6', '#e09a3a', '#e05c5c', '#4a9edd']
 
-function renderChart(chartSpec) {
+function renderChart(chartSpec, onTicketClick) {
   if (!chartSpec || chartSpec.error) return null
 
   const { chart_type, title, x_key, y_key, data } = chartSpec
@@ -31,7 +31,8 @@ function renderChart(chartSpec) {
               contentStyle={{ background: '#1a1a35', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff' }}
               cursor={{ fill: '#ffffff05' }}
             />
-            <Bar dataKey={y_key} radius={[4, 4, 0, 0]}>
+            <Bar dataKey={y_key} radius={[4, 4, 0, 0]} style={{ cursor: onTicketClick ? 'pointer' : 'default' }}
+               onClick={onTicketClick ? (d) => onTicketClick(d) : undefined}>
               {data.map((_, i) => (
                 <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
               ))}
@@ -47,14 +48,16 @@ function renderChart(chartSpec) {
               cursor={{ stroke: '#A1CEBC', strokeWidth: 1 }}
             />
             <Line type="monotone" dataKey={y_key} stroke="#A1CEBC" strokeWidth={2.5}
-              dot={{ fill: '#A1CEBC', r: 3, strokeWidth: 0 }}
-              activeDot={{ r: 5, fill: '#4fc093' }} />
+              activeDot={{ r: 5, fill: '#4fc093', cursor: onTicketClick ? 'pointer' : 'default',
+                onClick: onTicketClick ? (_, payload) => onTicketClick(payload.payload) : undefined }} />
           </LineChart>
         ) : chart_type === 'pie' ? (
           <PieChart>
             <Pie data={data} cx="50%" cy="50%" outerRadius={80} dataKey={y_key} nameKey={x_key} paddingAngle={3}>
               {data.map((_, i) => (
-                <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} 
+                  style={{ cursor: onTicketClick ? 'pointer' : 'default' }}
+                  onClick={onTicketClick ? () => onTicketClick(entry) : undefined} />
               ))}
             </Pie>
             <Tooltip
@@ -112,6 +115,7 @@ function Chatbot() {
       type: msg.chart_spec ? 'chart' : msg.excel_spec ? 'excel' : 'text',
       chart_spec: msg.chart_spec || null,
       excel_spec: msg.excel_spec || null,
+      ticket_records: msg.ticket_records || null,
     }
     try {
       const res = await fetch('http://localhost:8000/api/workspace', {
@@ -609,7 +613,10 @@ function handleDrop(e) {
                       )}
                       {msg.chart_spec && (
                         <div ref={el => { if (el) chartRefs.current[msg.id] = el }}>
-                          {renderChart(msg.chart_spec)}
+                          {renderChart(msg.chart_spec, msg.ticket_records?.length ? (d) => {
+                            setModalData(msg.ticket_records)
+                            setIsModalOpen(true)
+                          } : null)}
                         </div>
                       )}
                       {(msg.chart_spec || msg.excel_spec || (msg.ticket_records && msg.ticket_records.length > 0)) && (

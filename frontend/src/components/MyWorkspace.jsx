@@ -7,42 +7,70 @@ import {
 } from 'recharts'
 
 const CHART_COLORS = ['#A1CEBC', '#7b6cf6', '#e09a3a', '#e05c5c', '#4a9edd']
+const [isModalOpen, setIsModalOpen] = useState(false)
+const [modalData, setModalData] = useState([])
 
-function renderChart(chartSpec) {
+function renderChart(chartSpec, onTicketClick) {
   if (!chartSpec || chartSpec.error) return null
-  const { chart_type, x_key, y_key, data } = chartSpec
+
+  const { chart_type, title, x_key, y_key, data } = chartSpec
 
   return (
-    <ResponsiveContainer width="100%" height={180}>
-      {chart_type === 'bar' ? (
-        <BarChart data={data} barSize={22}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
-          <XAxis dataKey={x_key} stroke="#ffffff30" tick={{ fill: '#ffffff60', fontSize: 10 }} axisLine={false} tickLine={false} />
-          <YAxis stroke="#ffffff30" tick={{ fill: '#ffffff40', fontSize: 9 }} axisLine={false} tickLine={false} />
-          <Tooltip contentStyle={{ background: '#1a1a35', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff' }} cursor={{ fill: '#ffffff05' }} />
-          <Bar dataKey={y_key} radius={[4, 4, 0, 0]}>
-            {data.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
-          </Bar>
-        </BarChart>
-      ) : chart_type === 'line' ? (
-        <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
-          <XAxis dataKey={x_key} stroke="#ffffff30" tick={{ fill: '#ffffff60', fontSize: 10 }} axisLine={false} tickLine={false} />
-          <YAxis stroke="#ffffff30" tick={{ fill: '#ffffff40', fontSize: 9 }} axisLine={false} tickLine={false} />
-          <Tooltip contentStyle={{ background: '#1a1a35', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff' }} />
-          <Line type="monotone" dataKey={y_key} stroke="#A1CEBC" strokeWidth={2.5} dot={{ fill: '#A1CEBC', r: 3, strokeWidth: 0 }} activeDot={{ r: 5, fill: '#4fc093' }} />
-        </LineChart>
-      ) : chart_type === 'pie' ? (
-        <PieChart>
-          <Pie data={data} cx="50%" cy="50%" outerRadius={70} dataKey={y_key} nameKey={x_key} paddingAngle={3}>
-            {data.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
-          </Pie>
-          <Tooltip contentStyle={{ background: '#1a1a35', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff' }} />
-        </PieChart>
-      ) : null}
-    </ResponsiveContainer>
+    <div style={{ marginTop: '12px' }}>
+      {title && (
+        <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          {title}
+        </p>
+      )}
+      <ResponsiveContainer width="100%" height={200}>
+        {chart_type === 'bar' ? (
+          <BarChart data={data} barSize={28}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
+            <XAxis dataKey={x_key} stroke="#ffffff30" tick={{ fill: '#ffffff60', fontSize: 11 }} axisLine={false} tickLine={false} />
+            <YAxis stroke="#ffffff30" tick={{ fill: '#ffffff40', fontSize: 10 }} axisLine={false} tickLine={false} />
+            <Tooltip
+              contentStyle={{ background: '#1a1a35', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff' }}
+              cursor={{ fill: '#ffffff05' }}
+            />
+            <Bar dataKey={y_key} radius={[4, 4, 0, 0]} style={{ cursor: onTicketClick ? 'pointer' : 'default' }}
+               onClick={onTicketClick ? (d) => onTicketClick(d) : undefined}>
+              {data.map((_, i) => (
+                <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+              ))}
+            </Bar>
+          </BarChart>
+        ) : chart_type === 'line' ? (
+          <LineChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
+            <XAxis dataKey={x_key} stroke="#ffffff30" tick={{ fill: '#ffffff60', fontSize: 11 }} axisLine={false} tickLine={false} />
+            <YAxis stroke="#ffffff30" tick={{ fill: '#ffffff40', fontSize: 10 }} axisLine={false} tickLine={false} />
+            <Tooltip
+              contentStyle={{ background: '#1a1a35', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff' }}
+              cursor={{ stroke: '#A1CEBC', strokeWidth: 1 }}
+            />
+            <Line type="monotone" dataKey={y_key} stroke="#A1CEBC" strokeWidth={2.5}
+              activeDot={{ r: 5, fill: '#4fc093', cursor: onTicketClick ? 'pointer' : 'default',
+                onClick: onTicketClick ? (_, payload) => onTicketClick(payload.payload) : undefined }} />
+          </LineChart>
+        ) : chart_type === 'pie' ? (
+          <PieChart>
+            <Pie data={data} cx="50%" cy="50%" outerRadius={80} dataKey={y_key} nameKey={x_key} paddingAngle={3}>
+              {data.map((_, i) => (
+                <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} 
+                  style={{ cursor: onTicketClick ? 'pointer' : 'default' }}
+                  onClick={onTicketClick ? () => onTicketClick(entry) : undefined} />
+              ))}
+            </Pie>
+            <Tooltip
+              contentStyle={{ background: '#1a1a35', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff' }}
+            />
+          </PieChart>
+        ) : null}
+      </ResponsiveContainer>
+    </div>
   )
 }
+
 
 function MyWorkspace() {
   const navigate = useNavigate()
@@ -275,7 +303,10 @@ function MyWorkspace() {
                       </p>
                     )}
                     <div ref={el => { if (el) chartRefs.current[item.id] = el }}>
-                      {renderChart(item.chart_spec)}
+                      {renderChart(item.chart_spec, item.ticket_records?.length ? () => {
+                        setModalData(item.ticket_records)
+                        setIsModalOpen(true)
+                      } : null)}
                     </div>
                   </div>
                 )}
@@ -332,6 +363,41 @@ function MyWorkspace() {
         {items.length > 0 && filtered.length === 0 && (
           <p className="text-white/30 text-sm text-center py-16">No {filter} items saved yet.</p>
         )}
+
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-[#13132a] border border-white/10 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-white/5">
+              <h3 className="text-xl font-headline font-bold text-white tracking-tight">Ticket Overview</h3>
+              <button onClick={() => setIsModalOpen(false)} className="text-white/40 hover:text-white transition-colors">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <div className="p-6 overflow-auto">
+              <table className="w-full text-left border-collapse whitespace-nowrap">
+                <thead className="sticky top-0 bg-[#13132a]">
+                  <tr className="text-[0.6875rem] uppercase tracking-widest text-[#A1CEBC] font-label border-b border-white/10">
+                    <th className="pb-3 font-semibold">Ticket #</th>
+                    <th className="pb-3 font-semibold">Status</th>
+                    <th className="pb-3 font-semibold">Priority</th>
+                    <th className="pb-3 font-semibold">Assignee</th>
+                  </tr>
+                </thead>
+                <tbody className="text-sm text-white/80">
+                  {modalData.map((ticket, i) => (
+                    <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                      <td className="py-3 pr-4 text-white font-mono">{ticket.ticket_number || ticket.ticket_id}</td>
+                      <td className="py-3 pr-4">{ticket.status}</td>
+                      <td className="py-3 pr-4">{ticket.priority || ticket.priority_name || 'N/A'}</td>
+                      <td className="py-3 pr-4">{ticket.assigned_person || 'Unassigned'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
 
       </main>
     </div>
