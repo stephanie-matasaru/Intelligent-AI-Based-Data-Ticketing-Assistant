@@ -258,6 +258,7 @@ function Graphs() {
   const [teamData, setTeamData]         = useState(MOCK_TEAM)
   const [timelineGroup, setTimelineGroup] = useState('weekly')
   const [drillDown, setDrillDown] = useState(null)
+  const [filtersOpen, setFiltersOpen] = useState(false)
 
   const priorityRef = useRef(null)
   const slaRef = useRef(null)
@@ -537,56 +538,73 @@ async function exportChart(ref, filename, chartTitle, chartData, filters) {
         </div>
 
         <div className="filter-bar" role="search" aria-label="Filter charts">
-          <div className="filter-group">
-            <label className="filter-label" htmlFor="graph-start-date">Start Date</label>
-            <input id="graph-start-date" type="date" className="filter-input" value={filters.startDate}
-              onChange={e => handleFilter('startDate', e.target.value)} />
-          </div>
-          <div className="filter-group">
-            <label className="filter-label" htmlFor="graph-end-date">End Date</label>
-            <input id="graph-end-date" type="date" className="filter-input" value={filters.endDate}
-              onChange={e => handleFilter('endDate', e.target.value)} />
-          </div>
-          <div className="filter-group">
-            <label className="filter-label" htmlFor="graph-priority">Priority</label>
-            <select id="graph-priority" className="filter-input" value={filters.priority}
-              onChange={e => handleFilter('priority', e.target.value)}>
-              <option value="all">All</option>
-              <option value="Critical">Critical</option>
-              <option value="High">High</option>
-              <option value="Medium">Medium</option>
-              <option value="Low">Low</option>
-            </select>
-          </div>
-          <div className="filter-group">
-            <label className="filter-label" htmlFor="graph-status">Status</label>
-            <select id="graph-status" className="filter-input" value={filters.status}
-              onChange={e => handleFilter('status', e.target.value)}>
-              <option value="all">All</option>
-              <option value="Open">Open</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Pending">Pending</option>
-              <option value="Resolved">Resolved</option>
-              <option value="Closed">Closed</option>
-            </select>
-          </div>
-          <div className="filter-group">
-            <label className="filter-label" htmlFor="graph-team">Team</label>
-            <select id="graph-team" className="filter-input" value={filters.team}
-              onChange={e => handleFilter('team', e.target.value)}>
-              <option value="all">All Teams</option>
-              <option value="Support">Support</option>
-              <option value="Network">Network</option>
-              <option value="Frontend">Frontend</option>
-              <option value="Backend">Backend</option>
-              <option value="DevOps">DevOps</option>
-              <option value="Data">Data</option>
-            </select>
-          </div>
-          <button className="filter-reset" onClick={handleReset} aria-label="Reset all filters">
-            <span className="material-symbols-outlined" style={{ fontSize: 16 }} aria-hidden="true">refresh</span>
-            Reset
+          <button
+            className="filter-mobile-toggle"
+            onClick={() => setFiltersOpen(!filtersOpen)}
+            aria-expanded={filtersOpen}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 16 }}>tune</span>
+              Filters
+            </span>
+            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>
+              {filtersOpen ? 'expand_less' : 'expand_more'}
+            </span>
           </button>
+
+          <div className={`filter-bar-inner ${filtersOpen ? 'filter-bar-inner--open' : ''}`}>
+            <div className="filter-group">
+              <label className="filter-label" htmlFor="graph-start-date">Start Date</label>
+              <input id="graph-start-date" type="date" className="filter-input" value={filters.startDate}
+                onChange={e => handleFilter('startDate', e.target.value)} />
+            </div>
+            <div className="filter-group">
+              <label className="filter-label" htmlFor="graph-end-date">End Date</label>
+              <input id="graph-end-date" type="date" className="filter-input" value={filters.endDate}
+                onChange={e => handleFilter('endDate', e.target.value)} />
+            </div>
+            <div className="filter-group">
+              <label className="filter-label" htmlFor="graph-priority">Priority</label>
+              <select id="graph-priority" className="filter-input" value={filters.priority}
+                onChange={e => handleFilter('priority', e.target.value)}>
+                <option value="all">All</option>
+                <option value="Critical">Critical</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </div>
+            <div className="filter-group">
+              <label className="filter-label" htmlFor="graph-status">Status</label>
+              <select id="graph-status" className="filter-input" value={filters.status}
+                onChange={e => handleFilter('status', e.target.value)}>
+                <option value="all">All</option>
+                <option value="Open">Open</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Pending">Pending</option>
+                <option value="Resolved">Resolved</option>
+                <option value="Closed">Closed</option>
+              </select>
+            </div>
+            <div className="filter-group">
+              <label className="filter-label" htmlFor="graph-team">Team</label>
+              <select id="graph-team" className="filter-input" value={filters.team}
+                onChange={e => handleFilter('team', e.target.value)}>
+                <option value="all">All Teams</option>
+                <option value="Support">Support</option>
+                <option value="Network">Network</option>
+                <option value="Frontend">Frontend</option>
+                <option value="Backend">Backend</option>
+                <option value="DevOps">DevOps</option>
+                <option value="Data">Data</option>
+              </select>
+            </div>
+            <button className="filter-reset" onClick={handleReset} aria-label="Reset all filters">
+              <span className="material-symbols-outlined" style={{ fontSize: 16 }} aria-hidden="true">refresh</span>
+              Reset
+            </button>
+          </div>
+
         </div>
 
         <div className="charts-grid">
