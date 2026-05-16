@@ -102,6 +102,7 @@ function Chatbot() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalData, setModalData] = useState([])
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
 
     async function saveToWorkspace(msg) {
     if (!userId) return
@@ -482,6 +483,31 @@ async function handleUpload() {
     }
   };
 
+function handleDragOver(e) {
+  e.preventDefault()
+  setIsDragging(true)
+}
+
+function handleDragLeave(e) {
+  e.preventDefault()
+  if (!e.currentTarget.contains(e.relatedTarget)) {
+    setIsDragging(false)
+  } 
+}
+
+function handleDrop(e) {
+  e.preventDefault()
+  setIsDragging(false)
+  const file = e.dataTransfer.files[0]
+  if (!file) return
+  const ext = file.name.toLowerCase().split('.').pop()
+  if (!['xlsx', 'xls', 'csv', 'pdf', 'docx'].includes(ext)) {
+    alert(`Unsupported file type: .${ext}`)
+    return
+  }
+  setAttachedFile(file)
+}
+
   return (
     <div className="bg-[#0f0f1e] text-white font-body h-screen flex flex-col overflow-hidden">
 
@@ -490,8 +516,12 @@ async function handleUpload() {
       <main className="flex flex-1 overflow-hidden">
 
         {/* Chat Section */}
-        <section className="flex-grow flex flex-col px-4 md:px-12 py-8 max-w-5xl mx-auto w-full overflow-hidden">
-
+        <section
+          className="flex-grow flex flex-col px-4 md:px-12 py-8 max-w-5xl mx-auto w-full overflow-hidden"
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
           {/* Chat Header */}
           <div className="mb-6 flex items-center justify-between flex-shrink-0">
             <div>
@@ -665,7 +695,13 @@ async function handleUpload() {
 
           {/* Input Area */}
           <div className="flex-shrink-0 pt-4">
-            <div className="bg-[#1a1a35] backdrop-blur-md border border-white/10 p-1.5 rounded-2xl shadow-[0_-20px_50px_rgba(0,0,0,0.3)] max-w-2xl mx-auto">
+            <div
+              className={`bg-[#1a1a35] backdrop-blur-md border p-1.5 rounded-2xl shadow-[0_-20px_50px_rgba(0,0,0,0.3)] max-w-2xl mx-auto transition-colors ${
+                isDragging
+                  ? 'border-[#4fc093] bg-[#1a1a35]/80'
+                  : 'border-white/10'
+              }`}
+            >
               <div className="flex items-center gap-2">
                 <input
                   type="file"
