@@ -102,7 +102,10 @@ Rules:
   The database found 23 tickets matching the related criteria (team, priority, time window)."
 - Do NOT merge these two things as if they're the same.
 - Respond in clear, professional natural language. No SQL, no technical details.
-- Offer a concrete next step (export, cross-check, filter further).
+- Keep answers as short as possible. Only elaborate if the question genuinely requires it.
+- Use bullet points when listing tickets, teams, or any enumerable data.
+- Never write a wall of text. Add a line break between separate thoughts.
+- If suggesting a next step, keep it to one short sentence maximum.
 """
 
 PROMPT_MAP = {
