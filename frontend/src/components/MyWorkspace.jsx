@@ -5,6 +5,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, CartesianGrid
 } from 'recharts'
+import * as XLSX from 'xlsx'
 
 const CHART_COLORS = ['#A1CEBC', '#7b6cf6', '#e09a3a', '#e05c5c', '#4a9edd']
 
@@ -64,13 +65,101 @@ function renderChart(chartSpec, onTicketClick) {
   )
 }
 
+function DrillDownPanel({ drillDown, onClose, onExportCSV, onExportExcel }) {
+  if (!drillDown) return null
+
+  const priorityStyle = (p) => {
+    const map = {
+      Critical: { bg: 'rgba(224,92,92,0.2)',   color: '#e05c5c' },
+      High:     { bg: 'rgba(224,154,58,0.2)',  color: '#e09a3a' },
+      Medium:   { bg: 'rgba(224,212,58,0.2)',  color: '#e0d43a' },
+      Low:      { bg: 'rgba(79,192,147,0.2)',  color: '#4fc093' },
+    }
+    return map[p] || { bg: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)' }
+  }
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 40, backdropFilter: 'blur(2px)' }} />
+      <div style={{ position: 'fixed', right: 0, top: 0, height: '100%', width: 'min(580px, 100vw)', background: '#13132a', borderLeft: '1px solid rgba(255,255,255,0.08)', zIndex: 50, overflowY: 'auto', display: 'flex', flexDirection: 'column', boxShadow: '-12px 0 48px rgba(0,0,0,0.5)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '24px', borderBottom: '1px solid rgba(255,255,255,0.08)', position: 'sticky', top: 0, background: '#13132a', zIndex: 1 }}>
+          <div>
+            <p style={{ fontSize: '0.625rem', textTransform: 'uppercase', letterSpacing: '0.12em', color: '#A1CEBC', margin: 0 }}>Tickets in Selection</p>
+            <h2 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'white', margin: '4px 0 0 0' }}>{drillDown.label}</h2>
+            {!drillDown.loading && (
+              <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', marginTop: 4, marginBottom: 0 }}>
+                {drillDown.tickets.length} ticket{drillDown.tickets.length !== 1 ? 's' : ''}
+              </p>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {!drillDown.loading && !drillDown.error && drillDown.tickets.length > 0 && (
+              <>
+                <button onClick={onExportCSV} style={{ background: '#4fc093', color: '#0f0f1e', border: 'none', borderRadius: 8, padding: '8px 14px', fontSize: '0.6875rem', fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 15 }}>download</span>CSV
+                </button>
+                <button onClick={onExportExcel} style={{ background: '#4a9edd', color: '#0f0f1e', border: 'none', borderRadius: 8, padding: '8px 14px', fontSize: '0.6875rem', fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 15 }}>table_view</span>Excel
+                </button>
+              </>
+            )}
+            <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', cursor: 'pointer', padding: 4, display: 'flex' }}>
+              <span className="material-symbols-outlined">close</span>
+            </button>
+          </div>
+        </div>
+        <div style={{ flex: 1, overflowX: 'auto', overflowY: 'auto' }}>
+          {drillDown.loading && <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.35)', padding: 48 }}>Loading tickets...</div>}
+          {drillDown.error && <div style={{ textAlign: 'center', color: '#e05c5c', padding: 48 }}>Failed to load tickets.</div>}
+          {!drillDown.loading && !drillDown.error && drillDown.tickets.length === 0 && <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.35)', padding: 48 }}>No tickets match this selection.</div>}
+          {!drillDown.loading && !drillDown.error && drillDown.tickets.length > 0 && (
+            <div style={{ minWidth: '500px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem' }}>
+                <thead>
+                  <tr style={{ background: '#0c0c1f', borderBottom: '1px solid rgba(255,255,255,0.08)', position: 'sticky', top: 0 }}>
+                    {['Ticket', 'Priority', 'Status', 'Assignee', 'Team', 'Service', 'Submitted'].map(h => (
+                      <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: '0.5875rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#A1CEBC', fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {drillDown.tickets.map(t => {
+                    const ps = priorityStyle(t.priority || t.priority_name)
+                    return (
+                      <tr key={t.ticket_id || t.ticket_number} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                        <td style={{ padding: '10px 14px', color: 'white', fontWeight: 600 }}>{t.ticket_number}</td>
+                        <td style={{ padding: '10px 14px' }}>
+                          <span style={{ padding: '2px 8px', borderRadius: 4, fontSize: '0.6875rem', fontWeight: 700, background: ps.bg, color: ps.color }}>
+                            {t.priority || t.priority_name || '—'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '10px 14px', color: 'rgba(255,255,255,0.65)' }}>{t.status}</td>
+                        <td style={{ padding: '10px 14px', color: 'rgba(255,255,255,0.65)' }}>{t.assigned_person || '—'}</td>
+                        <td style={{ padding: '10px 14px', color: 'rgba(255,255,255,0.65)' }}>{t.team || '—'}</td>
+                        <td style={{ padding: '10px 14px', color: 'rgba(255,255,255,0.65)' }}>{t.service || '—'}</td>
+                        <td style={{ padding: '10px 14px', color: 'rgba(255,255,255,0.35)', fontFamily: 'monospace', fontSize: '0.725rem', whiteSpace: 'nowrap' }}>
+                          {t.submit_datetime ? new Date(t.submit_datetime).toLocaleDateString() : '—'}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  )
+}
 
 function MyWorkspace() {
   const navigate = useNavigate()
   const [items, setItems] = useState([])
   const [filter, setFilter] = useState('all') // all | chart | text | excel
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [modalData, setModalData] = useState([])
+  const [drillDown, setDrillDown] = useState(null)
 
   const chartRefs = useRef({})
 
@@ -178,6 +267,50 @@ function MyWorkspace() {
   const typeIcon = { chart: 'bar_chart', text: 'notes', excel: 'table_chart' }
   const typeLabel = { chart: 'Chart', text: 'Insight', excel: 'Export' }
   const typeColor = { chart: '#7b6cf6', text: '#A1CEBC', excel: '#4fc093' }
+
+  function exportDrillDownCSV() {
+  if (!drillDown?.tickets?.length) return
+  const cols = [
+    ['ticket_number','Ticket Number'],['status','Status'],['priority','Priority'],
+    ['priority_name','Priority'],['team','Team'],['assigned_person','Assigned Person'],
+    ['service','Service'],['company','Company'],['submit_datetime','Submit Date'],
+    ['resolved_datetime','Resolved Date'],
+  ]
+  const dateKeys = ['submit_datetime','resolved_datetime']
+  const header = cols.map(([,label]) => `"${label}"`).join(',')
+  const rows = drillDown.tickets.map(t =>
+    cols.map(([key]) => {
+      const v = t[key]
+      if (!v) return '""'
+      const val = dateKeys.includes(key) ? new Date(v).toLocaleString() : v
+      return `"${String(val).replace(/"/g,'""')}"`
+    }).join(',')
+  )
+  const blob = new Blob([[header,...rows].join('\n')], { type: 'text/csv;charset=utf-8;' })
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = `tickets_${drillDown.label.replace(/[^a-z0-9]/gi,'_').toLowerCase()}.csv`
+  a.click()
+}
+
+function exportDrillDownExcel() {
+  if (!drillDown?.tickets?.length) return
+  const rows = drillDown.tickets.map(t => ({
+    'Ticket Number': t.ticket_number,
+    'Status': t.status,
+    'Priority': t.priority || t.priority_name,
+    'Team': t.team,
+    'Assigned Person': t.assigned_person,
+    'Service': t.service,
+    'Company': t.company,
+    'Submit Date': t.submit_datetime ? new Date(t.submit_datetime).toLocaleString() : '',
+    'Resolved Date': t.resolved_datetime ? new Date(t.resolved_datetime).toLocaleString() : '',
+  }))
+  const ws = XLSX.utils.json_to_sheet(rows)
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, ws, 'Tickets')
+  XLSX.writeFile(wb, `tickets_${drillDown.label.replace(/[^a-z0-9]/gi,'_').toLowerCase()}.xlsx`)
+}
 
   return (
     <div className="bg-[#0f0f1e] text-white min-h-screen flex flex-col">
@@ -294,8 +427,7 @@ function MyWorkspace() {
                   <div className="mt-1">
                     <div ref={el => { if (el) chartRefs.current[item.id] = el }}>
                       {renderChart(item.chart_spec, item.ticket_records?.length ? () => {
-                        setModalData(item.ticket_records)
-                        setIsModalOpen(true)
+                        setDrillDown({ label: item.chart_spec?.title || 'Chart', tickets: item.ticket_records, loading: false, error: false })
                       } : null)}
                     </div>
                   </div>
@@ -354,41 +486,12 @@ function MyWorkspace() {
           <p className="text-white/30 text-sm text-center py-16">No {filter} items saved yet.</p>
         )}
 
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-[#13132a] border border-white/10 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b border-white/5">
-              <h3 className="text-xl font-headline font-bold text-white tracking-tight">Ticket Overview</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-white/40 hover:text-white transition-colors">
-                <span className="material-symbols-outlined">close</span>
-              </button>
-            </div>
-            <div className="p-6 overflow-auto">
-              <table className="w-full text-left border-collapse whitespace-nowrap">
-                <thead className="sticky top-0 bg-[#13132a]">
-                  <tr className="text-[0.6875rem] uppercase tracking-widest text-[#A1CEBC] font-label border-b border-white/10">
-                    <th className="pb-3 font-semibold">Ticket #</th>
-                    <th className="pb-3 font-semibold">Status</th>
-                    <th className="pb-3 font-semibold">Priority</th>
-                    <th className="pb-3 font-semibold">Assignee</th>
-                  </tr>
-                </thead>
-                <tbody className="text-sm text-white/80">
-                  {modalData.map((ticket, i) => (
-                    <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                      <td className="py-3 pr-4 text-white font-mono">{ticket.ticket_number || ticket.ticket_id}</td>
-                      <td className="py-3 pr-4">{ticket.status}</td>
-                      <td className="py-3 pr-4">{ticket.priority || ticket.priority_name || 'N/A'}</td>
-                      <td className="py-3 pr-4">{ticket.assigned_person || 'Unassigned'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
+      <DrillDownPanel
+        drillDown={drillDown}
+        onClose={() => setDrillDown(null)}
+        onExportCSV={exportDrillDownCSV}
+        onExportExcel={exportDrillDownExcel}
+      />
       </main>
     </div>
   )
