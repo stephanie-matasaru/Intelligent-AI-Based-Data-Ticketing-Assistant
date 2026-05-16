@@ -46,8 +46,6 @@ function Navbar() {
         </div>
       </div>
       <div className="nav-right">
-        <span className="material-symbols-outlined nav-icon" aria-hidden="true">notifications</span>
-        <span className="material-symbols-outlined nav-icon" aria-hidden="true">settings</span>
         <div className="nav-avatar-wrapper" ref={dropdownRef}>
           <div
             className="nav-avatar"
