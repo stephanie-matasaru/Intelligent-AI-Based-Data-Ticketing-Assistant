@@ -11,3 +11,7 @@ CREATE TABLE workspace_items (
     saved_at DATETIME2 DEFAULT GETDATE()
 )
 GO
+
+ALTER TABLE workspace_items
+ADD ticket_records NVARCHAR(MAX) NULL;
+GO

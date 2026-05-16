@@ -12,6 +12,7 @@ class WorkspaceItem(BaseModel):
     label: str
     chart_spec: Optional[dict] = None
     excel_spec: Optional[dict] = None
+    ticket_records: Optional[list] = None
 
 @router.get("/{user_id}")
 def get_workspace_items(user_id: int):
@@ -19,7 +20,7 @@ def get_workspace_items(user_id: int):
         conn = get_connection()
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT id, type, label, chart_spec, excel_spec, saved_at
+            SELECT id, type, label, chart_spec, excel_spec, ticket_records, saved_at
             FROM workspace_items
             WHERE user_id = ?
             ORDER BY saved_at DESC
@@ -33,7 +34,8 @@ def get_workspace_items(user_id: int):
                 "label": row[2],
                 "chart_spec": json.loads(row[3]) if row[3] else None,
                 "excel_spec": json.loads(row[4]) if row[4] else None,
-                "savedAt": str(row[5])
+                "ticket_records": json.loads(row[5]) if row[5] else None,
+                "savedAt": str(row[6])
             }
             for row in rows
         ]
@@ -46,14 +48,15 @@ def save_workspace_item(item: WorkspaceItem):
         conn = get_connection()
         cursor = conn.cursor()
         cursor.execute("""
-            INSERT INTO workspace_items (user_id, type, label, chart_spec, excel_spec)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO workspace_items (user_id, type, label, chart_spec, excel_spec, ticket_records)
+            VALUES (?, ?, ?, ?, ?, ?)
         """, (
             item.user_id,
             item.type,
             item.label,
             json.dumps(item.chart_spec) if item.chart_spec else None,
             json.dumps(item.excel_spec) if item.excel_spec else None,
+            json.dumps(item.ticket_records) if item.ticket_records else None,
         ))
         conn.commit()
         cursor.execute("SELECT @@IDENTITY")
