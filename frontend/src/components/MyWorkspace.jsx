@@ -7,8 +7,6 @@ import {
 } from 'recharts'
 
 const CHART_COLORS = ['#A1CEBC', '#7b6cf6', '#e09a3a', '#e05c5c', '#4a9edd']
-const [isModalOpen, setIsModalOpen] = useState(false)
-const [modalData, setModalData] = useState([])
 
 function renderChart(chartSpec, onTicketClick) {
   if (!chartSpec || chartSpec.error) return null
@@ -76,6 +74,8 @@ function MyWorkspace() {
   const navigate = useNavigate()
   const [items, setItems] = useState([])
   const [filter, setFilter] = useState('all') // all | chart | text | excel
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [modalData, setModalData] = useState([])
 
   const chartRefs = useRef({})
 
