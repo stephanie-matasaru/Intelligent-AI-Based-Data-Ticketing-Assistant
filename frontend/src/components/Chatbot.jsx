@@ -585,7 +585,7 @@ function handleDrop(e) {
                   <div className="max-w-[85%]">
                    <div className="bg-gradient-to-br from-[#0a0a1a] to-[#1a1a3a] backdrop-blur-xl p-6 rounded-2xl rounded-tl-none shadow-2xl">
 
-                      <p className="text-white/80 leading-relaxed">
+                      <p className="text-white/80 leading-relaxed whitespace-pre-wrap">
                         {msg.text ? msg.text.replace("[ACTION: DOWNLOAD_EXCEL]", "").trim() : ""}
                       </p>
 
