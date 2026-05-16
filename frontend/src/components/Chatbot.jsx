@@ -746,8 +746,21 @@ function exportDrillDownExcel() {
                       )}
                       {msg.chart_spec && (
                         <div ref={el => { if (el) chartRefs.current[msg.id] = el }}>
-                          {renderChart(msg.chart_spec, msg.ticket_records?.length ? () => {
-                            setDrillDown({ label: msg.chart_spec?.title || 'Chart', tickets: msg.ticket_records, loading: false, error: false })
+                          {renderChart(msg.chart_spec, msg.ticket_records?.length ? (d) => {
+                            const xKey = msg.chart_spec?.x_key
+                            const clicked = d?.[xKey]
+                            const filtered = clicked
+                              ? msg.ticket_records.filter(t =>
+                                  String(t[xKey] || t.priority_name || t.status || t.team || t.service || '')
+                                    .toLowerCase() === String(clicked).toLowerCase()
+                                )
+                              : msg.ticket_records
+                            setDrillDown({
+                              label: clicked ? `${msg.chart_spec?.title || 'Chart'}: ${clicked}` : msg.chart_spec?.title || 'Chart',
+                              tickets: filtered.length ? filtered : msg.ticket_records,
+                              loading: false,
+                              error: false
+                            })
                           } : null)}
                         </div>
                       )}
