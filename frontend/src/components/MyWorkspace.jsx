@@ -163,13 +163,13 @@ function MyWorkspace() {
       <main className="flex-1 px-8 md:px-16 py-10 max-w-7xl mx-auto w-full">
 
         {/* Header */}
-        <div className="mb-8 flex items-end justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
             <p className="text-[0.6875rem] uppercase tracking-widest text-[#A1CEBC] mb-1">Personal Dashboard</p>
             <h1 className="text-3xl font-bold tracking-tight text-white">My Workspace</h1>
             <p className="text-white/40 text-sm mt-1">{items.length} saved item{items.length !== 1 ? 's' : ''}</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex felx-wrap items-center gap-3">
             <button
               onClick={() => navigate('/chat')}
               className="flex items-center gap-2 bg-gradient-to-br from-[#000000] to-[#3E2162] px-4 py-2 rounded-xl text-white/70 hover:text-white text-xs uppercase tracking-widest border border-white/10 transition-all"

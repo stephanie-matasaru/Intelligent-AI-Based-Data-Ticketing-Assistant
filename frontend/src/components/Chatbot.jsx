@@ -101,6 +101,7 @@ function Chatbot() {
   const userId = user?.user_id
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalData, setModalData] = useState([])
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
     async function saveToWorkspace(msg) {
     if (!userId) return
@@ -494,9 +495,19 @@ async function handleUpload() {
           {/* Chat Header */}
           <div className="mb-6 flex items-center justify-between flex-shrink-0">
             <div>
-              <h1 className="font-headline text-3xl font-bold tracking-tight text-white mb-1">
+             <div className="flex items-center gap-3 mb-1">
+              <h1 className="font-headline text-3xl font-bold tracking-tight text-white">
                 Active Ticket Session
               </h1>
+              <button
+                className="lg:hidden flex items-center justify-center w-8 h-8 rounded-lg bg-white/5 border border-white/10 text-white/40 hover:text-white transition-all"
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                aria-label="Toggle sidebar"
+              >
+                <span className="material-symbols-outlined text-[18px]">menu</span>
+              </button>
+            </div>
+              
               <div className="flex items-center gap-2">
                 <div className="ai-pulse"></div>
                 <span className="font-label text-[0.6875rem] uppercase tracking-widest text-[#A1CEBC]">
@@ -710,10 +721,29 @@ async function handleUpload() {
               </div>
             </div>
           </div>
-        </section>
-
+        </section>   
         {/* Sidebar */}
-        <aside className="w-72 bg-[#13132a] flex flex-col py-8 border-l border-white/5 shadow-[-20px_0px_40px_rgba(0,0,0,0.4)] flex-shrink-0 overflow-y-auto">
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 z-20 lg:hidden bg-black/50"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+          <aside className={`
+            fixed fixed lg:relative right-0 top-[5rem] lg:top-0 h-[calc(100vh-5rem)] lg:h-full z-30
+            w-72 bg-[#13132a] flex flex-col py-8
+            border-l border-white/5 shadow-[-20px_0px_40px_rgba(0,0,0,0.4)]
+            flex-shrink-0 overflow-y-auto
+            transition-transform duration-300
+            ${sidebarOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
+          `}>     
+           <button
+            className="lg:hidden self-end mx-4 mb-2 mt-2 text-white/30 hover:text-white transition-colors flex items-center gap-2 text-xs uppercase tracking-widest"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <span className="material-symbols-outlined text-[18px]">close</span>
+            Close
+          </button>     
           <div className="px-8 mb-8">
             <div className="flex items-center gap-3 mb-2">
               <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#000000] to-[#28074C] flex items-center justify-center">
@@ -753,7 +783,7 @@ async function handleUpload() {
 
             {/* Chat History */}
             <div
-              onClick={fetchSessions}
+              onClick={() => { if (showHistory) { setShowHistory(false) } else { fetchSessions() } }}
               className={`mx-4 my-1 p-4 flex items-center gap-3 rounded-xl cursor-pointer transition-all duration-200 ${
                 showHistory
                   ? 'bg-gradient-to-br from-[#000000] to-[#6B4D90] text-white shadow-lg shadow-blue-900/20'

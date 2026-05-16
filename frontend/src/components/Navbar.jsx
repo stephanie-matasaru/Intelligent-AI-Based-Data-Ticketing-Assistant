@@ -6,6 +6,7 @@ function Navbar() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
   const dropdownRef = useRef(null)
 
    useEffect(() => {
@@ -17,6 +18,7 @@ function Navbar() {
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
+  useEffect(() => { setMobileOpen(false) }, [pathname])
 
   async function handleLogout() {
     try {
@@ -31,6 +33,7 @@ function Navbar() {
   }
 
   return (
+    <>
     <nav className="dash-nav" role="navigation" aria-label="Main navigation">
       <div className="nav-left">
         <span className="nav-logo">AI Assistant</span>
@@ -84,8 +87,26 @@ function Navbar() {
             </div>
           )}
         </div>
+        <button
+          className="nav-hamburger"
+          aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={mobileOpen}
+          onClick={() => setMobileOpen(!mobileOpen)}
+        >
+          <span className="material-symbols-outlined">
+            {mobileOpen ? 'close' : 'menu'}
+          </span>
+        </button>
       </div>
     </nav>
+    <div className={`nav-mobile-menu ${mobileOpen ? 'open' : ''}`}>
+      <Link to="/dashboard" className={`nav-mobile-link ${pathname === '/dashboard' ? 'active' : ''}`}>Dashboard</Link>
+      <Link to="/tickets"   className={`nav-mobile-link ${pathname === '/tickets'   ? 'active' : ''}`}>Tickets</Link>
+      <Link to="/graphs"    className={`nav-mobile-link ${pathname === '/graphs'    ? 'active' : ''}`}>Archive</Link>
+      <Link to="/chat"      className={`nav-mobile-link ${pathname === '/chat'      ? 'active' : ''}`}>Chatbot</Link>
+      <Link to="/workspace" className={`nav-mobile-link ${pathname === '/workspace' ? 'active' : ''}`}>Workspace</Link>
+    </div>
+    </>
   )
 }
 

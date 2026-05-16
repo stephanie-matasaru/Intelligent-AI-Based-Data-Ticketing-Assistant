@@ -247,15 +247,18 @@
 ::-webkit-scrollbar-thumb { background: #7987d1; border-radius: 10px; }
 
 /* Responsive */
-@media (max-width: 900px) {
-  .db-cards-grid { grid-template-columns: repeat(2, 1fr); }
-  .db-hero-image { width: 220px; height: 130px; }
-  .db-app-title { font-size: 1.6rem; }
-}
-
 @media (max-width: 600px) {
   .db-cards-grid { grid-template-columns: 1fr; }
   .db-header { flex-direction: column; }
   .db-hero-image { width: 100%; height: 160px; }
   .db-main { padding: 1.5rem 1rem 3rem; }
+}
+
+@media (max-width: 768px) {
+  .db-root {
+    background-attachment: scroll;
+  }
+  .db-main {
+    padding: 1.5rem 1rem;
+  }
 }

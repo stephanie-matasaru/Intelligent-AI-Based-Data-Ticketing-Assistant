@@ -29,6 +29,8 @@ function Tickets() {
   const [totalTickets, setTotalTickets] = useState(0)
 
   const [currentTime, setCurrentTime] = useState(new Date());
+  
+  const [filtersOpen, setFiltersOpen] = useState(false)
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
@@ -148,7 +150,7 @@ function Tickets() {
 
       <main className="flex flex-1 overflow-hidden">
         
-        <section className="flex-grow flex flex-col p-6 w-full overflow-hidden">
+        <section className="flex-grow flex flex-col p-6 w-full overflow-auto">
           
           <div className="mb-6 flex-shrink-0">
             <h1 className="font-headline text-3xl font-bold tracking-tight text-white">
@@ -157,9 +159,24 @@ function Tickets() {
           </div>
 
           {/* top filter bar */}
-          <div className="bg-[#13132a] border border-white/5 rounded-xl p-4 mb-6 flex flex-wrap gap-4 items-end flex-shrink-0 shadow-lg"
-            role="search"
-            aria-label="Filter tickets">
+          <div className="bg-[#13132a] border border-white/5 rounded-xl mb-6 flex-shrink-0 shadow-lg">
+
+            <button
+              className="w-full flex items-center justify-between px-4 py-3 text-white/60 text-xs uppercase tracking-widest lg:hidden"
+              onClick={() => setFiltersOpen(!filtersOpen)}
+            >
+              <span className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[16px]">tune</span>
+                Filters
+              </span>
+              <span className="material-symbols-outlined text-[16px]">
+                {filtersOpen ? 'expand_less' : 'expand_more'}
+              </span>
+            </button>
+
+            <div className={`p-4 flex flex-wrap gap-4 items-end lg:flex ${filtersOpen ? 'flex' : 'hidden'}`}
+              role="search"
+              aria-label="Filter tickets">
             
             <div className="flex flex-col gap-1">
               <div className="bg-[#0a0a1a] flex items-center px-3 py-2.5 rounded-lg border border-white/10 w-48 focus-within:border-[#A1CEBC] transition-colors">
@@ -302,9 +319,11 @@ function Tickets() {
                  Export
               </button>
           </div>
+        </div>
 
           {/* data table */}
           <div className="flex-1 overflow-auto bg-[#13132a] rounded-xl border border-white/5 shadow-xl">
+            <div style={{ overflowX: 'auto' }}>
             <table className="w-full text-left border-collapse whitespace-nowrap" role="grid" aria-label="Tickets table" aria-rowcount={totalTickets}>
               <thead className="sticky top-0 z-10 bg-[#000000] border-b border-white/10 shadow-sm">
                 <tr className="text-[0.6875rem] uppercase tracking-widest text-[#A1CEBC] font-label">
@@ -352,6 +371,7 @@ function Tickets() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
 
           {/* footer */}
@@ -430,7 +450,7 @@ function Tickets() {
       {selectedTicket && (
         <>
           <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setSelectedTicket(null)} />
-          <div className="fixed right-0 top-0 h-full w-[480px] bg-[#13132a] border-l border-white/10 z-50 overflow-y-auto shadow-2xl flex flex-col">
+          <div className="fixed right-0 top-0 h-full w-full sm:w-[480px] bg-[#13132a] border-l border-white/10 z-50 overflow-y-auto shadow-2xl flex flex-col">
             
             {/* Header */}
             <div className="flex items-start justify-between p-6 border-b border-white/10">

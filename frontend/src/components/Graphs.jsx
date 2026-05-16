@@ -112,7 +112,7 @@ function DrillDownPanel({ drillDown, onClose, onExportCSV, onExportExcel }) {
       {/* panel */}
       <div style={{
         position: 'fixed', right: 0, top: 0,
-        height: '100%', width: '580px',
+        height: '100%', width: 'min(580px, 100vw)',
         background: '#13132a',
         borderLeft: '1px solid rgba(255,255,255,0.08)',
         zIndex: 50,
@@ -166,7 +166,7 @@ function DrillDownPanel({ drillDown, onClose, onExportCSV, onExportExcel }) {
         </div>
  
         {/* body */}
-        <div style={{ flex: 1, overflow: 'auto' }}>
+        <div style={{ flex: 1, overflowX: 'auto', overflowY: 'auto' }}>
           {drillDown.loading && (
             <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.35)', padding: 48, fontSize: '0.875rem' }}>
               Loading tickets...
@@ -186,6 +186,7 @@ function DrillDownPanel({ drillDown, onClose, onExportCSV, onExportExcel }) {
           )}
  
           {!drillDown.loading && !drillDown.error && drillDown.tickets.length > 0 && (
+            <div style={{ minWidth: '500px' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem' }}>
               <thead>
                 <tr style={{ background: '#0c0c1f', borderBottom: '1px solid rgba(255,255,255,0.08)', position: 'sticky', top: 0 }}>
@@ -235,6 +236,7 @@ function DrillDownPanel({ drillDown, onClose, onExportCSV, onExportExcel }) {
                 })}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       </div>

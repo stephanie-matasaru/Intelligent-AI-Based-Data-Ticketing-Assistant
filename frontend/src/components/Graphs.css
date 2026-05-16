@@ -162,3 +162,15 @@
   border-color: #A1CEBC;
   color: #A1CEBC;
 }
+
+@media (max-width: 1024px) {  
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+  .chart-card--wide {
+    grid-column: span 1;
+  }
+  .graphs-main {
+    padding: 1rem;
+  }
+}
