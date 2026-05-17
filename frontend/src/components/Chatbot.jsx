@@ -195,6 +195,7 @@ function Chatbot() {
   const [drillDown, setDrillDown] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(null)
 
     async function saveToWorkspace(msg) {
     if (!userId) return
@@ -335,20 +336,25 @@ async function fetchMessages(groupId) {
 }
 
 async function handleDeleteSession(groupIdToDelete) {
-  if (!confirm("Delete this chat?")) return
-  try {
-    await fetch(`http://localhost:8000/api/chatbot/session/${groupIdToDelete}`, {
-      method: "DELETE"
-    })
-    setSessions(prev => prev.filter(s => s.group_id !== groupIdToDelete))
-    if (selectedSession === groupIdToDelete) {
-      setSelectedSession(null)
-      setSessionMessages([])
-    }
-  } catch (err) {
-    console.error("Failed to delete session:", err)
+    setConfirmDelete({ type: 'session', groupId: groupIdToDelete })
   }
-}
+
+async function confirmDeleteAction() {
+    if (!confirmDelete) return
+    try {
+      await fetch(`http://localhost:8000/api/chatbot/session/${confirmDelete.groupId}`, {
+        method: 'DELETE'
+      })
+      setSessions(prev => prev.filter(s => s.group_id !== confirmDelete.groupId))
+      if (selectedSession === confirmDelete.groupId) {
+        setSelectedSession(null)
+        setSessionMessages([])
+      }
+    } catch (err) {
+      console.error('Failed to delete session:', err)
+    }
+    setConfirmDelete(null)
+  }
 
   function handleDownload(sqlScript, filename) {
     const blob = new Blob([sqlScript], { type: 'text/plain' })
@@ -1056,6 +1062,46 @@ function exportDrillDownExcel() {
           onExportCSV={exportDrillDownCSV}
           onExportExcel={exportDrillDownExcel}
         />
+        {confirmDelete && (
+        <>
+          <div
+            onClick={() => setConfirmDelete(null)}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 60, backdropFilter: 'blur(2px)' }}
+          />
+          <div style={{
+            position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
+            background: '#13132a', border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: 16, padding: '28px 32px', zIndex: 70, width: 'min(400px, 90vw)',
+            boxShadow: '0 24px 64px rgba(0,0,0,0.6)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+              <div style={{ background: 'rgba(224,92,92,0.15)', borderRadius: 10, padding: 8, display: 'flex' }}>
+                <span className="material-symbols-outlined" style={{ color: '#e05c5c', fontSize: 20, fontVariationSettings: "'FILL' 1" }}>delete</span>
+              </div>
+              <div>
+                <p style={{ margin: 0, fontWeight: 700, color: 'white', fontSize: '0.9375rem' }}>Delete chat?</p>
+                <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)' }}>
+                  This conversation will be permanently deleted.
+                </p>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setConfirmDelete(null)}
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)', borderRadius: 8, padding: '8px 18px', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 600 }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteAction}
+                style={{ background: 'rgba(224,92,92,0.15)', border: '1px solid rgba(224,92,92,0.3)', color: '#e05c5c', borderRadius: 8, padding: '8px 18px', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 700 }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </>
+      )}
       </main>
     </div>
   )
