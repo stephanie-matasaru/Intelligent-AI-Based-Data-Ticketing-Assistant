@@ -106,6 +106,7 @@ Rules:
 - Use bullet points when listing tickets, teams, or any enumerable data.
 - Never write a wall of text. Add a line break between separate thoughts.
 - If suggesting a next step, keep it to one short sentence maximum.
+- NEVER mention a total count of matching tickets unless you are listing all of them. If you list only some, do not state a total number — it will be misleading.
 """
 
 PROMPT_MAP = {
