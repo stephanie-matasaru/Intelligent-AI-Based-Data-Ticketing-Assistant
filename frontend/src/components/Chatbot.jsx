@@ -769,8 +769,7 @@ function exportDrillDownExcel() {
                           {msg.ticket_records && msg.ticket_records.length > 0 && (
                             <button
                               onClick={() => {
-                                setModalData(msg.ticket_records)
-                                setIsModalOpen(true)
+                                setDrillDown({ label: 'All Tickets', tickets: msg.ticket_records, loading: false, error: false })
                               }}
                               className="flex items-center gap-1 text-[0.625rem] uppercase tracking-widest transition-colors text-white/50 hover:text-[#A1CEBC]"
                             >
