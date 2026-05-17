@@ -128,7 +128,7 @@ def generate_dual_sql(question: str, history: list):
     Format:
     {
       "primary_query": "The SQL query that perfectly answers the user's request (e.g., COUNT, SUM, etc).",
-      "raw_data_query": "SELECT TOP 100 tickets.*, priorities.priority_name FROM tickets LEFT JOIN priorities ON tickets.priority_id = priorities.priority_id WHERE [insert exact same WHERE clause from primary_query here]"
+      "raw_data_query": "A SELECT query returning individual ticket rows (NEVER a COUNT or aggregate) using the EXACT same WHERE clause as primary_query. Must always return individual rows, even if primary_query is a COUNT or SUM. Format: SELECT TOP 100 tickets.ticket_number, tickets.status, tickets.company, tickets.team, tickets.service, tickets.assigned_person, tickets.submit_datetime, tickets.resolved_datetime, tickets.description, priorities.priority_name FROM tickets LEFT JOIN priorities ON tickets.priority_id = priorities.priority_id WHERE [same WHERE clause]"
     }
     """
 

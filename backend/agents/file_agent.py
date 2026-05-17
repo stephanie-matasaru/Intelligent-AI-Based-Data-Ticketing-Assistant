@@ -166,7 +166,7 @@ Parsed uploaded files:
             {"role": "system", "content": FILE_AGENT_PROMPT},
             {"role": "user", "content": user_content}
         ],
-        max_completion_tokens=2000
+        max_completion_tokens=4000
     )
 
     content = response.choices[0].message.content.strip()
