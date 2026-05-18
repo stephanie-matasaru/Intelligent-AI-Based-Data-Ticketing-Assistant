@@ -143,7 +143,7 @@ function Register({ onClose, onSwitchToLogin }) {
               <label>First Name</label>
               <input
                 type="text"
-                placeholder="Jane"
+                placeholder=""
                 value={firstName}
                 onChange={e => setFirstName(e.target.value)}
               />
@@ -152,7 +152,7 @@ function Register({ onClose, onSwitchToLogin }) {
               <label>Last Name</label>
               <input
                 type="text"
-                placeholder="Doe"
+                placeholder=""
                 value={lastName}
                 onChange={e => setLastName(e.target.value)}
               />
@@ -163,7 +163,7 @@ function Register({ onClose, onSwitchToLogin }) {
             <label>Email Address</label>
             <input
               type="email"
-              placeholder="jane@nokia.com"
+              placeholder="name@nokia.com"
               value={email}
               onChange={e => setEmail(e.target.value)}
             />

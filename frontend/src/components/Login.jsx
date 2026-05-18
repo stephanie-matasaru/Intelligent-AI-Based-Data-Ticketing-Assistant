@@ -105,6 +105,14 @@ function Login() {
         </div>
       </main>
 
+
+      {showRegister && (
+        <Register
+          onClose={() => setShowRegister(false)}
+          onSwitchToLogin={() => { setShowRegister(false); openModal() }}
+        />
+      )}
+
       {modalOpen && (
         <div
           className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-6"
@@ -113,7 +121,7 @@ function Login() {
           aria-modal="true"
           aria-labelledby="modal-title"
         >
-          <div className={`modal-card w-full max-w-sm bg-[#0f1117] border border-white/10 rounded-2xl p-8 shadow-2xl ${shake ? 'shake' : ''}`}>
+          <div className={`modal-card w-full max-w-sm bg-[#0f1117] border border-white/10 rounded-2xl p-8 shadow-2xl overflow-y-auto max-h-[90vh] ${shake ? 'shake' : ''}`}>
 
             <div className="flex items-center justify-between mb-8">
               <div>
@@ -171,6 +179,16 @@ function Login() {
                 {loading ? <span className="spinner" aria-hidden="true" /> : success ? 'Logged In' : 'Log In'}
               </button>
             </div>
+            
+            <p className="text-center text-white/30 text-xs mt-6">
+              Don't have an account?{' '}
+              <span
+                onClick={() => { closeModal(); setShowRegister(true) }}
+                className="text-ai-mint cursor-pointer hover:underline">
+                Register
+              </span>
+            </p>
+            
           </div>
         </div>
       )}
