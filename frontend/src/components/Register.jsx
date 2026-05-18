@@ -99,7 +99,7 @@ function Register({ onClose, onSwitchToLogin }) {
     }
   }, [])
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!firstName || !email || !username || !password) {
       alert('Please fill in all fields.')
       return
@@ -108,8 +108,27 @@ function Register({ onClose, onSwitchToLogin }) {
       alert('Passwords do not match.')
       return
     }
-    // TODO: connect to your backend register endpoint
-    console.log('Registering:', { firstName, lastName, email, username })
+
+    try {
+      const response = await fetch('http://localhost:8000/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(data.detail || 'Registration failed')
+        return
+      }
+
+      alert('Account created! You can now log in.')
+      onSwitchToLogin()
+
+    } catch (error) {
+      alert('Something went wrong. Please try again.')
+    }
   }
 
   function handleOverlayClick(e) {
