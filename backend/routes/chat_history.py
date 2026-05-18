@@ -39,7 +39,7 @@ def get_sessions(user_id: int):
         WHERE cm.user_id = ?
         GROUP BY cm.group_id
         ORDER BY started_at DESC
-    """, user_id)
+    """,(user_id))
     rows = cursor.fetchall()
     return [
         {
@@ -60,7 +60,7 @@ def get_messages(group_id: str):
         FROM chat_messages
         WHERE group_id = ?
         ORDER BY date_added ASC
-    """, group_id)
+    """, (group_id))
     rows = cursor.fetchall()
     conn.close()
     return [
