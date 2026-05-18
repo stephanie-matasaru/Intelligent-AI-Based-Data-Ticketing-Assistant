@@ -123,6 +123,9 @@ function Register({ onClose, onSwitchToLogin }) {
         return
       }
 
+      localStorage.removeItem('user')
+      sessionStorage.removeItem('chat_messages')
+      sessionStorage.removeItem('chat_group_id')
       alert('Account created! You can now log in.')
       onSwitchToLogin()
 
