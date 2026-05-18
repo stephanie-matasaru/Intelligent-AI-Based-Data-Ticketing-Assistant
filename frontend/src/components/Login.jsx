@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './Login.css'
+import Register from './Register'
 
 function Login() {
   const [modalOpen, setModalOpen]       = useState(false)
@@ -11,6 +12,7 @@ function Login() {
   const [loading, setLoading]           = useState(false)
   const [success, setSuccess]           = useState(false)
   const [shake, setShake]               = useState(false)
+  const [showRegister, setShowRegister] = useState(false) 
   const navigate = useNavigate()
 
   function openModal() {
