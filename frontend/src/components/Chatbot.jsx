@@ -241,8 +241,8 @@ function Chatbot() {
       return res.json()
     })
     .then(data => {
-      if (data?.user_id) {
-        localStorage.setItem('user', JSON.stringify(data))
+      if (data?.user) {
+        localStorage.setItem('user', JSON.stringify(data.user))
       }
     })
     .catch(() => navigate('/'))
@@ -290,6 +290,17 @@ function Chatbot() {
     setShowHistory(false)
     setSelectedSession(null)
 }
+
+  async function handleSignOut() {
+    await fetch('http://localhost:8000/api/auth/logout', {
+      method: 'POST',
+      credentials: 'include'
+    })
+    sessionStorage.removeItem('chat_messages')
+    sessionStorage.removeItem('chat_group_id')
+    localStorage.removeItem('user')
+    navigate('/')
+  }
 
   function buildHistory(messages) {
     return messages
@@ -1046,7 +1057,7 @@ function exportDrillDownExcel() {
             {/* Sign Out */}
             <div className="mt-4 pt-4 border-t border-white/5">
               <div
-                onClick={() => navigate('/')}
+                onClick={handleSignOut}
                 className="text-white/50 mx-4 my-1 p-4 flex items-center gap-3 hover:bg-white/5 hover:text-white rounded-xl transition-all cursor-pointer"
               >
                 <span className="material-symbols-outlined">logout</span>
