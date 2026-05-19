@@ -4,6 +4,7 @@ import './Settings.css'
 
 function Settings() {
   const navigate = useNavigate()
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
 
   // Change username state
   const [newUsername, setNewUsername]       = useState('')
@@ -107,6 +108,12 @@ function Settings() {
             <h1 className="settings-title">Settings</h1>
             <p className="settings-subtitle">Manage your account</p>
           </div>
+          {user?.username && (
+            <div className="settings-logged-in">
+              <span className="material-symbols-outlined">account_circle</span>
+              <span>Logged in as <strong>{user.username}</strong></span>
+            </div>
+          )}
         </div>
 
         {/* Change Username */}

@@ -216,6 +216,23 @@
   animation: spin 0.7s linear infinite;
 }
 
+.settings-logged-in {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  font-size: 0.85rem;
+  color: var(--text-muted, #a0aec0);
+}
+
+.settings-logged-in .material-symbols-outlined {
+  font-size: 1.1rem;
+}
+
+.settings-logged-in strong {
+  color: var(--text-primary, #e2e8f0);
+}
+
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
