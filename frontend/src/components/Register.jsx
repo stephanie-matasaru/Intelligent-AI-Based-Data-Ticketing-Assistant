@@ -4,7 +4,6 @@ import './Register.css'
 function Register({ onClose, onSwitchToLogin }) {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
-  const [email, setEmail] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
@@ -100,7 +99,7 @@ function Register({ onClose, onSwitchToLogin }) {
   }, [])
 
   async function handleSubmit() {
-    if (!firstName || !email || !username || !password) {
+    if (!firstName || !username || !password) {
       alert('Please fill in all fields.')
       return
     }
@@ -179,16 +178,6 @@ function Register({ onClose, onSwitchToLogin }) {
                 onChange={e => setLastName(e.target.value)}
               />
             </div>
-          </div>
-
-          <div className="register-field">
-            <label>Email Address</label>
-            <input
-              type="email"
-              placeholder="name@nokia.com"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-            />
           </div>
 
           <div className="register-field">
