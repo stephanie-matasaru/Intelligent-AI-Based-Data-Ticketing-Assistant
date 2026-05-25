@@ -1,7 +1,7 @@
 USE TicketingSystem;
 GO
 
-CREATE PROCEDURE dbo.GetTicketsByCategory
+CREATE OR ALTER PROCEDURE dbo.GetTicketsByCategory
     @StartDate  DATETIME2 = NULL,
     @EndDate    DATETIME2 = NULL,
     @Priority   NVARCHAR(50) = NULL,
@@ -23,7 +23,7 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE dbo.GetTicketsByTeam
+CREATE OR ALTER PROCEDURE dbo.GetTicketsByTeam
     @StartDate  DATETIME2 = NULL,
     @EndDate    DATETIME2 = NULL,
     @Priority   NVARCHAR(50) = NULL,
@@ -59,12 +59,12 @@ BEGIN
     SELECT
         CASE
             WHEN @GroupBy = 'daily'   THEN CAST(t.submit_datetime AS DATE)
-            WHEN @GroupBy = 'weekly' THEN DATEADD(DAY, -(DATEDIFF(DAY, 0, t.submit_datetime) % 7), CAST(t.submit_datetime AS DATE))
+            WHEN @GroupBy = 'weekly'  THEN DATEADD(DAY, -(DATEDIFF(DAY, 0, t.submit_datetime) % 7), CAST(t.submit_datetime AS DATE))
             WHEN @GroupBy = 'monthly' THEN DATEFROMPARTS(YEAR(t.submit_datetime), MONTH(t.submit_datetime), 1)
         END AS period_start,
         CASE
             WHEN @GroupBy = 'daily'   THEN CAST(t.submit_datetime AS DATE)
-            WHEN @GroupBy = 'weekly' THEN DATEADD(DAY, 6 - (DATEDIFF(DAY, 0, t.submit_datetime) % 7), CAST(t.submit_datetime AS DATE))            
+            WHEN @GroupBy = 'weekly'  THEN DATEADD(DAY, 6 - (DATEDIFF(DAY, 0, t.submit_datetime) % 7), CAST(t.submit_datetime AS DATE))
             WHEN @GroupBy = 'monthly' THEN EOMONTH(t.submit_datetime)
         END AS period_end,
         COUNT(*) AS count
@@ -79,12 +79,12 @@ BEGIN
     GROUP BY
         CASE
             WHEN @GroupBy = 'daily'   THEN CAST(t.submit_datetime AS DATE)
-            WHEN @GroupBy = 'weekly'  THEN DATEADD(DAY, -DATEPART(WEEKDAY, t.submit_datetime) + 2, CAST(t.submit_datetime AS DATE))
+            WHEN @GroupBy = 'weekly'  THEN DATEADD(DAY, -(DATEDIFF(DAY, 0, t.submit_datetime) % 7), CAST(t.submit_datetime AS DATE))
             WHEN @GroupBy = 'monthly' THEN DATEFROMPARTS(YEAR(t.submit_datetime), MONTH(t.submit_datetime), 1)
         END,
         CASE
             WHEN @GroupBy = 'daily'   THEN CAST(t.submit_datetime AS DATE)
-            WHEN @GroupBy = 'weekly'  THEN DATEADD(DAY, -DATEPART(WEEKDAY, t.submit_datetime) + 8, CAST(t.submit_datetime AS DATE))
+            WHEN @GroupBy = 'weekly'  THEN DATEADD(DAY, 6 - (DATEDIFF(DAY, 0, t.submit_datetime) % 7), CAST(t.submit_datetime AS DATE))
             WHEN @GroupBy = 'monthly' THEN EOMONTH(t.submit_datetime)
         END
     ORDER BY period_start;
