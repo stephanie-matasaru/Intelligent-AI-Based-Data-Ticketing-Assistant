@@ -196,6 +196,7 @@ function Chatbot() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(null)
+  const [showAllSessions, setShowAllSessions] = useState(false)
 
     async function saveToWorkspace(msg) {
     if (!userId) return
@@ -987,7 +988,7 @@ function exportDrillDownExcel() {
 
             {/* Chat History */}
             <div
-              onClick={() => { if (showHistory) { setShowHistory(false) } else { fetchSessions() } }}
+              onClick={() => { if (showHistory) { setShowHistory(false); setShowAllSessions(false) } else { fetchSessions() } }}
               className={`mx-4 my-1 p-4 flex items-center gap-3 rounded-xl cursor-pointer transition-all duration-200 ${
                 showHistory
                   ? 'bg-gradient-to-br from-[#000000] to-[#6B4D90] text-white shadow-lg shadow-blue-900/20'
@@ -1004,7 +1005,7 @@ function exportDrillDownExcel() {
                 {sessions.length === 0 && (
                   <p className="text-white/30 text-xs px-2 py-3">No past sessions found.</p>
                 )}
-                {sessions.map((s) => (
+                {(showAllSessions ? sessions : sessions.slice(0, 10)).map((s) => (
                   <div
                     key={s.group_id}
                     className="group flex items-center gap-1 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-all"
@@ -1030,8 +1031,17 @@ function exportDrillDownExcel() {
                     </button>
                   </div>
                 ))}
-              </div>
-            )}
+                {sessions.length > 10 && (
+                  <button
+                    onClick={() => setShowAllSessions(!showAllSessions)}
+                    className="w-full mt-2 p-2 text-white/30 hover:text-white text-xs uppercase tracking-widest transition-colors"
+                  >
+                    {showAllSessions ? 'Show less' : `Show all (${sessions.length})`}
+                  </button>
+                )}
+                </div>
+              )}
+
             {/* Messages in selected session */}
             {showHistory && selectedSession && (
               <div className="mx-4 mt-2">
