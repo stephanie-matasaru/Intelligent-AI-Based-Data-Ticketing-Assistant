@@ -424,7 +424,7 @@ async function exportChart(ref, filename, chartTitle, chartData, filters) {
     Object.entries(extraParams).forEach(([k, v]) => params.set(k, v))
  
     params.set('page', '1')
-    params.set('page_size', '500')
+    params.set('page_size', '5000')
  
     try {
       const res = await fetch(`http://localhost:8000/api/tickets/?${params.toString()}`)
