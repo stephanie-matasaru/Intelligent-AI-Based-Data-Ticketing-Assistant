@@ -61,7 +61,12 @@ BEGIN
             WHEN @GroupBy = 'daily'   THEN CAST(t.submit_datetime AS DATE)
             WHEN @GroupBy = 'weekly'  THEN DATEADD(DAY, -DATEPART(WEEKDAY, t.submit_datetime) + 2, CAST(t.submit_datetime AS DATE))
             WHEN @GroupBy = 'monthly' THEN DATEFROMPARTS(YEAR(t.submit_datetime), MONTH(t.submit_datetime), 1)
-        END AS day,
+        END AS period_start,
+        CASE
+            WHEN @GroupBy = 'daily'   THEN CAST(t.submit_datetime AS DATE)
+            WHEN @GroupBy = 'weekly'  THEN DATEADD(DAY, -DATEPART(WEEKDAY, t.submit_datetime) + 8, CAST(t.submit_datetime AS DATE))
+            WHEN @GroupBy = 'monthly' THEN EOMONTH(t.submit_datetime)
+        END AS period_end,
         COUNT(*) AS count
     FROM tickets t
     JOIN priorities p ON t.priority_id = p.priority_id

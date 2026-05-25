@@ -83,7 +83,7 @@ def tickets_timeline(
     )
     rows = cursor.fetchall()
     conn.close()
-    return [{"day": str(row[0]), "count": row[1]} for row in rows]
+    return [{"day": str(row[0]), "period_start": str(row[0]), "period_end": str(row[1]), "count": row[2]} for row in rows]
 
 # Frontend: BarChart "Tickets by Category" (cat_t1)
 # Returns: [{"name": "App", "count": 312}, ...]

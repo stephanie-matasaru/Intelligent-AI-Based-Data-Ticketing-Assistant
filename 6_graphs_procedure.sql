@@ -101,26 +101,16 @@ SET
     NOCOUNT ON;
 
 SELECT
-    SUM(
-        CASE
-            WHEN t.resolved_datetime IS NOT NULL
-            AND t.resolved_datetime <= t.estimated_resolution THEN 1
-            ELSE 0
-        END
-    ) AS sla_met,
-    SUM(
-        CASE
-            WHEN (
-                t.resolved_datetime IS NOT NULL
-                AND t.resolved_datetime > t.estimated_resolution
-            )
-            OR (
-                t.resolved_datetime IS NULL
-                AND GETDATE() > t.estimated_resolution
-            ) THEN 1
-            ELSE 0
-        END
-    ) AS sla_breached
+    SUM(CASE
+        WHEN (t.resolved_datetime IS NOT NULL AND t.resolved_datetime <= t.estimated_resolution)
+        OR   (t.resolved_datetime IS NULL AND t.estimated_resolution >= GETDATE()) THEN 1
+        ELSE 0
+    END) AS sla_met,
+    SUM(CASE
+        WHEN (t.resolved_datetime IS NOT NULL AND t.resolved_datetime > t.estimated_resolution)
+        OR   (t.resolved_datetime IS NULL AND t.estimated_resolution < GETDATE()) THEN 1
+        ELSE 0
+    END) AS sla_breached
 FROM
     tickets t
     JOIN priorities p ON t.priority_id = p.priority_id
