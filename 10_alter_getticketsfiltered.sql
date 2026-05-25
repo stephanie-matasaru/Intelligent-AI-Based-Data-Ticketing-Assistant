@@ -20,7 +20,7 @@ BEGIN
 
     IF @Page < 1 SET @Page = 1;
     IF @PageSize < 1 SET @PageSize = 25;
-    IF @PageSize > 500 SET @PageSize = 500;
+    IF @PageSize > 5000 SET @PageSize = 5000;
 
     DECLARE @Offset INT = (@Page - 1) * @PageSize;
 
