@@ -59,12 +59,12 @@ BEGIN
     SELECT
         CASE
             WHEN @GroupBy = 'daily'   THEN CAST(t.submit_datetime AS DATE)
-            WHEN @GroupBy = 'weekly'  THEN DATEADD(DAY, -DATEPART(WEEKDAY, t.submit_datetime) + 2, CAST(t.submit_datetime AS DATE))
+            WHEN @GroupBy = 'weekly' THEN DATEADD(DAY, -(DATEDIFF(DAY, 0, t.submit_datetime) % 7), CAST(t.submit_datetime AS DATE))
             WHEN @GroupBy = 'monthly' THEN DATEFROMPARTS(YEAR(t.submit_datetime), MONTH(t.submit_datetime), 1)
         END AS period_start,
         CASE
             WHEN @GroupBy = 'daily'   THEN CAST(t.submit_datetime AS DATE)
-            WHEN @GroupBy = 'weekly'  THEN DATEADD(DAY, -DATEPART(WEEKDAY, t.submit_datetime) + 8, CAST(t.submit_datetime AS DATE))
+            WHEN @GroupBy = 'weekly' THEN DATEADD(DAY, 6 - (DATEDIFF(DAY, 0, t.submit_datetime) % 7), CAST(t.submit_datetime AS DATE))            
             WHEN @GroupBy = 'monthly' THEN EOMONTH(t.submit_datetime)
         END AS period_end,
         COUNT(*) AS count
