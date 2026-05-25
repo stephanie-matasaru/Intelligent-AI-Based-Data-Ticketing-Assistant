@@ -742,7 +742,7 @@ async function exportChart(ref, filename, chartTitle, chartData, filters) {
                   <Line type="monotone" dataKey="count" stroke="#A1CEBC" strokeWidth={2.5}
                     dot={{ fill: '#A1CEBC', r: 4, strokeWidth: 0 }}
                     activeDot={{ r: 6, fill: '#4fc093', cursor: 'pointer',
-                      onClick: (_, payload) => fetchDrillDown(`Timeline: ${payload.payload.day}`, { start_date: payload.payload.day, end_date: payload.payload.day })
+                      onClick: (_, payload) => fetchDrillDown(`Timeline: ${payload.payload.day}`, { start_date: payload.payload.period_start, end_date: payload.payload.period_end })
                     }} />
                     </LineChart>
               </ResponsiveContainer>
