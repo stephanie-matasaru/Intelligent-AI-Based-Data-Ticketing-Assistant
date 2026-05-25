@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from fastapi.responses import JSONResponse
 from services.file_parser_service import parse_uploaded_file
-from services.chat_service import save_message
 from typing import Optional
 import uuid
 
@@ -50,14 +49,6 @@ async def upload_file(
         readable_count = f"{paragraph_count} paragraphs"
     else:
         readable_count = "parsed content"
-
-    save_message(
-        user_id=user_id,
-        sender="user",
-        message=f"Uploaded file: {file.filename} ({readable_count})",
-        status="Success",
-        group_id=group_id
-    )
 
     return JSONResponse(content={
         "message": f"File uploaded and parsed successfully: {file.filename}",
