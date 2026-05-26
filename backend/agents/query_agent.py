@@ -122,13 +122,21 @@ def generate_dual_sql(question: str, history: list):
     base_prompt_without_sql_rule = INPUT_PROMPT.split("OUTPUT FORMAT (MANDATORY):")[0]
 
     override_prompt = base_prompt_without_sql_rule + """
+    CRITICAL RULE FOR raw_data_query:
+    raw_data_query MUST ALWAYS return individual ticket rows. NEVER use COUNT, SUM, or any aggregate in raw_data_query.
+    Even if the user asks "how many", raw_data_query must still return the actual rows.
+    raw_data_query must ALWAYS follow this exact structure:
+    SELECT TOP 100 tickets.ticket_number, tickets.status, tickets.company, tickets.team, tickets.service, tickets.assigned_person, tickets.submit_datetime, tickets.resolved_datetime, tickets.description, priorities.priority_name
+    FROM tickets LEFT JOIN priorities ON tickets.priority_id = priorities.priority_id
+    WHERE [exact same WHERE clause as primary_query]
+
     OUTPUT FORMAT (MANDATORY):
     You MUST output ONLY a valid JSON object. Do not include any conversational text or ```sql blocks.
     
     Format:
     {
       "primary_query": "The SQL query that perfectly answers the user's request (e.g., COUNT, SUM, etc).",
-      "raw_data_query": "A SELECT query returning individual ticket rows (NEVER a COUNT or aggregate) using the EXACT same WHERE clause as primary_query. Must always return individual rows, even if primary_query is a COUNT or SUM. Format: SELECT TOP 100 tickets.ticket_number, tickets.status, tickets.company, tickets.team, tickets.service, tickets.assigned_person, tickets.submit_datetime, tickets.resolved_datetime, tickets.description, priorities.priority_name FROM tickets LEFT JOIN priorities ON tickets.priority_id = priorities.priority_id WHERE [same WHERE clause]"
+      "raw_data_query": "SELECT TOP 100 tickets.ticket_number, tickets.status ... WHERE [same WHERE clause]"
     }
     """
 
