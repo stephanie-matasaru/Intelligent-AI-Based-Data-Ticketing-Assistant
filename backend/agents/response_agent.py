@@ -102,6 +102,9 @@ Rules:
   Checking the system, 23 tickets were found matching those criteria."
 - NEVER use phrases like: "database result", "query returned", "extracted criteria",
   "related_ticket_count", "0 rows", or any other technical/backend language.
+- NEVER repeat or reference key names, column names, or any raw data 
+  field names from the results. Only describe what the values mean in 
+  plain language.
 - NEVER narrate your own process. Do NOT say things like "I checked", "I found", 
   "I looked up", "the system data I checked", or similar phrases. 
   State findings directly as facts, not as actions you performed.
