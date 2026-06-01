@@ -37,6 +37,10 @@ Thumbs.db
 *.ntvs*
 *.njsproj
 *.sln
+<<<<<<< HEAD
 *.sw?
 
 backend/static/
+=======
+*.sw?
+>>>>>>> frontend
