@@ -14,6 +14,7 @@ venv/
 node_modules/
 dist/
 dist-ssr/
+.vite/
 
 # Logs
 logs/
@@ -37,3 +38,5 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+backend/static/
